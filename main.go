@@ -3,15 +3,16 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"flag"
 	"fmt"
 	"os"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hesusruiz/vcutils/yaml"
+	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 )
 
@@ -1089,23 +1090,47 @@ func (doc *Document) ProcessBlock(startLineNum int) int {
 
 }
 
-func main() {
+func processWatch(inputFileName string, outputFileName string, sugar *zap.SugaredLogger) error {
+
+	var old_timestamp time.Time
+	var current_timestamp time.Time
+
+	for {
+		info, err := os.Stat(inputFileName)
+		if err != nil {
+			return err
+		}
+
+		current_timestamp = info.ModTime()
+
+		if old_timestamp.Before(info.ModTime()) {
+			old_timestamp = current_timestamp
+			fmt.Println("************Processing*************")
+			b := NewDocumentFromFile(inputFileName, sugar)
+			html := b.ToHTML()
+			err = os.WriteFile(outputFileName, []byte(html), 0664)
+			if err != nil {
+				return err
+			}
+		}
+
+		time.Sleep(1 * time.Second)
+
+	}
+}
+
+func process(c *cli.Context) error {
+
+	// Default input file name
 	var inputFileName = "index.txt"
 
 	// Output file name command line parameter
-	var outputFileName string
-	const outputFlagUsage = "output file name, default is \"{input file}.html\""
-	flag.StringVar(&outputFileName, "o", "", outputFlagUsage)
+	outputFileName := c.String("output")
 
 	// Dry run
-	var dryrun bool
-	const dryrunFlagUsage = "do not generate output file, just process input file"
-	flag.BoolVar(&dryrun, "n", false, dryrunFlagUsage)
+	dryrun := c.Bool("dryrun")
 
-	// Parse the flags
-	flag.Parse()
-
-	debug = false
+	debug = c.Bool("debug")
 
 	var z *zap.Logger
 	var err error
@@ -1127,8 +1152,8 @@ func main() {
 	defer sugar.Sync()
 
 	// Get the input file name
-	if len(flag.Arg(0)) > 0 {
-		inputFileName = flag.Arg(0)
+	if c.Args().Present() {
+		inputFileName = c.Args().First()
 	} else {
 		fmt.Printf("no input file provided, using \"%v\"\n", inputFileName)
 	}
@@ -1150,6 +1175,11 @@ func main() {
 		fmt.Printf("dry run: processing %v without writing output\n", inputFileName)
 	}
 
+	if c.Bool("watch") {
+		processWatch(inputFileName, outputFileName, sugar)
+		return nil
+	}
+
 	b := NewDocumentFromFile(inputFileName, sugar)
 
 	if debug {
@@ -1159,11 +1189,58 @@ func main() {
 	html := b.ToHTML()
 
 	if dryrun {
-		os.Exit(0)
+		return nil
 	}
 
 	err = os.WriteFile(outputFileName, []byte(html), 0664)
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func main() {
+
+	app := &cli.App{
+		Name:     "rite",
+		Version:  "v1.01",
+		Compiled: time.Now(),
+		Authors: []*cli.Author{
+			{
+				Name:  "Jesus Ruiz",
+				Email: "hesus.ruiz@gmail.com",
+			},
+		},
+		Usage:     "process a rite document and produce HTML",
+		UsageText: "rite [options] [INPUT_FILE] (default input file is index.txt)",
+		Action:    process,
+		ArgsUsage: "perico perez",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "output",
+				Aliases: []string{"o"},
+				Usage:   "write html to `FILE` (default is input file name with extension .html)",
+			},
+			&cli.BoolFlag{
+				Name:    "dryrun",
+				Aliases: []string{"n"},
+				Usage:   "do not generate output file, just process input file",
+			},
+			&cli.BoolFlag{
+				Name:    "debug",
+				Aliases: []string{"d"},
+				Usage:   "run in debug mode",
+			},
+			&cli.BoolFlag{
+				Name:    "watch",
+				Aliases: []string{"w"},
+				Usage:   "watch the file for changes",
+			},
+		},
+	}
+
+	if err := app.Run(os.Args); err != nil {
 		panic(err)
 	}
 

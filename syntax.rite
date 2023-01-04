@@ -1,0 +1,21 @@
+---
+title: Syntax for Rite
+bibliography: bibliography.yaml
+---
+
+# Rite Syntax
+
+## Block syntax
+
+In Rite indentation is relevant, making the document source much easier to understand. The meaning of <i>relevant</i> is the same as in Python, Markdown lists or even natural language.
+
+Block structure is evident from the indentation of the text and takes priority over inline structure.
+
+Items of the same block are separated from one another by blank lines. For a given block item, all contiguos lines are processed as a single paragraph. Processing of paragraphs is explained below.
+
+A line which is indented more than the previous one starts a new, indented block.
+
+## Headers
+
+A header can be written in two ways, HTML and Rite way.
+
