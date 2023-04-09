@@ -27,6 +27,7 @@ type Document struct {
 	config       *yaml.YAML
 }
 
+var plain bool
 var debug bool
 
 const startTag = '{'
@@ -211,7 +212,7 @@ func NewDocument(s *bufio.Scanner, logger *zap.SugaredLogger) *Document {
 				// We accept a heading of a given level only if it is the same level, one more or one less than
 				// the previously encountered heading
 				tagName, htmlTag, rest := doc.processTagSpec(lineNum)
-				if contains(headingElements, tagName) {
+				if plain && contains(headingElements, tagName) {
 					if !strings.Contains(htmlTag, "no-num") {
 
 						newHeading := &Heading{}
@@ -851,7 +852,8 @@ func (doc *Document) ProcessList(startLineNum int) int {
 
 		// Write the first line of the list item
 		doc.log.Debugw("ProcessList item open tag", "line", i+1)
-		doc.sb.WriteString(fmt.Sprintf("%v%v<p>%v%v</p>\n", strings.Repeat(" ", itemIndentation), htmlTag, bulletText, restLine))
+		// doc.sb.WriteString(fmt.Sprintf("%v%v<p>%v%v</p>\n", strings.Repeat(" ", itemIndentation), htmlTag, bulletText, restLine))
+		doc.sb.WriteString(fmt.Sprintf("%v%v%v%v\n", strings.Repeat(" ", itemIndentation), htmlTag, bulletText, restLine))
 
 		// Skip all the blank lines after the first line
 		i = doc.skipBlankLines(i + 1)
@@ -944,7 +946,15 @@ func (doc *Document) processVerbatim(startLineNum int) int {
 			thisIndentationStr = strings.Repeat(" ", doc.Indentation(i)-minimumIndentation)
 		}
 
-		if i == startLineNum+1 {
+		if i == startLineNum+1 && i == lastNonEmptyLineNum {
+			doc.sb.WriteString(fmt.Sprintf("\n%v%v%v%v", indentStr, htmlTag, restLine, doc.lines[i]))
+			// As a very common special case, if there was a <code> in the same line as <pre>, write the end tag too
+			if strings.HasPrefix(restLine, "<code") {
+				doc.sb.WriteString(fmt.Sprintf("</code></%v>\n\n", tagName))
+			} else {
+				doc.sb.WriteString(fmt.Sprintf("</%v>\n\n", tagName))
+			}
+		} else if i == startLineNum+1 {
 			// Write the first line
 			doc.sb.WriteString(fmt.Sprintf("\n%v%v%v%v\n", indentStr, htmlTag, restLine, doc.lines[i]))
 
@@ -1209,7 +1219,7 @@ func main() {
 
 	app := &cli.App{
 		Name:     "rite",
-		Version:  "v1.02",
+		Version:  "v1.04",
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
 			{
@@ -1226,6 +1236,11 @@ func main() {
 				Name:    "output",
 				Aliases: []string{"o"},
 				Usage:   "write html to `FILE` (default is input file name with extension .html)",
+			},
+			&cli.BoolFlag{
+				Name:    "plain",
+				Aliases: []string{"p"},
+				Usage:   "do not use respec semantics, just a plain HTML file",
 			},
 			&cli.BoolFlag{
 				Name:    "dryrun",
