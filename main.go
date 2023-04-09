@@ -708,8 +708,8 @@ func (doc *Document) processHeaderParagraph(headerLineNum int) int {
 	var i int
 
 	if debug {
-		fmt.Println("********** Start HEADER", headerLineNum)
-		defer fmt.Println("********** End HEADER", headerLineNum)
+		fmt.Println("********** Start HEADER", headerLineNum+1)
+		defer fmt.Println("********** End HEADER", headerLineNum+1)
 	}
 
 	// The header should be just the first line
@@ -894,41 +894,45 @@ func (doc *Document) startsWithList(lineNum int) bool {
 }
 
 func (doc *Document) processVerbatim(startLineNum int) int {
+	doc.log.Debugw("ProcessVerbatim", "line", startLineNum+1)
+
 	// This is a verbatim section, so we write it without processing
 	tagName, htmlTag, restLine := doc.processTagSpec(startLineNum)
 
-	thisIndentation := doc.Indentation(startLineNum)
-	indentStr := strings.Repeat(" ", doc.Indentation(startLineNum))
+	verbatimSectionIndentation := doc.Indentation(startLineNum)
+	indentStr := strings.Repeat(" ", verbatimSectionIndentation)
 
 	startOfNextBlock := 0
 	lastNonEmptyLineNum := 0
 	minimumIndentation := doc.indentations[startLineNum+1]
 
+	// Loop until the end of the document or we find a line with less indentation
+	// Blank lines are assumed to pertain to the verbatim section
 	for i := startLineNum + 1; !doc.AtEOF(i); i++ {
 
-		verbatimIndentation := doc.Indentation(i)
+		startOfNextBlock = i
 
+		// This is the indentation of the text in the verbatim section
+		// We do not require that it is left-alligned, but calculate its offset
+		thisLineIndentation := doc.Indentation(i)
+
+		// If the line is non-blank
 		if len(doc.lines[i]) > 0 {
 
-			if verbatimIndentation <= thisIndentation {
-				startOfNextBlock = i
+			// Break the loop if indentation of this line is less or equal than pre section
+			if thisLineIndentation <= verbatimSectionIndentation {
+				// This line is part of th enext block
 				break
 			}
 
+			// Update the number of the last line of the verbatim section
 			lastNonEmptyLineNum = i
-			if verbatimIndentation < minimumIndentation {
-				minimumIndentation = verbatimIndentation
+
+			// Update the minimum indentation in the whole section
+			if thisLineIndentation < minimumIndentation {
+				minimumIndentation = thisLineIndentation
 			}
 
-		}
-
-		if len(doc.lines[i]) > 0 && verbatimIndentation <= thisIndentation {
-			startOfNextBlock = i
-			break
-		}
-
-		if len(doc.lines[i]) > 0 {
-			lastNonEmptyLineNum = i
 		}
 
 	}
@@ -961,6 +965,7 @@ func (doc *Document) processVerbatim(startLineNum int) int {
 
 	}
 
+	doc.log.Debugw("ProcessVerbatim", "startOfNextBlock", startOfNextBlock+1)
 	return startOfNextBlock
 
 }
@@ -1044,7 +1049,7 @@ func (doc *Document) ProcessBlock(startLineNum int) int {
 			prefixLen = 4
 		}
 
-		doc.log.Debugw("ProcessBlock", "line", currentLineNum, "indent", currentLineIndentation, "l", currentLine[:prefixLen])
+		doc.log.Debugw("ProcessBlock", "line", currentLineNum+1, "indent", currentLineIndentation, "l", currentLine[:prefixLen])
 
 		// If the line has less indentation than the block, stop processing this block
 		if currentLineIndentation < thisBlockIndentation {
@@ -1204,7 +1209,7 @@ func main() {
 
 	app := &cli.App{
 		Name:     "rite",
-		Version:  "v1.01",
+		Version:  "v1.02",
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
 			{
