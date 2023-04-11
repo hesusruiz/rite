@@ -60,8 +60,11 @@ type Heading struct {
 // NewDocument parses the input one line at a time, preprocessing the lines and building
 // a parsed document ready to be processed
 func NewDocument(s *bufio.Scanner, logger *zap.SugaredLogger) *Document {
-	re := regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
 
+	// This regex detects the <x-ref REFERENCE> tags that need special processing
+	reXRef := regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
+
+	// Verbatim sections require special processing to keep their exact format
 	insideVerbatim := false
 	indentationVerbatim := 0
 
@@ -72,21 +75,23 @@ func NewDocument(s *bufio.Scanner, logger *zap.SugaredLogger) *Document {
 	doc.figs = make(map[string]int)
 	doc.log = logger
 
+	// Initialize the structure to keep the tree of headers in the document
 	outline := []*Heading{}
 	previousHeading := "h1"
 
-	// Pre-process all lines as we read them
-	// This means that we can not use information that resides later in the file
+	// We build in memory the parsed document, pre-processing all lines as we read them.
+	// This means that in this stage we can not use information that resides later in the file.
 	for s.Scan() {
 
 		// Get a rawLine from the file
 		rawLine := s.Text()
 
-		// Calculate its indentation
+		// Strip blanks at the beginning and calculate indentation based on the difference in length
+		// We do not support other whitespace like tabs
 		line := strings.TrimLeft(rawLine, " ")
 		indentation := len(rawLine) - len(line)
 
-		// Trim possible space to make blank lines have zero legth
+		// Trim possible leading and trailing whitespace to make blank lines have zero legth
 		line = strings.TrimSpace(line)
 
 		// Calculate the line number
@@ -98,161 +103,168 @@ func NewDocument(s *bufio.Scanner, logger *zap.SugaredLogger) *Document {
 		// Add the indentation
 		doc.indentations = append(doc.indentations, indentation)
 
-		// Preprocess the line if not a blank one
-		if len(doc.lines[lineNum]) > 0 {
+		// Do not process the line if it is empty
+		if len(doc.lines[lineNum]) == 0 {
+			continue
+		}
 
-			// Special processing for verbatim areas.
-			if insideVerbatim {
-				// Do not process the line if we are still inside a verbatim area
-				if indentation > indentationVerbatim {
-					continue
-				}
-				// Check if we exited the verbatim area
-				if indentation <= indentationVerbatim {
-					insideVerbatim = false
-				}
+		// Special processing for verbatim areas, started by a <pre> tag.
+		// Everyting inside a verbatim area should be left exactly as it is.
+		if insideVerbatim {
+			// Do not process the line if we are inside a verbatim area
+			if indentation > indentationVerbatim {
+				continue
+			}
+			// Check if we exited the verbatim area
+			if indentation <= indentationVerbatim {
+				insideVerbatim = false
+			}
+		} else if strings.HasPrefix(doc.lines[lineNum], "<pre") {
+			// The verbatim area is indicated by a <pre> tag
+			insideVerbatim = true
+
+			// Remember the indentation of the tag
+			// Verbatim content has to be indented (indentation > indentationVerbatim)
+			indentationVerbatim = indentation
+		}
+
+		// Preprocess the special <x-ref> tag inside the text of the line
+		doc.lines[lineNum] = string(reXRef.ReplaceAll([]byte(doc.lines[lineNum]), []byte("<a href=\"#${1}\" class=\"xref\">[${1}]</a>")))
+
+		// Preprocess Markdown headers ('#') and convert to h1, h2, ...
+		// We assume that a header starts with the '#' character, no matter what the rest of the line is
+		if doc.lines[lineNum][0] == '#' {
+
+			// Trim and count the number of '#'
+			plainLine := strings.TrimLeft(doc.lines[lineNum], "#")
+			lenPrefix := len(doc.lines[lineNum]) - len(plainLine)
+
+			// Trim the possible whitespace between the '#'s and the text
+			plainLine = strings.TrimLeft(plainLine, " ")
+
+			// Build the new line and store it
+			doc.lines[lineNum] = fmt.Sprintf("<h%v>%v", lenPrefix, plainLine)
+
+		}
+
+		// Preprocess Markdown list markers
+		// They can start with plain dashes '-' but we support a special format '-(something)'.
+		// The 'something' inside parenthesis will be highlighted in the list item
+		if strings.HasPrefix(doc.lines[lineNum], "- ") {
+
+			doc.lines[lineNum] = strings.Replace(doc.lines[lineNum], "- ", "<li>", 1)
+
+		} else if strings.HasPrefix(doc.lines[lineNum], "-(") {
+
+			line := doc.lines[lineNum]
+
+			// Get the end ')'
+			indexRightBracket := strings.IndexRune(line, ')')
+			if indexRightBracket == -1 {
+				doc.log.Fatalw("no closing ')' in list bullet", "line", lineNum+1)
 			}
 
-			// Check if we enter into a verbatim area
-			if strings.HasPrefix(doc.lines[lineNum], "<pre") {
-				insideVerbatim = true
-				indentationVerbatim = indentation
+			// Check that there is at least one character inside the '()'
+			if indexRightBracket == 2 {
+				doc.log.Fatalw("no content inside '()' in list bullet", "line", lineNum+1)
 			}
 
-			// Preprocess the special <x-ref> tag
-			doc.lines[lineNum] = string(re.ReplaceAll([]byte(doc.lines[lineNum]), []byte("<a href=\"#${1}\" class=\"xref\">[${1}]</a>")))
+			// Extract the whole tag spec, eliminating embedded blanks
+			bulletText := line[2:indexRightBracket]
+			bulletText = strings.ReplaceAll(bulletText, " ", "%20")
 
-			// Preprocess Markdown headers ('#') and convert to h1, h2, ...
-			if doc.lines[lineNum][0] == '#' {
+			// And the remaining text in the line
+			restLine := line[indexRightBracket+1:]
 
-				// Trim and count the number of '#'
-				plainLine := strings.TrimLeft(doc.lines[lineNum], "#")
-				lenPrefix := len(doc.lines[lineNum]) - len(plainLine)
+			// Update the line in the document
+			doc.lines[lineNum] = "<li =" + bulletText + ">" + restLine
 
-				switch lenPrefix {
-				case 1:
-					doc.lines[lineNum] = strings.Replace(doc.lines[lineNum], "#", "<h1>", 1)
-				case 2:
-					doc.lines[lineNum] = strings.Replace(doc.lines[lineNum], "##", "<h2>", 1)
-				case 3:
-					doc.lines[lineNum] = strings.Replace(doc.lines[lineNum], "###", "<h3>", 1)
-				case 4:
-					doc.lines[lineNum] = strings.Replace(doc.lines[lineNum], "####", "<h4>", 1)
-				case 5:
-					doc.lines[lineNum] = strings.Replace(doc.lines[lineNum], "#####", "<h5>", 1)
-				}
+		}
 
+		// Parse the tag at the beginning of the line
+		tagFields := doc.preprocessTagSpec(lineNum)
+		if tagFields == nil {
+			// No tag found, just continue with the next line
+			continue
+		}
+
+		// Preprocess tags with ID fields so they can be referenced later
+		// We also keep a counter so they can be numbered in the final HTML
+		id := tagFields["id"]
+		if len(id) > 0 {
+
+			// If the user specified the "type" attribute, we use its value as a classification bucket for numbering
+			typ := tagFields["type"]
+			if len(typ) == 0 {
+				// Otherwise, we use the name of the tag as a classification bucket
+				typ = tagFields["tag"]
 			}
 
-			// Preprocess Markdown list markers
-			if strings.HasPrefix(doc.lines[lineNum], "- ") {
+			// As an example, if the user does not specify anything, all <figures> with an id will be in the
+			// same bucket and the counter will be incremented for each figure. But the user may differentiate
+			// figures with images from figures with tables (for example). She can use the special attribute
+			// like this: '<figure #picture1 :photos>' or for tables '<figure #tablewithgrowthrate :tables> The
+			// names of the buckets (the string after the ':') can be any, and there may be as many as needed.
 
-				doc.lines[lineNum] = strings.Replace(doc.lines[lineNum], "- ", "<li>", 1)
-
-			} else if strings.HasPrefix(doc.lines[lineNum], "-(") {
-
-				line := doc.lines[lineNum]
-
-				// Get the end ')'
-				indexRightBracket := strings.IndexRune(line, ')')
-				if indexRightBracket == -1 {
-					doc.log.Fatalw("no closing ) in list bullet", "line", lineNum)
-				}
-
-				// Extract the whole tag spec
-				bulletText := line[2:indexRightBracket]
-				bulletText = strings.ReplaceAll(bulletText, " ", "%20")
-
-				// And the remaining text in the line
-				restLine := line[indexRightBracket+1:]
-
-				// Update the line in the document
-				doc.lines[lineNum] = "<li =" + bulletText + ">" + restLine
-
+			// We don't allow duplicate id
+			if doc.ids[id] > 0 {
+				doc.log.Fatalw("id already used", "id", id, "line", lineNum+1)
 			}
 
-			// Preprocess tags if they are at the beginning of the line
-			if startsWithTag(doc.lines[lineNum]) {
-				tagFields := doc.preprocessTagSpec(lineNum)
+			// Increment the number of elements in this bucket
+			doc.figs[typ] = doc.figs[typ] + 1
+			// And set the current value of the counter for this id.
+			doc.ids[id] = doc.figs[typ]
 
-				// Preprocess tags with ID fields so they can be referenced later
-				// We also keep a counter so they can be numbered in the final HTML
-				id := tagFields["id"]
-				if len(id) > 0 {
+			// // If the special string '{#my.num}' appears in the line, we can perform the replacement.
+			// line = strings.Replace(line, "{#h.num}", fmt.Sprint(b.figs[typ]), 1)
 
-					// If the user specified the "type" attribute, we use its value as a classification bucket for numbering
-					typ := tagFields["type"]
-					if len(typ) == 0 {
-						// Otherwise, we use the name of the tag as a classification bucket
-						typ = tagFields["tag"]
+		}
+
+		// Preprocess headings (h1, h2, h3, ...), creating the tree of content to display hierarchical numbering
+		// We accept a heading of a given level only if it is the same level, one more or one less than
+		// the previously encountered heading
+		// We do this only if not using ReSpec format, in which case numbering will be done by ReSpec
+		tagName, htmlTag, rest := doc.buildTagPresentation(lineNum, tagFields)
+		if plain && contains(headingElements, tagName) {
+
+			// If header is marked as "no-num" we do not include it in the header numbering schema
+			if !strings.Contains(htmlTag, "no-num") {
+
+				newHeading := &Heading{}
+				switch tagName {
+				case "h1":
+					outline = append(outline, newHeading)
+					doc.lines[lineNum] = fmt.Sprintf("%v<span class='secno'>%v</span> %v", htmlTag, len(outline), rest)
+					previousHeading = "h1"
+				case "h2":
+					if previousHeading != "h1" && previousHeading != "h2" && previousHeading != "h3" {
+						doc.log.Fatalf("line %v: adding '%v' but previous heading was '%v'\n", len(doc.lines)+1, tagName, previousHeading)
 					}
-
-					// As an example, if the user does not specify anything, all <figures> with an id will be in the
-					// same bucket and the counter will be incremented for each figure. But the user may differentiate
-					// figures with images from the ones with tables (for example). She can use the special attribute
-					// like this: '<figure #picture1 :photos>' or for tables '<figure #tablewithgrowthrate :tables> The
-					// names of the buckets (the string after the ':') can be any, and there may be as many as needed.
-
-					// We don't allow duplicate id
-					if doc.ids[id] > 0 {
-						doc.log.Fatalw("id already used", "line", lineNum, "id", id)
+					if len(outline) == 0 {
+						doc.log.Fatalf("line %v: adding '%v' but no 'h1' exists\n", len(doc.lines)+1, tagName)
 					}
-
-					// Increment the number of elements in this bucket
-					doc.figs[typ] = doc.figs[typ] + 1
-					// And set the current value of the counter for this id.
-					doc.ids[id] = doc.figs[typ]
-
-					// // If the special string '{#my.num}' appears in the line, we can perform the replacement.
-					// line = strings.Replace(line, "{#h.num}", fmt.Sprint(b.figs[typ]), 1)
+					l1 := outline[len(outline)-1]
+					l1.subheadings = append(l1.subheadings, newHeading)
+					doc.lines[lineNum] = fmt.Sprintf("%v<span class='secno'>%v.%v</span> %v", htmlTag, len(outline), len(l1.subheadings), rest)
+					previousHeading = "h2"
+				case "h3":
+					if previousHeading != "h2" && previousHeading != "h3" && previousHeading != "h4" {
+						doc.log.Fatalf("line %v: adding '%v' but previous heading was '%v'\n", len(doc.lines)+1, tagName, previousHeading)
+					}
+					if len(outline) == 0 {
+						doc.log.Fatalf("line %v: adding '%v' but no 'h1' exists\n", len(doc.lines)+1, tagName)
+					}
+					l1 := outline[len(outline)-1]
+					if len(l1.subheadings) == 0 {
+						doc.log.Fatalf("line %v: adding '%v' but no 'h2' exists\n", len(doc.lines)+1, tagName)
+					}
+					l2 := l1.subheadings[len(l1.subheadings)-1]
+					l2.subheadings = append(l2.subheadings, newHeading)
+					doc.lines[lineNum] = fmt.Sprintf("%v<span class='secno'>%v.%v.%v</span> %v", htmlTag, len(outline), len(l1.subheadings), len(l1.subheadings), rest)
+					previousHeading = "h3"
 
 				}
-
-				// Preprocess headings (h1, h2, h3, ...), creating the tree of content
-				// We accept a heading of a given level only if it is the same level, one more or one less than
-				// the previously encountered heading
-				tagName, htmlTag, rest := doc.processTagSpec(lineNum)
-				if plain && contains(headingElements, tagName) {
-					if !strings.Contains(htmlTag, "no-num") {
-
-						newHeading := &Heading{}
-						switch tagName {
-						case "h1":
-							outline = append(outline, newHeading)
-							doc.lines[lineNum] = fmt.Sprintf("%v<span class='secno'>%v</span> %v", htmlTag, len(outline), rest)
-							previousHeading = "h1"
-						case "h2":
-							if previousHeading != "h1" && previousHeading != "h2" && previousHeading != "h3" {
-								doc.log.Fatalf("line %v: adding '%v' but previous heading was '%v'\n", len(doc.lines)+1, tagName, previousHeading)
-							}
-							if len(outline) == 0 {
-								doc.log.Fatalf("line %v: adding '%v' but no 'h1' exists\n", len(doc.lines)+1, tagName)
-							}
-							l1 := outline[len(outline)-1]
-							l1.subheadings = append(l1.subheadings, newHeading)
-							doc.lines[lineNum] = fmt.Sprintf("%v<span class='secno'>%v.%v</span> %v", htmlTag, len(outline), len(l1.subheadings), rest)
-							previousHeading = "h2"
-						case "h3":
-							if previousHeading != "h2" && previousHeading != "h3" && previousHeading != "h4" {
-								doc.log.Fatalf("line %v: adding '%v' but previous heading was '%v'\n", len(doc.lines)+1, tagName, previousHeading)
-							}
-							if len(outline) == 0 {
-								doc.log.Fatalf("line %v: adding '%v' but no 'h1' exists\n", len(doc.lines)+1, tagName)
-							}
-							l1 := outline[len(outline)-1]
-							if len(l1.subheadings) == 0 {
-								doc.log.Fatalf("line %v: adding '%v' but no 'h2' exists\n", len(doc.lines)+1, tagName)
-							}
-							l2 := l1.subheadings[len(l1.subheadings)-1]
-							l2.subheadings = append(l2.subheadings, newHeading)
-							doc.lines[lineNum] = fmt.Sprintf("%v<span class='secno'>%v.%v.%v</span> %v", htmlTag, len(outline), len(l1.subheadings), len(l1.subheadings), rest)
-							previousHeading = "h3"
-
-						}
-					}
-
-				}
-
 			}
 
 		}
@@ -515,7 +527,7 @@ func (doc *Document) preprocessTagSpec(rawLineNum int) (tagFields map[string]str
 
 	}
 
-	// Decompose in fields separated by blank spece.
+	// Decompose in fields separated by white space.
 	// The first field is compulsory and is the tag name.
 	// There may be other optional attributes: class name and tag id.
 	fields := strings.Fields(tagSpec)
@@ -524,6 +536,7 @@ func (doc *Document) preprocessTagSpec(rawLineNum int) (tagFields map[string]str
 		doc.log.Fatalf("line %v, error processing Tag, no tag name found in %v", rawLineNum+1, doc.lines[rawLineNum])
 	}
 
+	// This is the tag name
 	tagFields["tag"] = fields[0]
 	tagSpec = strings.Replace(tagSpec, fields[0], "", 1)
 
@@ -535,42 +548,42 @@ func (doc *Document) preprocessTagSpec(rawLineNum int) (tagFields map[string]str
 		case '#':
 			// Shortcut for id="xxxx"
 			if len(f) < 2 {
-				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum)
+				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum+1)
 			}
 			tagFields["id"] = f[1:]
 			tagSpec = strings.Replace(tagSpec, f, "", 1)
 		case '.':
 			// Shortcut for class="xxxx"
 			if len(f) < 2 {
-				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum)
+				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum+1)
 			}
 			tagFields["class"] = f[1:]
 			tagSpec = strings.Replace(tagSpec, f, "", 1)
 		case '@':
 			// Shortcut for src="xxxx"
 			if len(f) < 2 {
-				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum)
+				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum+1)
 			}
 			tagFields["src"] = f[1:]
 			tagSpec = strings.Replace(tagSpec, f, "", 1)
 		case '-':
 			// Shortcut for href="xxxx"
 			if len(f) < 2 {
-				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum)
+				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum+1)
 			}
 			tagFields["href"] = f[1:]
 			tagSpec = strings.Replace(tagSpec, f, "", 1)
 		case ':':
 			// Special attribute "type" for item classification and counters
 			if len(f) < 2 {
-				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum)
+				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum+1)
 			}
 			tagFields["type"] = f[1:]
 			tagSpec = strings.Replace(tagSpec, f, "", 1)
 		case '=':
 			// Special attribute "number" for list items
 			if len(f) < 2 {
-				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum)
+				doc.log.Fatalf("line %v, Length of attributes must be greater than 1", rawLineNum+1)
 			}
 			tagFields["number"] = f[1:]
 			tagSpec = strings.Replace(tagSpec, f, "", 1)
@@ -776,7 +789,7 @@ func (doc *Document) ProcessList(startLineNum int) int {
 	// Calculate the unique list ID, if it was not specified by the user
 	listID := tagFields["id"]
 	if len(listID) == 0 {
-		listID = strconv.Itoa(startLineNum + 1)
+		listID = "list_" + strconv.Itoa(startLineNum+1)
 	}
 
 	listTagName, listHtmlTag, listRestLine := doc.buildTagPresentation(startLineNum, tagFields)
@@ -858,7 +871,7 @@ func (doc *Document) ProcessList(startLineNum int) int {
 		// Skip all the blank lines after the first line
 		i = doc.skipBlankLines(i + 1)
 		if doc.AtEOF(i) {
-			doc.log.Infof("EOF reached at line %v\n", i+1)
+			doc.log.Debugf("EOF reached at line %v\n", i+1)
 			break
 		}
 
