@@ -221,11 +221,11 @@ func NewDocument(s *bufio.Scanner, logger *zap.SugaredLogger) *Document {
 
 		}
 
-		// Preprocess headings (h1, h2, h3, ...), creating the tree of content to display hierarchical numbering
-		// We accept a heading of a given level only if it is the same level, one more or one less than
-		// the previously encountered heading
+		// Preprocess headings (h1, h2, h3, ...), creating the tree of content to display hierarchical numbering.
+		// To enforce the HTML5 spece, we accept a heading of a given level only if it is the same level,
+		// one more or one less than the previously encountered heading. H1 are always accepted in any context.
 		// We do this only if not using ReSpec format, in which case numbering will be done by ReSpec
-		tagName, htmlTag, rest := doc.buildTagPresentation(lineNum, tagFields)
+		tagName, htmlTag, rest := doc.buildTagPresentation(tagFields)
 		if plain && contains(headingElements, tagName) {
 
 			// If header is marked as "no-num" we do not include it in the header numbering schema
@@ -290,38 +290,42 @@ func (doc *Document) preprocessYAMLHeader() int {
 		return 0
 	}
 
-	var i int
+	// Build a string with all lines up to the next "---"
+	var currentLineNum int
 	var yamlString strings.Builder
-	for i = 1; i < len(doc.lines); i++ {
-		if strings.HasPrefix(doc.lines[i], "---") {
-			i++
+	for currentLineNum = 1; currentLineNum < len(doc.lines); currentLineNum++ {
+		if strings.HasPrefix(doc.lines[currentLineNum], "---") {
+			currentLineNum++
 			break
 		}
 
-		yamlString.WriteString(doc.lines[i])
+		yamlString.WriteString(doc.lines[currentLineNum])
 		yamlString.WriteString("\n")
 
 	}
 
+	// Parse the string that was built as YAML data
 	doc.config, err = yaml.ParseYaml(yamlString.String())
 	if err != nil {
 		doc.log.Fatalw("malformed YAML metadata", "error", err)
 	}
 
-	return i
+	// Return the line number after the YAML header
+	return currentLineNum
 }
 
+// NewDocumentFromFile reads a file and preprocesses it in memory
 func NewDocumentFromFile(fileName string, logger *zap.SugaredLogger) *Document {
 
-	// Read the simple template
+	// Read the whole file into memory
 	file, err := os.Open(fileName)
 	if err != nil {
 		logger.Fatalln(err)
 	}
 	defer file.Close()
 
+	// Process the file one line at a time, creating a Document object in memory
 	linescanner := bufio.NewScanner(file)
-
 	return NewDocument(linescanner, logger)
 
 }
@@ -339,6 +343,7 @@ func contains(set []string, tagName string) bool {
 	return false
 }
 
+// isVoidElement returns true if the tag is in the set of 'void' tags
 func isVoidElement(tagName string) bool {
 	for _, el := range voidElements {
 		if tagName == el {
@@ -348,6 +353,7 @@ func isVoidElement(tagName string) bool {
 	return false
 }
 
+// isNoSectionElement returns true if the tag is in the set of 'noSectionElements' tags
 func isNoSectionElement(tagName string) bool {
 	for _, el := range noSectionElements {
 		if tagName == el {
@@ -364,9 +370,9 @@ func (doc *Document) AtEOF(lineNum int) bool {
 	return lineNum == EOF || lineNum >= len(doc.lines)
 }
 
-// startsWithTag returns true if the line starts with one of the possible start tags
+// startsWithTag returns true if the line starts with one of the possible start tags characters
 func startsWithTag(line string) bool {
-	// Check both standard HTML tag and our special tag
+	// Check both standard HTML tag and our special tag character
 	return line[0] == startTag || line[0] == startHTMLTag
 }
 
@@ -393,8 +399,6 @@ func (doc *Document) startsWithHeaderTag(lineNum int) bool {
 //	starts either with the HTML tag ('<') or our special tag
 //	and it is followed by a blank line or a line which is more indented
 func (doc *Document) startsWithSectionTag(lineNum int) bool {
-
-	// thisIndentation := doc.Indentation(lineNum)
 
 	// Decompose the tag into its elements
 	tagFields := doc.preprocessTagSpec(lineNum)
@@ -483,6 +487,7 @@ func (doc *Document) postProcess() string {
 
 	replacePairs := []string{}
 	// Calculate the counters placeholders that we have to replace by their actual values
+	// A string like '{#theid.num}' is replaced by the index number of the identifier in its bucket.
 	for id, v := range doc.ids {
 		replacePairs = append(replacePairs, "{#"+id+".num}", fmt.Sprint(v))
 	}
@@ -603,7 +608,7 @@ func (doc *Document) preprocessTagSpec(rawLineNum int) (tagFields map[string]str
 	return tagFields
 }
 
-func (doc *Document) buildTagPresentation(rawLineNum int, tagFields map[string]string) (tagName string, htmlTag string, rest string) {
+func (doc *Document) buildTagPresentation(tagFields map[string]string) (tagName string, htmlTag string, rest string) {
 
 	// Sanity check
 	if tagFields == nil {
@@ -645,7 +650,7 @@ func (doc *Document) processTagSpec(rawLineNum int) (tagName string, htmlTag str
 		doc.log.Fatalw("no tag in line", "line", rawLineNum, "l", doc.lines[rawLineNum])
 	}
 
-	return doc.buildTagPresentation(rawLineNum, tagFields)
+	return doc.buildTagPresentation(tagFields)
 
 }
 
@@ -747,6 +752,7 @@ func (doc *Document) processHeaderParagraph(headerLineNum int) int {
 		return headerLineNum + 1
 	}
 
+	// Here we have a header line and the next lines specifies a subheader
 	// Create an hgroup with the header and the rest of contiguous lines in the paragraph
 	doc.sb.WriteString(fmt.Sprintf("%v<hgroup>\n", indentStr))
 	doc.sb.WriteString(fmt.Sprintf("%v  %v%v\n", indentStr, htmlTag, restLine))
@@ -767,7 +773,7 @@ func (doc *Document) indentStr(lineNum int) string {
 }
 
 func (doc *Document) ProcessList(startLineNum int) int {
-	var i int
+	var currentLineNum int
 
 	// startLineNum should point to the <ul> or <ol> tag.
 	// We expect the block to consist of a sequence of "li" elements, each of them can be as complex as needed
@@ -792,12 +798,14 @@ func (doc *Document) ProcessList(startLineNum int) int {
 		listID = "list_" + strconv.Itoa(startLineNum+1)
 	}
 
-	listTagName, listHtmlTag, listRestLine := doc.buildTagPresentation(startLineNum, tagFields)
+	listTagName, listHtmlTag, listRestLine := doc.buildTagPresentation(tagFields)
 
-	// List items must have indentation greater that the ol/ul tags
+	// List items must have indentation greater than the ol/ul tags
 	listIndentation := doc.Indentation(startLineNum)
 
 	// Write the first line, wrapping its text in a <p> if not empty
+	// We also add a newline at the beginning for better readability of the generated HTML (this has
+	// no influence on the displayed page).
 	doc.log.Debugw("ProcessList start-of-list tag", "line", startLineNum+1)
 	if len(listRestLine) > 0 {
 		doc.sb.WriteString(fmt.Sprintf("\n%v%v<p>%v</p>\n", doc.indentStr(startLineNum), listHtmlTag, listRestLine))
@@ -805,44 +813,46 @@ func (doc *Document) ProcessList(startLineNum int) int {
 		doc.sb.WriteString(fmt.Sprintf("\n%v%v\n", doc.indentStr(startLineNum), listHtmlTag))
 	}
 
-	itemIndentation := 0
-	itemNumber := 0
+	listContentIndentation := 0
+	listItemNumber := 0
 
-	// Process each of the list items
-	for i = startLineNum + 1; i < len(doc.lines); {
+	// Process each of the list items until end of list or end of file
+	for currentLineNum = startLineNum + 1; currentLineNum < len(doc.lines); {
 
 		// Do nothing if the line is empty
-		if len(doc.lines[i]) == 0 {
-			i++
+		if len(doc.lines[currentLineNum]) == 0 {
+			currentLineNum++
 			continue
 		}
 
-		line := doc.lines[i]
+		line := doc.lines[currentLineNum]
 
 		// The indentation of the first list item sets the expected indentation for all other items
-		if itemIndentation == 0 {
-			itemIndentation = doc.Indentation(i)
+		if listContentIndentation == 0 {
+			// This is done only once for the whole list
+			listContentIndentation = doc.Indentation(currentLineNum)
 		}
 
 		// If the line has less or equal indentation than the ol/ul tags, stop processing this block
-		if doc.Indentation(i) <= listIndentation {
+		if doc.Indentation(currentLineNum) <= listIndentation {
 			break
 		}
 
 		// We have a line that must be a list item
 		var tagName, htmlTag, restLine, bulletText string
 
+		// Check if line starts with '<li' or '{li'
 		if strings.HasPrefix(line, string(startTag)+"li") || strings.HasPrefix(line, string(startHTMLTag)+"li") {
 
 			// This is a list item, increment the counter
-			itemNumber++
+			listItemNumber++
 
 			// Decompose the tag in its elements
-			tagFields := doc.preprocessTagSpec(i)
+			tagFields := doc.preprocessTagSpec(currentLineNum)
 
 			// The user may have specified a bullet text to start the list
 			if len(tagFields["number"]) > 0 {
-				itemID := strings.ReplaceAll(tagFields["number"], "%20", "_")
+				itemID := listID + "." + strings.ReplaceAll(tagFields["number"], "%20", "_")
 				listNumber := strings.ReplaceAll(tagFields["number"], "%20", " ")
 				delete(tagFields, "number")
 				tagFields["id"] = itemID
@@ -851,42 +861,47 @@ func (doc *Document) ProcessList(startLineNum int) int {
 				// Calculate the list item ID if it was not specified by the user
 				itemID := tagFields["id"]
 				if len(itemID) == 0 {
-					itemID = listID + "." + strconv.Itoa(itemNumber)
+					itemID = listID + "." + strconv.Itoa(listItemNumber)
 					tagFields["id"] = itemID
 				}
 			}
 
 			// Build the tag for presentation
-			tagName, htmlTag, restLine = doc.buildTagPresentation(i, tagFields)
+			tagName, htmlTag, restLine = doc.buildTagPresentation(tagFields)
 
 		} else {
-			doc.log.Fatalf("line %v, this is not a list element: %v", i+1, line)
+			doc.log.Fatalf("line %v, this is not a list element: %v", currentLineNum+1, line)
 		}
 
 		// Write the first line of the list item
-		doc.log.Debugw("ProcessList item open tag", "line", i+1)
-		// doc.sb.WriteString(fmt.Sprintf("%v%v<p>%v%v</p>\n", strings.Repeat(" ", itemIndentation), htmlTag, bulletText, restLine))
-		doc.sb.WriteString(fmt.Sprintf("%v%v%v%v\n", strings.Repeat(" ", itemIndentation), htmlTag, bulletText, restLine))
+		doc.log.Debugw("ProcessList item open tag", "line", currentLineNum+1)
+		doc.sb.WriteString(fmt.Sprintf("%v%v%v%v\n", strings.Repeat(" ", listContentIndentation), htmlTag, bulletText, restLine))
 
 		// Skip all the blank lines after the first line
-		i = doc.skipBlankLines(i + 1)
-		if doc.AtEOF(i) {
-			doc.log.Debugf("EOF reached at line %v\n", i+1)
+		currentLineNum = doc.skipBlankLines(currentLineNum + 1)
+
+		// We are finished if we have reached the end of the document
+		if doc.AtEOF(currentLineNum) {
+			doc.log.Debugf("EOF reached at line %v\n", currentLineNum+1)
 			break
 		}
 
-		if doc.Indentation(i) > itemIndentation {
-			// Process the following lines as a block
-			doc.log.Debugw("ProcessList before ProcessBlock", "line", i+1)
-			doc.sb.WriteString(fmt.Sprintf("%v<div>\n", strings.Repeat(" ", itemIndentation)))
-			i = doc.ProcessBlock(i)
-			doc.sb.WriteString(fmt.Sprintf("%v</div>\n", strings.Repeat(" ", itemIndentation)))
-			doc.log.Debugw("ProcessList after ProcessBlock", "line", i+1)
+		// Each list item can have additional content which should be more indented
+		// We wrap that content in a <div></div> section
+		if doc.Indentation(currentLineNum) > listContentIndentation {
+			doc.log.Debugw("ProcessList before ProcessBlock", "line", currentLineNum+1)
+
+			// Process the following lines as a block, inside a <div> section
+			doc.sb.WriteString(fmt.Sprintf("%v<div>\n", strings.Repeat(" ", listContentIndentation)))
+			currentLineNum = doc.ProcessBlock(currentLineNum)
+			doc.sb.WriteString(fmt.Sprintf("%v</div>\n", strings.Repeat(" ", listContentIndentation)))
+
+			doc.log.Debugw("ProcessList after ProcessBlock", "line", currentLineNum+1)
 		}
 
 		// Write the list item end tag
-		doc.log.Debugw("ProcessList item close tag", "line", i+1)
-		doc.sb.WriteString(fmt.Sprintf("%v</%v>\n", strings.Repeat(" ", itemIndentation), tagName))
+		doc.log.Debugw("ProcessList item close tag", "line", currentLineNum+1)
+		doc.sb.WriteString(fmt.Sprintf("%v</%v>\n", strings.Repeat(" ", listContentIndentation), tagName))
 
 	}
 
@@ -894,7 +909,8 @@ func (doc *Document) ProcessList(startLineNum int) int {
 	doc.log.Debugw("ProcessList end-of-list tag", "line", startLineNum+1)
 	doc.sb.WriteString(fmt.Sprintf("%v</%v>\n\n", strings.Repeat(" ", listIndentation), listTagName))
 
-	return i
+	// Return the line number following the already processed list
+	return currentLineNum
 
 }
 
@@ -1067,11 +1083,12 @@ func (doc *Document) ProcessBlock(startLineNum int) int {
 			currentLineNum++
 			continue
 		}
+
+		// This is just for debugging, when printing the start of a line instead of the whole content
 		prefixLen := len(currentLine)
 		if prefixLen > 4 {
 			prefixLen = 4
 		}
-
 		doc.log.Debugw("ProcessBlock", "line", currentLineNum+1, "indent", currentLineIndentation, "l", currentLine[:prefixLen])
 
 		// If the line has less indentation than the block, stop processing this block
@@ -1118,20 +1135,25 @@ func (doc *Document) ProcessBlock(startLineNum int) int {
 
 }
 
+// processWatch checks periodically if an input file (inputFileName) has been modified, and if so
+// it processes the file and writes the result to the output file (outputFileName)
 func processWatch(inputFileName string, outputFileName string, sugar *zap.SugaredLogger) error {
 
 	var old_timestamp time.Time
 	var current_timestamp time.Time
 
+	// Loop forever
 	for {
+
+		// Get the modified timestamp of the input file
 		info, err := os.Stat(inputFileName)
 		if err != nil {
 			return err
 		}
-
 		current_timestamp = info.ModTime()
 
-		if old_timestamp.Before(info.ModTime()) {
+		// If current modified timestamp is newer than the previous timestamp, process the file
+		if old_timestamp.Before(current_timestamp) {
 			old_timestamp = current_timestamp
 			fmt.Println("************Processing*************")
 			b := NewDocumentFromFile(inputFileName, sugar)
@@ -1142,11 +1164,13 @@ func processWatch(inputFileName string, outputFileName string, sugar *zap.Sugare
 			}
 		}
 
+		// Check again in one second
 		time.Sleep(1 * time.Second)
 
 	}
 }
 
+// process is the main entry point of the program
 func process(c *cli.Context) error {
 
 	// Default input file name
@@ -1203,23 +1227,30 @@ func process(c *cli.Context) error {
 		fmt.Printf("dry run: processing %v without writing output\n", inputFileName)
 	}
 
+	// This is useful for development.
+	// If the user specified to watch, loop forever processing the input file when modified
 	if c.Bool("watch") {
-		processWatch(inputFileName, outputFileName, sugar)
-		return nil
+		err = processWatch(inputFileName, outputFileName, sugar)
+		return err
 	}
 
+	// Preprocess the input file
 	b := NewDocumentFromFile(inputFileName, sugar)
 
+	// Print stats data if requested
 	if debug {
 		b.printPreprocessStats()
 	}
 
+	// Generate the HTML from the preprocessed data
 	html := b.ToHTML()
 
+	// Do nothing if flag dryrun was specified
 	if dryrun {
 		return nil
 	}
 
+	// Write the HTML to the output file
 	err = os.WriteFile(outputFileName, []byte(html), 0664)
 	if err != nil {
 		return err
@@ -1232,7 +1263,7 @@ func main() {
 
 	app := &cli.App{
 		Name:     "rite",
-		Version:  "v1.04",
+		Version:  "v0.02",
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
 			{
