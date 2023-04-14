@@ -12,13 +12,13 @@
 <body>
 <article class="container">
 
-<h1>Access to data service from Happy Pets customer</h1>
+<h1><span class='secno'>1</span> Access to data service from Happy Pets customer</h1>
 
 <p>In this section we describe the process of changing the PTA attribute of a packet delivery order via the packet delivery portal. The same process would be used when trying to change the PDA or delivery address.
 </p>
 <p>In the following the sequences are shown for the scenario of the Happy Pets customer changing the PTA of the delivery order. In the case of the No Cheaper customer, the sequences would be the same with the only difference being that the request for changing the PTA would be denied.
 </p>
-<h2>Sequence description (Happy Pets Customer)</h2>
+<h2><span class='secno'>1.1</span> Sequence description (Happy Pets Customer)</h2>
 
 <p>The following gives a detailed description of the process of changing the PTA attribute by the Happy Pets customer, when using Verifiable Credentials.
 </p>
@@ -29,6 +29,124 @@
 
 <ul id="mainlist">
    <li id="mainlist.1"><a href='#mainlist.1' class='selfref'><b>1.</b></a> Happy Pets customer directs her browser to access the Packet Delivery company portal.
+   <div>
+
+<?xml version="1.0" encoding="utf-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" d2Version="v0.4.0-HEAD" preserveAspectRatio="xMinYMin meet" viewBox="0 0 916 1116"><svg id="d2-svg" class="d2-3355679560" width="916" height="1116" viewBox="-101 -101 916 1116"><rect x="-101.000000" y="-101.000000" width="916.000000" height="1116.000000" rx="0.000000" class=" fill-N7" stroke-width="0" /><style type="text/css"><![CDATA[
+.d2-3355679560 .text {
+	font-family: "d2-3355679560-font-regular";
+}
+@font-face {
+	font-family: d2-3355679560-font-regular;
+	src: url("data:application/font-woff;base64,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");
+}
+.d2-3355679560 .text-bold {
+	font-family: "d2-3355679560-font-bold";
+}
+@font-face {
+	font-family: d2-3355679560-font-bold;
+	src: url("data:application/font-woff;base64,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");
+}
+.d2-3355679560 .text-italic {
+	font-family: "d2-3355679560-font-italic";
+}
+@font-face {
+	font-family: d2-3355679560-font-italic;
+	src: url("data:application/font-woff;base64,d09GRgABAAAAABCcAAoAAAAAGWAAARhRAAAAAAAAAAAAAAAAAAAAAAAAAABPUy8yAAAA9AAAAGAAAABgW1SVeGNtYXAAAAFUAAAArgAAAOwEcQVZZ2x5ZgAAAgQAAAnNAAANlKPZY5FoZWFkAAAL1AAAADYAAAA2G7Ur2mhoZWEAAAwMAAAAJAAAACQLeAjPaG10eAAADDAAAACsAAAArE0tA8Zsb2NhAAAM3AAAAFgAAABYSjRNoG1heHAAAA00AAAAIAAAACAAQwD2bmFtZQAADVQAAAMmAAAIMgntVzNwb3N0AAAQfAAAACAAAAAg/8YAMgADAeEBkAAFAAACigJY//EASwKKAlgARAFeADIBIwAAAgsFAwMEAwkCBCAAAHcAAAADAAAAAAAAAABBREJPAAEAIP//Au7/BgAAA9gBESAAAZMAAAAAAeYClAAAACAAA3icfM05LkUBAIXh77rX/MzzfPHQiWjUoqBQSKxAbEAk8sKGTBsQIWEpNqBQ6Y7kRpROc5ov+VEoFWipvKBWq5pv27Zrz74DR06cOnPhSsdN8id2fsWh40acu9RxneRDme985TPvectrnvOUxzzkPne5bZr/r7Bl05p1bRu6lCrdevTq02/AoJYhw0aMGjNuwqQp02bMmjNvwaIly1bUVvkBAAD//wEAAP//dQ8ptAAAeJx8VmtsItfZPufMeMbGGBsGBoMNYxgYMAwYZoABY8A2GN/A68va6931bb3ZzXq/XJyLNxvtbm7+vshfvi8rslq1arVqUqWVUkXtj436I1LaqknUWEk3SqW0StSmP3JxomyjtJaVJlE9VDNgm121/XM0Gpj3fZ/nPM9zDqgDLgDQPegqwEADaAYGYAJApBwYJkoSa8ZEj4clSclDUaTrCbj5xPfx7LFPvM99wzP44OM/Gf3L0ovo6u5d8LH5Rx+Vj2+cOnXk5k3ZB/9wEwAAUPktAODvUQk0AD0AFCl6OM7DEgSEIsV6WPKj7tc0uAbHraL8W3jHscKE4bMV+PDqauRsPHGnPIFKu6s3bgAAQaK8gwLoGmAAqHNyXDSSRqJAm0mOY506ZDLStCjEJDNBQOfomVjo2KVCfKI1RsW47sV+l3Mk6c12sK55bfb8WPHqQ4OSr7PDk7rjfE9yPtrRJjABsNcjia4Bp9rj37SQWEnECALy5y6Fjj8+kZywSJTkTS8PuNhCxpWg3BtNbydcC9pnzo9dfSi/36h7Idba8vNe+WO7W+3FAoBWUAk0KlyLmIMSMZZyYOz6WBx648X1sYz8XhqV5JvQtLsK4/Jm5Rt4BZVAXfUbkl0fOweNTai0e72/WvMVVAIW9XfKLEpq1VhMYkmMxRTeSYxdn0/QeP61+fXRQoNVix/6NZ+icUJXP4JK8g82NuDy7iq8nz/rvyL/CM5d4Vd4+XK19mlUAtRe7VhMrb5fdew7PpzQaQZG14tX/TjRrMmjkjz3v+G7RTi3uwqff1o8K8jPKpoAPeUdtICugRbQUcs0bTLqkEdIo2hkj3HI3LMWnFnLj5yKBGcezEaPpJ0jY8o6rP3uxdHS2kDuwtToM2sD2Z7ltcSJteTyWvfSObWHMm9A5deoTizQJiNBsCxGiUJMacCy6y/P3T/y+OGVSN/iqbOFoVOoNDIzfmdY/hoOjh9KiEDdJ215B8roGvABYHZyHkkVQTTCeTyKCGOxfYUQhMlIm8202ufT7Ko3YZuWeiYC7oIvGZ1LJpcY0ZIPuqO2sKvQFUme1nZ3+/1CLu4S6KB1WBImhYg3aO9kQm1cFx1oH5S6j0cAAp7yDvwabgOjgsh8oEpREjFWYgnCo2hyX6Iv9Rb4kQXRk9LjVPpEph5nZw3cIRdvEtpd2SgT1h6fzj88J3odKdk65O7qDXa9zzl9w/NCJlXB6y7vwOtwG7Tf0u0AYdVl7x26gy+eiPI9dIDibKGZWKK7I0Y7rUXt6fncA9NdTkvIbMqtZvvzVr1gdKtZoGBBHrQJTEri3ILlP4PpNmAtXLFURTPmvh2Np2Pxl7vx2+EgFcuv4DawAndtP2WHSAexnxiYGFN2VEH48cxKYHQuJPXZtXXy6w0dWZ8tYbbbJr5XRpihk40uaM+eGFid5IPjQruoy4y7LXrRxEB3Y2tTe5iZBhD4AYBPo3eBWVEdm0G1CiFJkWQx/3Smsa+leSxl9RnaNG16R2e9fll7chq+kKibGJlqapRIjeCfSsuzCmew7ILbcBswIFirQEkiCPZWNRAEdgt7L4ZnWFf7gDc9orNwh7tS4/7huTCX1mNU5jT1QIKdcPrpcDvbJ9q7/sTZomZnofcMx89MZx88Kij6wBZPQ4ff9w7n7MzPhpLJij4YAOB7aLOaMSQpqgBNRlINmmhEgYkxl4uhFrxzkk9H69OFHhwfah8KDqDNmym2qy/OuOQ3IW9sbRr1BeUXymWlJvgWXUcc8AIACNA5BAAol8v/XfaAv6vvfZX3AwczfIE2gbaSg8ocFOshSeZycQl9M/vq2tj8qhVtyjYI35I/+eL+CwACvrwDvkWbwKCwGI0o2aXouSqBu/uIC8VLEOoxgoQaWpvRW9B/7T5DNmAGiJI4vt8XfQ63lWmUnhXo5ioBxC0M1JJxIkPi3BTXHa7rmnWnYjieLqZwfNA0xA8o3OTpIf8A3Bp2hSUvL/bF9XZjLT8HTwf8w23QWjvD7fQrHTsng7ewr3a4nfx9X8I/wm3QDGy1PqnEseqNqvnfPbTAjywIhxb50QVfYEKMCcqiPXN84IHpYGXt7V/N9Q9mV3P9efX8/6oswr/C7YrnyZqJdYh1csrNgtpLfIIkaVrzVIbA3NNB1foC10MhA/NjVzZqD3U6J9igUbyBXuplAlXjM2eehdA3PC+mUz7uM7fjQB8X4TZoqeHITHJ73DTitkLAYmprsboKTApuzfOphlx9JinfALD8j/IOvAS3gef2vL897pW0r4T98+F5S8jcy/lSnfFggh/mgyPtQUp0cOFYRzoSmtRGvBzjDbJWD2NNd/r73C6712gNMHbO4OzhAzm3MnNPeQfOorv2czcmKekhqolRk7sv90ZwmBhsLLj62i5oLyWwdqfO2qhv6dJmAs3WJmhI1D35ZFr+3GCw2zV1Etms1I6Xd+CXcEvx7F7tA/VT1eh9cV+ZQ7ZBfqCgHB7ew9p+Sc9QMCa/S1kUycBZ2TrCVs/GPADoDbgFHAAoLqTp6q3g4Aljscp9j8RW2EILhBBvbmt5bFSPEMR11pZHhz5Y1Klvbc3n4Jb8oTPndOac0F7zZIUadsjlGmLlrwAsv1rugh/BLWAFgFT3Rw3D2u5QhwhNh85iMLj7LIapAldXj+F6t+H/C/KHluTQ70gy0ZASWPip/KWjyLIFJ9Tv/q2ryKuYyl8BAH8Gt0ADAKwEWclBQpHU1MPsB00wVS//Qtby8GI6IP9PuuIdX3kHvo2eAnqFBfPBzfRfXGY2hUG3b3gpKuRdncOLYU82YuOD6qqNn0wf/eHFwe6T6WPPXcincvdt5LJHBu7byPUfAVDBCh9Dj6h3RUmkWCkmiZhIWpv+b+k+zbSUfPAJbS/8s6B17r7au4fhdfSU8h0rpbGquTz7xiMdpKZ+6fJClxjt6HN6+COhyVnf5MUpaNQGJy4sHw3yPQ4mxHUezUUXllaH+pW9XgEA1aFH1MxNI8khOUgdIs/bRu6dkN/Uwcuak+ey5vNv/HS8X5h/5Td3q/owl3fABrhLmbuiu0pQ5mmLp51udWvbaStvoy288l99+Qp8B32pnnISd2C8IK7YTpJEkj5wnh1TfEeSl438qDVszgekPBOOhZnAuGiMm9gULRi72VDa35vxB6cSxntONwhMyB7qjbiifk8gzoWLQWz5zgbeFrB5EwF3JBDJRyKHI/jyfn6AG3ALYJXzhTlRXIZbslX9bRCNguvouoKJqsF0nrKzZqONRaNm2uJopS0dAKrn19twCzTvaZWuGo4gwmZWb9EYW9odmnuL9+qy72saEgQZ9iPX7gf5mX8CAAD//wEAAP//oh7RbwAAAAABAAAAARhRDVBcL18PPPUAAQPoAAAAANhdoMwAAAAA3WYvN/69/t0IHQPJAAIAAwACAAAAAAAAAAEAAAPY/u8AAAhA/r39vAgdA+gAwv/RAAAAAAAAAAAAAAArAnQAJADIAAAB/v/LAiYAOQJMADkCbgAjAc4AIwLBACMCawAjAnkAPAImACMB+gAMAhkAJwGzACUCFwAnAeEAJQEaACsCEwABAgsAHwDtAB8A7v+EAdwAHwD4ACwDHwAfAg0AHwIDACcCF//2AVYAHwGS//wBRQA8AhAAOALDAEYBwP/CAZr/9gHgACoB4AAaAeD/9gHgAGkA8gAXAeAAEQDtAB8AAABHAO7/hAAAAC4ALgBSAIQAugDUAOQBEgE4AWoBjgHOAgYCNAJsAqYCzgMWA0ADTANYA3IDlAPWBAAELgRoBIYEwgTwBRwFVgWGBZ4F0AXoBhIGLAZCBogGlgasBsoAAQAAACsAjAAMAGYABwABAAAAAAAAAAAAAAAAAAQAA3icnJTbThtXFIY/B9tterqoUERu0L5MpWRMoxAl4cqUoIyKcOpxepCqSoM9PojxzMgzmJIn6HXfom+Rqz5Gn6LqdbV/L4MdRUEgBPx79jr8a61/bWCT/9igVr8L/N2cG66x3fzZ8B2+aB4Z3mC/+ZnhOg8b/xhuMGi8NdzkQaNr+BPe1f80/ClP6r8ZvstW/dDw5zyubxr+csPxr+GveMK7Ba7BM/4wXGOLwvAdNvnV8Ab3sJi1OvfYMdzga7YNN9kGekyoSJmQMcIxZMKIM2YklEQkzJgwJGGAI6RNSqWvGbGQY/TBrzERFTNiRRxT4UiJSIkpGVvEt/LKea2MQ51mdtemYkzMiTxOiclw5IzIyUg4VZyKioIXtGhR0hffgoqSgJIJKQE5M0a06HDIET3GTChxHCqSZxaRM6TinFj5nVn4zvRJyCiN1RkZA/F04pfIO+QIR4dCtquRj9YiPMTxo7w9t1y23xLo160wW8+7ZBMzVz9TdSXVzbkmONatz9vmB+GKF7hb9WedyfU9Guh/pcgnnGn+A00qE5MM57ZoE0lBkbuPY1/nkEgd+YmQHq/o8Iaezm26dGlzTI+Ql/Lt0MXxHR2OOZBHKLy4O5RijvkFx/eEsvGxE+vPYmIJv1OYuktxnKmOKYV67pkHqjVRhTefsN+hfE0dpXz62iNv6TS/THsWMzJVFGI4VS+X2iitfwNTxFS1+Nle3fttmNvuLbf4glw77NW64OQnt2B03VSD9zRzrp+AmAE5J7LokzOlRcWFeL8m5owUx4G690pbUtG+9PF5LqSShKkYhGSKM6PQ39h0Exn3/prunb0lA/l7pqeXVd0mi1Ovrmb0Rt1b3kXW5WRlAi2bar6ipr64Zqb9RDu1yj+Sb6nXLecRoeIudvtDr8AOz9llj7Gy9HUzv7zzr4S32FMHTklkNZSmfQ2PCdgl4Cm77PKcp+/1csnGGR+3xmc1f5sD9umwd201C9sO+7xci/bxzH+J7Y7qcTy6PD279TQf3EC132jfrt7NribnpzG3aFfbcUzM1HNxW6s1ufsE/wMAAP//AQAA//9yoVFAAAAAAwAA//UAAP/OADIAAAAAAAAAAAAAAAAAAAAAAAAAAA==");
+}]]></style><style type="text/css"><![CDATA[.shape {
+  shape-rendering: geometricPrecision;
+  stroke-linejoin: round;
+}
+.connection {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.blend {
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
+
+		.d2-3355679560 .fill-N1{fill:#0A0F25;}
+		.d2-3355679560 .fill-N2{fill:#676C7E;}
+		.d2-3355679560 .fill-N3{fill:#9499AB;}
+		.d2-3355679560 .fill-N4{fill:#CFD2DD;}
+		.d2-3355679560 .fill-N5{fill:#DEE1EB;}
+		.d2-3355679560 .fill-N6{fill:#EEF1F8;}
+		.d2-3355679560 .fill-N7{fill:#FFFFFF;}
+		.d2-3355679560 .fill-B1{fill:#170034;}
+		.d2-3355679560 .fill-B2{fill:#7639C5;}
+		.d2-3355679560 .fill-B3{fill:#8F70D1;}
+		.d2-3355679560 .fill-B4{fill:#C1A2F3;}
+		.d2-3355679560 .fill-B5{fill:#DACEFB;}
+		.d2-3355679560 .fill-B6{fill:#F2EDFF;}
+		.d2-3355679560 .fill-AA2{fill:#0F66B7;}
+		.d2-3355679560 .fill-AA4{fill:#87BFF3;}
+		.d2-3355679560 .fill-AA5{fill:#BCDDFB;}
+		.d2-3355679560 .fill-AB4{fill:#EA99C6;}
+		.d2-3355679560 .fill-AB5{fill:#FFDAEF;}
+		.d2-3355679560 .stroke-N1{stroke:#0A0F25;}
+		.d2-3355679560 .stroke-N2{stroke:#676C7E;}
+		.d2-3355679560 .stroke-N3{stroke:#9499AB;}
+		.d2-3355679560 .stroke-N4{stroke:#CFD2DD;}
+		.d2-3355679560 .stroke-N5{stroke:#DEE1EB;}
+		.d2-3355679560 .stroke-N6{stroke:#EEF1F8;}
+		.d2-3355679560 .stroke-N7{stroke:#FFFFFF;}
+		.d2-3355679560 .stroke-B1{stroke:#170034;}
+		.d2-3355679560 .stroke-B2{stroke:#7639C5;}
+		.d2-3355679560 .stroke-B3{stroke:#8F70D1;}
+		.d2-3355679560 .stroke-B4{stroke:#C1A2F3;}
+		.d2-3355679560 .stroke-B5{stroke:#DACEFB;}
+		.d2-3355679560 .stroke-B6{stroke:#F2EDFF;}
+		.d2-3355679560 .stroke-AA2{stroke:#0F66B7;}
+		.d2-3355679560 .stroke-AA4{stroke:#87BFF3;}
+		.d2-3355679560 .stroke-AA5{stroke:#BCDDFB;}
+		.d2-3355679560 .stroke-AB4{stroke:#EA99C6;}
+		.d2-3355679560 .stroke-AB5{stroke:#FFDAEF;}
+		.d2-3355679560 .background-color-N1{background-color:#0A0F25;}
+		.d2-3355679560 .background-color-N2{background-color:#676C7E;}
+		.d2-3355679560 .background-color-N3{background-color:#9499AB;}
+		.d2-3355679560 .background-color-N4{background-color:#CFD2DD;}
+		.d2-3355679560 .background-color-N5{background-color:#DEE1EB;}
+		.d2-3355679560 .background-color-N6{background-color:#EEF1F8;}
+		.d2-3355679560 .background-color-N7{background-color:#FFFFFF;}
+		.d2-3355679560 .background-color-B1{background-color:#170034;}
+		.d2-3355679560 .background-color-B2{background-color:#7639C5;}
+		.d2-3355679560 .background-color-B3{background-color:#8F70D1;}
+		.d2-3355679560 .background-color-B4{background-color:#C1A2F3;}
+		.d2-3355679560 .background-color-B5{background-color:#DACEFB;}
+		.d2-3355679560 .background-color-B6{background-color:#F2EDFF;}
+		.d2-3355679560 .background-color-AA2{background-color:#0F66B7;}
+		.d2-3355679560 .background-color-AA4{background-color:#87BFF3;}
+		.d2-3355679560 .background-color-AA5{background-color:#BCDDFB;}
+		.d2-3355679560 .background-color-AB4{background-color:#EA99C6;}
+		.d2-3355679560 .background-color-AB5{background-color:#FFDAEF;}
+		.d2-3355679560 .color-N1{color:#0A0F25;}
+		.d2-3355679560 .color-N2{color:#676C7E;}
+		.d2-3355679560 .color-N3{color:#9499AB;}
+		.d2-3355679560 .color-N4{color:#CFD2DD;}
+		.d2-3355679560 .color-N5{color:#DEE1EB;}
+		.d2-3355679560 .color-N6{color:#EEF1F8;}
+		.d2-3355679560 .color-N7{color:#FFFFFF;}
+		.d2-3355679560 .color-B1{color:#170034;}
+		.d2-3355679560 .color-B2{color:#7639C5;}
+		.d2-3355679560 .color-B3{color:#8F70D1;}
+		.d2-3355679560 .color-B4{color:#C1A2F3;}
+		.d2-3355679560 .color-B5{color:#DACEFB;}
+		.d2-3355679560 .color-B6{color:#F2EDFF;}
+		.d2-3355679560 .color-AA2{color:#0F66B7;}
+		.d2-3355679560 .color-AA4{color:#87BFF3;}
+		.d2-3355679560 .color-AA5{color:#BCDDFB;}
+		.d2-3355679560 .color-AB4{color:#EA99C6;}
+		.d2-3355679560 .color-AB5{color:#FFDAEF;}.appendix text.text{fill:#0A0F25}.md{--color-fg-default:#0A0F25;--color-fg-muted:#676C7E;--color-fg-subtle:#9499AB;--color-canvas-default:#FFFFFF;--color-canvas-subtle:#EEF1F8;--color-border-default:#170034;--color-border-muted:#7639C5;--color-neutral-muted:#EEF1F8;--color-accent-fg:#7639C5;--color-accent-emphasis:#7639C5;--color-attention-subtle:#676C7E;--color-danger-fg:red;}.sketch-overlay-B1{fill:url(#streaks-darker);mix-blend-mode:lighten}.sketch-overlay-B2{fill:url(#streaks-dark);mix-blend-mode:overlay}.sketch-overlay-B3{fill:url(#streaks-dark);mix-blend-mode:overlay}.sketch-overlay-B4{fill:url(#streaks-normal);mix-blend-mode:color-burn}.sketch-overlay-B5{fill:url(#streaks-normal);mix-blend-mode:color-burn}.sketch-overlay-B6{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-AA2{fill:url(#streaks-dark);mix-blend-mode:overlay}.sketch-overlay-AA4{fill:url(#streaks-normal);mix-blend-mode:color-burn}.sketch-overlay-AA5{fill:url(#streaks-normal);mix-blend-mode:color-burn}.sketch-overlay-AB4{fill:url(#streaks-normal);mix-blend-mode:color-burn}.sketch-overlay-AB5{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-N1{fill:url(#streaks-darker);mix-blend-mode:lighten}.sketch-overlay-N2{fill:url(#streaks-dark);mix-blend-mode:overlay}.sketch-overlay-N3{fill:url(#streaks-normal);mix-blend-mode:color-burn}.sketch-overlay-N4{fill:url(#streaks-normal);mix-blend-mode:color-burn}.sketch-overlay-N5{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-N6{fill:url(#streaks-bright);mix-blend-mode:darken}.sketch-overlay-N7{fill:url(#streaks-bright);mix-blend-mode:darken}.light-code{display: block}.dark-code{display: none}]]></style><g id="hans"><g class="shape" ><rect x="311.000000" y="0.000000" width="132.000000" height="66.000000" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="377.000000" y="38.500000" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Perico Perez</text></g><g id="defendants"><g class="shape" ><rect x="0.000000" y="228.000000" width="714.000000" height="686.000000" class=" stroke-B1 fill-B4" style="stroke-width:2;" /></g><text x="357.000000" y="215.000000" class="text fill-N1" style="text-anchor:middle;font-size:28px">defendants</text></g><g id="defendants.mc"><g class="shape" ><rect x="115.000000" y="257.000000" width="155.000000" height="66.000000" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="192.500000" y="295.500000" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Magnus Carlsen</text></g><g id="defendants.playmagnus"><g class="shape" ><rect x="103.000000" y="444.000000" width="180.000000" height="66.000000" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="193.000000" y="482.500000" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Play Magnus Group</text></g><g id="defendants.chesscom"><g class="shape" ><rect x="209.000000" y="631.000000" width="121.000000" height="66.000000" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="269.500000" y="669.500000" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Chess.com</text></g><g id="defendants.naka"><g class="shape" ><rect x="251.000000" y="818.000000" width="169.000000" height="66.000000" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="335.500000" y="856.500000" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Hikaru Nakamura</text></g><g id="defendants.(mc -&gt; playmagnus)[0]"><marker id="mk-3488378134" markerWidth="10.000000" markerHeight="12.000000" refX="7.000000" refY="6.000000" viewBox="0.000000 0.000000 10.000000 12.000000" orient="auto" markerUnits="userSpaceOnUse"> <polygon points="0.000000,0.000000 10.000000,6.000000 0.000000,12.000000" class="connection fill-B1" stroke-width="2" /> </marker><path d="M 192.750000 325.500000 C 192.750000 371.900000 192.750000 396.200000 192.750000 441.000000" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-3488378134)" mask="url(#d2-3355679560)" /><text x="193.000000" y="390.000000" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">Owns majority</text></g><g id="defendants.(playmagnus &lt;-&gt; chesscom)[0]"><marker id="mk-2451250203" markerWidth="10.000000" markerHeight="12.000000" refX="3.000000" refY="6.000000" viewBox="0.000000 0.000000 10.000000 12.000000" orient="auto" markerUnits="userSpaceOnUse"> <polygon points="10.000000,0.000000 0.000000,6.000000 10.000000,12.000000" class="connection fill-B1" stroke-width="2" /> </marker><path d="M 192.750000 514.500000 C 192.750000 558.900000 202.750000 583.200000 240.214288 628.906432" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-start="url(#mk-2451250203)" marker-end="url(#mk-3488378134)" mask="url(#d2-3355679560)" /><text x="201.000000" y="583.000000" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">Merger talks</text></g><g id="defendants.(chesscom -&gt; naka)[0]"><path d="M 269.500000 699.500000 C 269.500000 745.900000 277.900000 770.200000 309.231593 815.705409" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-3488378134)" mask="url(#d2-3355679560)" /><text x="275.000000" y="769.000000" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">Sponsoring</text></g><g id="(hans -&gt; defendants)[0]"><path d="M 309.345114 54.724917 C 130.250000 112.023097 85.000000 146.900000 85.000000 224.500000" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-3488378134)" mask="url(#d2-3355679560)" /><text x="155.000000" y="110.000000" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">sueing for $100M</text></g><g id="(defendants.naka -&gt; hans)[0]"><path d="M 422.284917 818.739879 C 550.500000 753.928427 583.000000 718.800000 583.000000 690.750000 C 583.000000 662.700000 583.000000 625.300000 583.000000 597.250000 C 583.000000 569.200000 583.000000 531.800000 583.000000 503.750000 C 583.000000 475.700000 583.000000 438.300000 583.000000 410.250000 C 583.000000 382.200000 583.000000 344.800000 583.000000 316.750000 C 583.000000 288.700000 583.000000 253.400000 583.000000 228.500000 C 583.000000 203.600000 555.050000 113.798542 446.891617 64.647588" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-3488378134)" mask="url(#d2-3355679560)" /><text x="583.000000" y="455.000000" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">Accused of cheating on his stream</text></g><g id="(defendants.mc -&gt; hans)[0]"><path d="M 236.945035 256.028654 C 287.518072 201.100000 310.500000 114.300000 347.964288 68.593568" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-3488378134)" mask="url(#d2-3355679560)" /><text x="297.500000" y="170.000000" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">Lost then withdrew with accusations</text></g><g id="(defendants.chesscom -&gt; hans)[0]"><path d="M 331.653575 632.379081 C 427.600000 567.100822 452.000000 531.800000 452.000000 503.750000 C 452.000000 475.700000 452.000000 438.300000 452.000000 410.250000 C 452.000000 382.200000 452.000000 344.800000 452.000000 316.750000 C 452.000000 288.700000 452.000000 253.400000 452.000000 228.500000 C 452.000000 203.600000 442.400000 114.300000 406.473561 68.643484" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-3488378134)" mask="url(#d2-3355679560)" /><text x="452.500000" y="378.000000" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">72 page report of cheating</text></g><mask id="d2-3355679560" maskUnits="userSpaceOnUse" x="-101" y="-101" width="916" height="1116">
+<rect x="-101" y="-101" width="916" height="1116" fill="white"></rect>
+<rect x="145.000000" y="374.000000" width="96" height="21" fill="black"></rect>
+<rect x="160.000000" y="567.000000" width="82" height="21" fill="black"></rect>
+<rect x="238.000000" y="753.000000" width="74" height="21" fill="black"></rect>
+<rect x="99.000000" y="94.000000" width="112" height="21" fill="black"></rect>
+<rect x="472.000000" y="439.000000" width="222" height="21" fill="black"></rect>
+<rect x="178.000000" y="154.000000" width="239" height="21" fill="black"></rect>
+<rect x="367.000000" y="362.000000" width="171" height="21" fill="black"></rect>
+</mask></svg></svg>
+   </div>
    </li>
    <li id="mainlist.2"><a href='#mainlist.2' class='selfref'><b>2.</b></a> The browser sends a request to the Packet Delivery portal server.
    </li>
@@ -54,23 +172,23 @@ Host: rp.packetdelivery.com</code></pre>
    <div>
 
       <ul>
-         <li id="list_46.response_type"><a href='#list_46.response_type' class='selfref'><b>response_type.</b></a> REQUIRED. Must be <b>"vp_token"</b>. This parameter is defined in <a href="#RFC6749" class="xref">[RFC6749]</a>. The possible values are determined by the response type registry established by <a href="#RFC6749" class="xref">[RFC6749]</a>. The <a href="#OIDC4VP" class="xref">[OIDC4VP]</a> specification introduces the response type <b>"vp_token"</b>. This response type asks the SIOP to return only a VP Token in the Authorization Response, which is what we want in our case.
+         <li id="list_69.response_type"><a href='#list_69.response_type' class='selfref'><b>response_type.</b></a> REQUIRED. Must be <b>"vp_token"</b>. This parameter is defined in <a href="#RFC6749" class="xref">[RFC6749]</a>. The possible values are determined by the response type registry established by <a href="#RFC6749" class="xref">[RFC6749]</a>. The <a href="#OIDC4VP" class="xref">[OIDC4VP]</a> specification introduces the response type <b>"vp_token"</b>. This response type asks the SIOP to return only a VP Token in the Authorization Response, which is what we want in our case.
          </li>
-         <li id="list_46.scope"><a href='#list_46.scope' class='selfref'><b>scope.</b></a> REQUIRED. This parameter is defined in <a href="#RFC6749" class="xref">[RFC6749]</a> which allows it to be used by verifiers to request presentation of credentials by utilizing a pre-defined scope value designating the type of credential. See section <a href="#request_scope" class="xref">Request Scope</a> for more details. We use in this instance the value <code>gaiax.credentials.presentation.CustomerCredential</code> which means that the RP (PacketDelivery) is asking the SIOP (customer wallet) to send a credential of type CustomerCredential issued by any participant in the ecosystem.
+         <li id="list_69.scope"><a href='#list_69.scope' class='selfref'><b>scope.</b></a> REQUIRED. This parameter is defined in <a href="#RFC6749" class="xref">[RFC6749]</a> which allows it to be used by verifiers to request presentation of credentials by utilizing a pre-defined scope value designating the type of credential. See section <a href="#request_scope" class="xref">Request Scope</a> for more details. We use in this instance the value <code>gaiax.credentials.presentation.CustomerCredential</code> which means that the RP (PacketDelivery) is asking the SIOP (customer wallet) to send a credential of type CustomerCredential issued by any participant in the ecosystem.
          </li>
-         <li id="list_46.response_mode"><a href='#list_46.response_mode' class='selfref'><b>response_mode.</b></a> REQUIRED. MUST be “post”. As this is a cross-device scenario, this response mode is used to request the Self-Issued OP to deliver the result of the authentication process to a certain endpoint using the HTTP POST method. This endpoint to which the SIOP shall deliver the authentication result is conveyed in the parameter <code>redirect_uri</code>.
+         <li id="list_69.response_mode"><a href='#list_69.response_mode' class='selfref'><b>response_mode.</b></a> REQUIRED. MUST be “post”. As this is a cross-device scenario, this response mode is used to request the Self-Issued OP to deliver the result of the authentication process to a certain endpoint using the HTTP POST method. This endpoint to which the SIOP shall deliver the authentication result is conveyed in the parameter <code>redirect_uri</code>.
          </li>
-         <li id="list_46.redirect_uri"><a href='#list_46.redirect_uri' class='selfref'><b>redirect_uri.</b></a> (REQUIRED). MUST be a valid RP endpoint. The Authentication Response is sent to this endpoint using <code>POST</code> and encoding <code>application/json</code>)
+         <li id="list_69.redirect_uri"><a href='#list_69.redirect_uri' class='selfref'><b>redirect_uri.</b></a> (REQUIRED). MUST be a valid RP endpoint. The Authentication Response is sent to this endpoint using <code>POST</code> and encoding <code>application/json</code>)
          </li>
-         <li id="list_46.client_id"><a href='#list_46.client_id' class='selfref'><b>client_id.</b></a> REQUIRED. MUST be the DID of the RP (Packet Delivery in this case) so it can be resolved by the SIOP and checked against a Trusted List, or rejected if it does not pass validation. This provides a high level of assurance to the SIOP that the RP is really who it claims.
+         <li id="list_69.client_id"><a href='#list_69.client_id' class='selfref'><b>client_id.</b></a> REQUIRED. MUST be the DID of the RP (Packet Delivery in this case) so it can be resolved by the SIOP and checked against a Trusted List, or rejected if it does not pass validation. This provides a high level of assurance to the SIOP that the RP is really who it claims.
          </li>
-         <li id="list_46.nonce"><a href='#list_46.nonce' class='selfref'><b>nonce.</b></a> REQUIRED. This parameter follows the definition given in <a href="#OpenID.Core" class="xref">[OpenID.Core]</a>. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.
+         <li id="list_69.nonce"><a href='#list_69.nonce' class='selfref'><b>nonce.</b></a> REQUIRED. This parameter follows the definition given in <a href="#OpenID.Core" class="xref">[OpenID.Core]</a>. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.
          </li>
-         <li id="list_46.state"><a href='#list_46.state' class='selfref'><b>state.</b></a> REQUIRED. Used by the portal component of Packet Delivery to associate the start of an authentication session with the end of that session when the RP component notifies to the portal.
+         <li id="list_69.state"><a href='#list_69.state' class='selfref'><b>state.</b></a> REQUIRED. Used by the portal component of Packet Delivery to associate the start of an authentication session with the end of that session when the RP component notifies to the portal.
          </li>
-         <li id="list_46.presentation_definition"><a href='#list_46.presentation_definition' class='selfref'><b>presentation_definition.</b></a> CONDITIONAL. A string containing a <code>presentation_definition</code> JSON object as defined in Section 4 of <a href="#DIF.PresentationExchange" class="xref">[DIF.PresentationExchange]</a>. We do not use this parameter because <code>scope</code> already specifies the credential type.
+         <li id="list_69.presentation_definition"><a href='#list_69.presentation_definition' class='selfref'><b>presentation_definition.</b></a> CONDITIONAL. A string containing a <code>presentation_definition</code> JSON object as defined in Section 4 of <a href="#DIF.PresentationExchange" class="xref">[DIF.PresentationExchange]</a>. We do not use this parameter because <code>scope</code> already specifies the credential type.
          </li>
-         <li id="list_46.presentation_definition_uri"><a href='#list_46.presentation_definition_uri' class='selfref'><b>presentation_definition_uri.</b></a> CONDITIONAL. A string containing a URL pointing to a resource where a <code>presentation_definition</code> JSON object as defined in Section 4 of <a href="#DIF.PresentationExchange" class="xref">[DIF.PresentationExchange]</a> can be retrieved. We do not use this parameter because <code>scope</code> already specifies the credential type.
+         <li id="list_69.presentation_definition_uri"><a href='#list_69.presentation_definition_uri' class='selfref'><b>presentation_definition_uri.</b></a> CONDITIONAL. A string containing a URL pointing to a resource where a <code>presentation_definition</code> JSON object as defined in Section 4 of <a href="#DIF.PresentationExchange" class="xref">[DIF.PresentationExchange]</a> can be retrieved. We do not use this parameter because <code>scope</code> already specifies the credential type.
          </li>
       </ul>
 
@@ -125,9 +243,9 @@ Host: rp.packetdelivery.com</code></pre>
    <div>
 
       <ul>
-         <li id="list_111.1">The Public Key of the entity used to verify its digital signatures
+         <li id="list_134.1">The Public Key of the entity used to verify its digital signatures
          </li>
-         <li id="list_111.2">Status of the entity in the Trusted Participant List
+         <li id="list_134.2">Status of the entity in the Trusted Participant List
          </li>
       </ul>
 
@@ -187,15 +305,15 @@ Host: rp.packetdelivery.com</code></pre>
       </p>
 
       <ol>
-         <li id="list_172.1">Perform the standard verification of the JWT as described in <a href="#RFC8725" class="xref">[RFC8725]</a> and <a href="#RFC7515" class="xref">[RFC7515]</a>, except for the signature.
+         <li id="list_195.1">Perform the standard verification of the JWT as described in <a href="#RFC8725" class="xref">[RFC8725]</a> and <a href="#RFC7515" class="xref">[RFC7515]</a>, except for the signature.
          </li>
-         <li id="list_172.2">Check for the existence of the claim <code>auth_request</code> in the JWT and that its contents are a well-formed Authentication Request.
+         <li id="list_195.2">Check for the existence of the claim <code>auth_request</code> in the JWT and that its contents are a well-formed Authentication Request.
          </li>
-         <li id="list_172.3">Get the DID of the RP from the <code>client_id</code> parameter of the Authentication Request received in the JWT, making sure that it corresponds exactly to the <code>iss</code> claim in the payload of the JWT.
+         <li id="list_195.3">Get the DID of the RP from the <code>client_id</code> parameter of the Authentication Request received in the JWT, making sure that it corresponds exactly to the <code>iss</code> claim in the payload of the JWT.
          </li>
-         <li id="list_172.4">Send a GET request to the <code>/api/did/v1/identifiers/{did}</code> endpoint of one of the Universal Resolvers in the ecosystem, where <code>{did}</code> should be the DID of the RP retrieved in the previous step (in our case the DID of Packet Delivery). The endpoint returns the DID Document corresponding to the DID of the RP.
+         <li id="list_195.4">Send a GET request to the <code>/api/did/v1/identifiers/{did}</code> endpoint of one of the Universal Resolvers in the ecosystem, where <code>{did}</code> should be the DID of the RP retrieved in the previous step (in our case the DID of Packet Delivery). The endpoint returns the DID Document corresponding to the DID of the RP.
          </li>
-         <li id="list_172.5">Perform the standard verifications on the DID Document as described in <a href="#VC_DATA" class="xref">[VC_DATA]</a>. In particular it is important to check that the DID inside the DID Document corresponds with the DID that was specified in the GET request.
+         <li id="list_195.5">Perform the standard verifications on the DID Document as described in <a href="#VC_DATA" class="xref">[VC_DATA]</a>. In particular it is important to check that the DID inside the DID Document corresponds with the DID that was specified in the GET request.
          </li>
       </ol>
 
@@ -315,9 +433,9 @@ presentation_submission=[see definition below]
    <div>
 
       <ol>
-         <li id="list_294.1">That the DID of the entity which is the issuer of the VC is a trusted participant.
+         <li id="list_317.1">That the DID of the entity which is the issuer of the VC is a trusted participant.
          </li>
-         <li id="list_294.2">That the VC was digitally signed by that participant.
+         <li id="list_317.2">That the VC was digitally signed by that participant.
          </li>
       </ol>
 
@@ -360,17 +478,17 @@ Claims:
       </p>
 
       <ul>
-         <li id="list_335.1"><b>iss</b> and <b>client_id</b> have the same value because the access token has been generated by the RP component of Packet Delivery, not by an IdP as in the "classic" OIDC flows.
+         <li id="list_358.1"><b>iss</b> and <b>client_id</b> have the same value because the access token has been generated by the RP component of Packet Delivery, not by an IdP as in the "classic" OIDC flows.
          </li>
-         <li id="list_335.2"><b>sub</b> identifies the customer using the DID inside the Verifiable Credential received
+         <li id="list_358.2"><b>sub</b> identifies the customer using the DID inside the Verifiable Credential received
          </li>
-         <li id="list_335.3"><b>aud</b> identifies the RS (Resource Server) component in Packet Delivery. In this case we assume that it is internal and does not have a DID assigned, so we use the URI of the component.
+         <li id="list_358.3"><b>aud</b> identifies the RS (Resource Server) component in Packet Delivery. In this case we assume that it is internal and does not have a DID assigned, so we use the URI of the component.
          </li>
-         <li id="list_335.4"><b>kid</b> in the header identifies the key that is used to sign the JWT and which must be configured up-front and known by the RS (Resource Server.
+         <li id="list_358.4"><b>kid</b> in the header identifies the key that is used to sign the JWT and which must be configured up-front and known by the RS (Resource Server.
          </li>
-         <li id="list_335.5"><b>scope</b> has the same value as the equivalent <b>scope</b> parameter in the initial Authorization Request.
+         <li id="list_358.5"><b>scope</b> has the same value as the equivalent <b>scope</b> parameter in the initial Authorization Request.
          </li>
-         <li id="list_335.6"><b>verifiableCredential</b> contains the Verifiable Credential that was received, specifically the value of the first element of the field <code>verifiableCredential</code> of the Verifiable Presentation.
+         <li id="list_358.6"><b>verifiableCredential</b> contains the Verifiable Credential that was received, specifically the value of the first element of the field <code>verifiableCredential</code> of the Verifiable Presentation.
          </li>
       </ul>
 
@@ -380,9 +498,9 @@ Claims:
    <div>
 
       <ol>
-         <li id="list_351.1">The <code>state</code> nonce that was generated by the portal when it generated the QR code. The portal uses the <code>state</code> nonce to know what login session is notified.
+         <li id="list_374.1">The <code>state</code> nonce that was generated by the portal when it generated the QR code. The portal uses the <code>state</code> nonce to know what login session is notified.
          </li>
-         <li id="list_351.2">The access token generated before.
+         <li id="list_374.2">The access token generated before.
          </li>
       </ol>
 

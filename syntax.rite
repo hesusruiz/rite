@@ -1,9 +1,24 @@
 ---
 title: Syntax for Rite
-bibliography: bibliography.yaml
 ---
 
-# Rite Syntax
+<h1 .no-num> rite Syntax
+
+<h1> This is a test
+
+The core of `rite` syntax  is essentially semantic HTML5 with some simplifications to make it easier to write. It also allows a reduced set of Markdown features, described below.
+
+The most important concept in `rite` is that indentation is relevant for the structure of the document. Indentation is used to eliminate the need to use the end tags.
+
+## The structure of a document
+
+A 'rite' document MAY start with a metadata header denoted by a line of minimum three dashes, where the `title` item is compulsory. Like this:
+
+<pre><code class="language-yaml">
+    ---
+    title: Syntax for Rite
+    ---
+
 
 ## Block syntax
 

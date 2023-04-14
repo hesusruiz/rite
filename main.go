@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -14,6 +15,13 @@ import (
 	"github.com/hesusruiz/vcutils/yaml"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
+
+	"oss.terrastruct.com/d2/d2graph"
+	"oss.terrastruct.com/d2/d2layouts/d2dagrelayout"
+	"oss.terrastruct.com/d2/d2lib"
+	"oss.terrastruct.com/d2/d2renderers/d2svg"
+	"oss.terrastruct.com/d2/d2themes/d2themescatalog"
+	"oss.terrastruct.com/d2/lib/textmeasure"
 )
 
 // Document represents a parsed document
@@ -27,7 +35,7 @@ type Document struct {
 	config       *yaml.YAML
 }
 
-var plain bool
+var norespec bool
 var debug bool
 
 const startTag = '{'
@@ -63,6 +71,7 @@ func NewDocument(s *bufio.Scanner, logger *zap.SugaredLogger) *Document {
 
 	// This regex detects the <x-ref REFERENCE> tags that need special processing
 	reXRef := regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
+	reCode := regexp.MustCompile(`\x60([0-9a-zA-Z-_\.]+)\x60`)
 
 	// Verbatim sections require special processing to keep their exact format
 	insideVerbatim := false
@@ -119,7 +128,7 @@ func NewDocument(s *bufio.Scanner, logger *zap.SugaredLogger) *Document {
 			if indentation <= indentationVerbatim {
 				insideVerbatim = false
 			}
-		} else if strings.HasPrefix(doc.lines[lineNum], "<pre") {
+		} else if strings.HasPrefix(doc.lines[lineNum], "<pre") || strings.HasPrefix(doc.lines[lineNum], "'''d2") {
 			// The verbatim area is indicated by a <pre> tag
 			insideVerbatim = true
 
@@ -130,6 +139,7 @@ func NewDocument(s *bufio.Scanner, logger *zap.SugaredLogger) *Document {
 
 		// Preprocess the special <x-ref> tag inside the text of the line
 		doc.lines[lineNum] = string(reXRef.ReplaceAll([]byte(doc.lines[lineNum]), []byte("<a href=\"#${1}\" class=\"xref\">[${1}]</a>")))
+		doc.lines[lineNum] = string(reCode.ReplaceAll([]byte(doc.lines[lineNum]), []byte("<code>${1}</code>")))
 
 		// Preprocess Markdown headers ('#') and convert to h1, h2, ...
 		// We assume that a header starts with the '#' character, no matter what the rest of the line is
@@ -226,7 +236,7 @@ func NewDocument(s *bufio.Scanner, logger *zap.SugaredLogger) *Document {
 		// one more or one less than the previously encountered heading. H1 are always accepted in any context.
 		// We do this only if not using ReSpec format, in which case numbering will be done by ReSpec
 		tagName, htmlTag, rest := doc.buildTagPresentation(tagFields)
-		if plain && contains(headingElements, tagName) {
+		if norespec && contains(headingElements, tagName) {
 
 			// If header is marked as "no-num" we do not include it in the header numbering schema
 			if !strings.Contains(htmlTag, "no-num") {
@@ -376,8 +386,8 @@ func startsWithTag(line string) bool {
 	return line[0] == startTag || line[0] == startHTMLTag
 }
 
-// startsWithHeaderTag returns true if the line starts with <h1>, <h2>, ...
-func (doc *Document) startsWithHeaderTag(lineNum int) bool {
+// lineStartsWithHeaderTag returns true if the line starts with <h1>, <h2>, ...
+func (doc *Document) lineStartsWithHeaderTag(lineNum int) bool {
 
 	line := doc.lines[lineNum]
 
@@ -394,11 +404,11 @@ func (doc *Document) startsWithHeaderTag(lineNum int) bool {
 	return false
 }
 
-// startsWithSectionTag returns true if the line:
+// lineStartsWithSectionTag returns true if the line:
 //
 //	starts either with the HTML tag ('<') or our special tag
 //	and it is followed by a blank line or a line which is more indented
-func (doc *Document) startsWithSectionTag(lineNum int) bool {
+func (doc *Document) lineStartsWithSectionTag(lineNum int) bool {
 
 	// Decompose the tag into its elements
 	tagFields := doc.preprocessTagSpec(lineNum)
@@ -914,12 +924,12 @@ func (doc *Document) ProcessList(startLineNum int) int {
 
 }
 
-func (doc *Document) startsWithVerbatim(lineNum int) bool {
+func (doc *Document) lineStartsWithVerbatim(lineNum int) bool {
 	line := doc.lines[lineNum]
 	return strings.HasPrefix(line, "<pre")
 }
 
-func (doc *Document) startsWithList(lineNum int) bool {
+func (doc *Document) lineStartsWithList(lineNum int) bool {
 	line := doc.lines[lineNum]
 	return strings.HasPrefix(line, "<ol") || strings.HasPrefix(line, "<ul")
 }
@@ -1009,6 +1019,89 @@ func (doc *Document) processVerbatim(startLineNum int) int {
 
 }
 
+func (doc *Document) lineStartsWithD2(lineNum int) bool {
+	line := doc.lines[lineNum]
+	return strings.HasPrefix(line, "<x-diagram .d2>")
+}
+
+func (doc *Document) processD2(startLineNum int) int {
+	doc.log.Debugw("ProcessD2 enter", "line", startLineNum+1)
+
+	line := doc.lines[startLineNum]
+	if !strings.HasPrefix(line, "<x-diagram .d2>") {
+		return startLineNum
+	}
+
+	verbatimSectionIndentation := doc.Indentation(startLineNum)
+
+	startOfNextBlock := 0
+
+	// This will hold the string with the text lines for D2 drawing
+	d2String := ""
+
+	// Loop until the end of the document or we find a line with less indentation
+	// Blank lines are assumed to pertain to the verbatim section
+	for i := startLineNum + 1; !doc.AtEOF(i); i++ {
+
+		startOfNextBlock = i
+
+		// This is the indentation of the text in the verbatim section
+		// We do not require that it is left-alligned, but calculate its offset
+		thisLineIndentation := doc.Indentation(i)
+
+		// If the line is non-blank
+		if len(doc.lines[i]) > 0 {
+
+			// Break the loop if indentation of this line is less or equal than pre section
+			if thisLineIndentation <= verbatimSectionIndentation {
+				// This line is part of th enext block
+				break
+			}
+
+			d2String = d2String + strings.Repeat(" ", doc.Indentation(i)-verbatimSectionIndentation) + doc.lines[i] + "\n"
+
+		}
+
+	}
+
+	fmt.Println(d2String)
+
+	ruler, err := textmeasure.NewRuler()
+	if err != nil {
+		doc.log.Fatalw("processD2", "line", startLineNum)
+	}
+
+	defaultLayout := func(ctx context.Context, g *d2graph.Graph) error {
+		return d2dagrelayout.Layout(ctx, g, nil)
+	}
+	diagram, _, err := d2lib.Compile(context.Background(), d2String, &d2lib.CompileOptions{
+		Layout: defaultLayout,
+		Ruler:  ruler,
+	})
+	if err != nil {
+		doc.log.Fatalw("processD2", "line", startLineNum)
+	}
+	out, err := d2svg.Render(diagram, &d2svg.RenderOpts{
+		Pad:     d2svg.DEFAULT_PADDING,
+		ThemeID: d2themescatalog.GrapeSoda.ID,
+	})
+	if err != nil {
+		doc.log.Fatalw("processD2", "line", startLineNum)
+	}
+	// err = os.WriteFile(filepath.Join("out.svg"), out, 0600)
+	// if err != nil {
+	// 	doc.log.Fatalw("processD2", "line", startLineNum)
+	// }
+
+	doc.sb.WriteString("\n")
+	doc.sb.Write(out)
+	doc.sb.WriteString("\n")
+
+	doc.log.Debugw("ProcessD2 exit", "startOfNextBlock", startOfNextBlock+1)
+	return startOfNextBlock
+
+}
+
 func (doc *Document) ProcessSectionTag(startLineNum int) int {
 	// Section starts with a tag spec. Process the tag and
 	// advance the line pointer appropriately
@@ -1063,7 +1156,7 @@ func (doc *Document) ProcessBlock(startLineNum int) int {
 	// Skip all the blank lines at the beginning of the block
 	startLineNum = doc.skipBlankLines(startLineNum)
 	if doc.AtEOF(startLineNum) {
-		doc.log.Infof("EOF reached at line %v\n", startLineNum)
+		doc.log.Debugf("EOF reached at line %v\n", startLineNum)
 		return startLineNum
 	}
 
@@ -1102,26 +1195,32 @@ func (doc *Document) ProcessBlock(startLineNum int) int {
 			continue
 		}
 
+		// A D2 drawing
+		if doc.lineStartsWithD2(currentLineNum) {
+			currentLineNum = doc.processD2(currentLineNum)
+			continue
+		}
+
 		// A verbatim section that is not processed
-		if doc.startsWithVerbatim(currentLineNum) {
+		if doc.lineStartsWithVerbatim(currentLineNum) {
 			currentLineNum = doc.processVerbatim(currentLineNum)
 			continue
 		}
 
 		// Headers have some special processing
-		if doc.startsWithHeaderTag(currentLineNum) {
+		if doc.lineStartsWithHeaderTag(currentLineNum) {
 			currentLineNum = doc.processHeaderParagraph(currentLineNum)
 			continue
 		}
 
 		// Lists have also some special processing
-		if doc.startsWithList(currentLineNum) {
+		if doc.lineStartsWithList(currentLineNum) {
 			currentLineNum = doc.ProcessList(currentLineNum)
 			continue
 		}
 
 		// Any other tag which starts a section, like div, p, section, article, ...
-		if doc.startsWithSectionTag(currentLineNum) {
+		if doc.lineStartsWithSectionTag(currentLineNum) {
 			currentLineNum = doc.ProcessSectionTag(currentLineNum)
 			continue
 		}
@@ -1174,7 +1273,7 @@ func processWatch(inputFileName string, outputFileName string, sugar *zap.Sugare
 func process(c *cli.Context) error {
 
 	// Default input file name
-	var inputFileName = "index.txt"
+	var inputFileName = "index.rite"
 
 	// Output file name command line parameter
 	outputFileName := c.String("output")
@@ -1183,6 +1282,8 @@ func process(c *cli.Context) error {
 	dryrun := c.Bool("dryrun")
 
 	debug = c.Bool("debug")
+
+	norespec = c.Bool("norespec")
 
 	var z *zap.Logger
 	var err error
@@ -1282,9 +1383,9 @@ func main() {
 				Usage:   "write html to `FILE` (default is input file name with extension .html)",
 			},
 			&cli.BoolFlag{
-				Name:    "plain",
+				Name:    "norespec",
 				Aliases: []string{"p"},
-				Usage:   "do not use respec semantics, just a plain HTML file",
+				Usage:   "do not generate using respec semantics, just a plain HTML file",
 			},
 			&cli.BoolFlag{
 				Name:    "dryrun",
