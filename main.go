@@ -128,7 +128,7 @@ func NewDocument(s *bufio.Scanner, logger *zap.SugaredLogger) *Document {
 			if indentation <= indentationVerbatim {
 				insideVerbatim = false
 			}
-		} else if strings.HasPrefix(doc.lines[lineNum], "<pre") || strings.HasPrefix(doc.lines[lineNum], "'''d2") {
+		} else if strings.HasPrefix(doc.lines[lineNum], "<pre") || strings.HasPrefix(doc.lines[lineNum], "<x-diagram .d2>") {
 			// The verbatim area is indicated by a <pre> tag
 			insideVerbatim = true
 
@@ -1064,8 +1064,7 @@ func (doc *Document) processD2(startLineNum int) int {
 
 	}
 
-	fmt.Println(d2String)
-
+	// Create the SVG from the D2 description
 	ruler, err := textmeasure.NewRuler()
 	if err != nil {
 		doc.log.Fatalw("processD2", "line", startLineNum)
@@ -1083,7 +1082,7 @@ func (doc *Document) processD2(startLineNum int) int {
 	}
 	out, err := d2svg.Render(diagram, &d2svg.RenderOpts{
 		Pad:     d2svg.DEFAULT_PADDING,
-		ThemeID: d2themescatalog.GrapeSoda.ID,
+		ThemeID: d2themescatalog.NeutralDefault.ID,
 	})
 	if err != nil {
 		doc.log.Fatalw("processD2", "line", startLineNum)

@@ -1,6 +1,6 @@
 module github.com/hesusruiz/rite
 
-go 1.19
+go 1.20
 
 require (
 	github.com/hesusruiz/vcutils v0.0.0-20221011172906-f573373bbe40
