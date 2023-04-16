@@ -11,15 +11,16 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
+	"github.com/hesusruiz/rite/sliceedit"
 	"github.com/hesusruiz/vcutils/yaml"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
-
-	"github.com/hesusruiz/rite/sliceedit"
 
 	"oss.terrastruct.com/d2/d2graph"
 	"oss.terrastruct.com/d2/d2layouts/d2dagrelayout"
@@ -521,7 +522,7 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 
 }
 
-// preprocessTagSpec returns a map with the tag fields, or nil if not a tag
+// preprocessTagSpec returns a structure with the tag fields, or nil if not a tag
 func (doc *Document) preprocessTagSpec(rawLine []byte) (*TagStruct, error) {
 	var tagSpec, restLine []byte
 
@@ -562,6 +563,9 @@ func (doc *Document) preprocessTagSpec(rawLine []byte) (*TagStruct, error) {
 	// This is the tag name
 	t.Tag = fields[0]
 
+	// This will hold the standard attributes
+	var standardAttributes [][]byte
+
 	// Process the special shortcut syntax we provide
 	for i := 1; i < len(fields); i++ {
 		f := fields[i]
@@ -589,10 +593,12 @@ func (doc *Document) preprocessTagSpec(rawLine []byte) (*TagStruct, error) {
 			// Special attribute "number" for list items
 			t.Number = f[1:]
 		default:
-			// Special cases should be at the beginning. If we are here, the rest is normal HTML attributes
-			t.StdFields = bytes.Join(fields[i:], []byte(" "))
+			// This should be a standard attribute
+			standardAttributes = append(standardAttributes, f)
 		}
 	}
+
+	t.StdFields = bytes.Join(standardAttributes, []byte(" "))
 
 	// The rest of the input line after the tag is available in the "restLine" element
 	t.RestLine = restLine
@@ -725,24 +731,28 @@ func (doc *Document) ToHTML() string {
 // It returns the final document as a string
 func (doc *Document) postProcess() string {
 
-	// Get the name of the template or the default name
-	templateName := doc.config.String("template", "assets/output_template.html")
+	// Initialise the template system
+	templateDir := doc.config.String("template", "templates/respec")
+	fmt.Println("Using template dir:", templateDir)
 
-	// Build the full document with the template
-	tmpl, err := os.ReadFile(templateName)
+	t := template.Must(template.ParseGlob(filepath.Join(templateDir, "layouts/*")))
+	t = template.Must(t.ParseGlob(filepath.Join(templateDir, "partials/*")))
+	t = template.Must(t.ParseGlob(filepath.Join(templateDir, "pages/*")))
+
+	var data = map[string]any{
+		"Config": doc.config.Data(),
+		"HTML":   doc.renderer.String(),
+	}
+
+	var out bytes.Buffer
+	err := t.ExecuteTemplate(&out, "index.html.tpl", data)
 	if err != nil {
-		log.Fatalw("error reading template", "error", err, "name", templateName)
 		panic(err)
 	}
-	rawHtml := bytes.Replace(tmpl, []byte("HERE_GOES_THE_CONTENT"), []byte(doc.renderer.String()), 1)
+
+	rawHtml := out.Bytes()
 
 	edBuf := sliceedit.NewBuffer(rawHtml)
-
-	// The title in the metadata
-	title := doc.config.String("title", "title")
-
-	searchString := "{#title}"
-	edBuf.ReplaceAllString(searchString, title)
 
 	// For all IDs that were detected
 	for idName, idNumber := range doc.ids {
@@ -1350,7 +1360,7 @@ func processWatch(inputFileName string, outputFileName string, sugar *zap.Sugare
 			fmt.Println("************Processing*************")
 
 			// Parse the document
-			b, err := NewDocumentFromFileBytes(inputFileName)
+			b, err := NewDocumentFromFile(inputFileName)
 			if err != nil {
 				return err
 			}
@@ -1372,7 +1382,7 @@ func processWatch(inputFileName string, outputFileName string, sugar *zap.Sugare
 }
 
 // NewDocumentFromFile reads a file and preprocesses it in memory
-func NewDocumentFromFileBytes(fileName string) (*Document, error) {
+func NewDocumentFromFile(fileName string) (*Document, error) {
 
 	// Read the whole file into memory
 	file, err := os.Open(fileName)
@@ -1454,7 +1464,7 @@ func process(c *cli.Context) error {
 	}
 
 	// Preprocess the input file
-	b, err := NewDocumentFromFileBytes(inputFileName)
+	b, err := NewDocumentFromFile(inputFileName)
 	if err != nil {
 		return err
 	}
@@ -1485,7 +1495,7 @@ func main() {
 
 	app := &cli.App{
 		Name:     "rite",
-		Version:  "v0.03",
+		Version:  "v0.04",
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
 			{
