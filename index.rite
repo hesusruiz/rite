@@ -91,7 +91,7 @@ The description of the above diagram is the following:
 
       This is an example request (with newlines and leading spaces added for legibility):
 
-      <pre><code class="language-http">
+      <pre class="line-numbers"><code class="language-http">
          openid://?
             <b>scope</b>=gaiax.credentials.presentation.CustomerCredential
             &amp;<b>response_type</b>=vp_token
@@ -135,7 +135,7 @@ The description of the above diagram is the following:
 
          <li>The Public Key of the entity used to verify its digital signatures
 
-         <li>Status of the entity in the Trusted Participant List
+         <li>Status of the entity in the {#mainlist.num} Trusted Participant List
 
       The DID Document is extensible, and can contain any additional public information which may be relevant for the use case, like commercial name of the RP, website address, contact information, etc.
 
@@ -202,7 +202,7 @@ The description of the above diagram is the following:
 
          - Send a GET request to the <code>/api/did/v1/identifiers/{did}</code> endpoint of one of the Universal Resolvers in the ecosystem, where <code>{did}</code> should be the DID of the RP retrieved in the previous step (in our case the DID of Packet Delivery). The endpoint returns the DID Document corresponding to the DID of the RP.
 
-         - Perform the standard verifications on the DID Document as described in <x-ref VC_DATA >. In particular it is important to check that the DID inside the DID Document corresponds with the DID that was specified in the GET request.
+         - Perform the standard verifications on the DID Document as described in <x-ref VC_DATA >. In particular it is important to check that the DID inside the {#mainlist.num} DID Document corresponds with the DID that was specified in the GET request.
 
 
       The Universal Resolver server used in this step has to be operated by an entity which is trusted by the customer. To minimize the required trust in the ecosystem there may be many Universal Resolver servers operated by different entities. At least one of those trusted entities has to be configured in the wallet of the user.
@@ -308,7 +308,7 @@ The description of the above diagram is the following:
             ]
          }
 
-      The above Verifiable Presentation includes only one Verifiable Credential of type <code>CustomerCredential</code> that was issued by Happy Pets to a customer. The <code>credentialSubject</code> object in the credential has an <code>id</code> field with value <code>did:peer:99ab5bca41bb45b78d242a46f0157b7d</code> which is the DID of the user and that is not registered in any blockchain or centralized repository.
+      The above Verifiable Presentation includes only one Verifiable Credential of type <code>CustomerCredential</code> that was issued by Happy {#mainlist.num} Pets to a customer. The <code>credentialSubject</code> object in the credential has an <code>id</code> field with value <code>did:peer:99ab5bca41bb45b78d242a46f0157b7d</code> which is the DID of the user and that is not registered in any blockchain or centralized repository.
 
    -(14) The SIOP (customer wallet) sends the Authentication Response to the endpoint passed in the <code>redirect_uri</code> parameter of the Authentication Request, sending a HTTP POST request using <code>application/x-www-form-urlencoded</code> encoding.
 
@@ -512,6 +512,7 @@ The description of the above diagram is the following:
 
 
 <section id="section-11">
+   ## Normative references
 
    <h2 id="name-normative-references" .no-num>Normative References
 

@@ -27,9 +27,28 @@
 <p>The description of the above diagram is the following:
 </p>
 
-<ul id="mainlist">
-   <li id="mainlist.1"><a href='#mainlist.1' class='selfref'><b>1.</b></a> Happy Pets customer directs her browser to access the Packet Delivery company portal.
+<ul id='mainlist'>
+   <li id='mainlist.1'><a href='#mainlist.1' class='selfref'><b>1.</b></a> Happy Pets customer directs her browser to access the Packet Delivery company portal.
    <div>
+<!--Original D2 diagram definition
+   # Actors
+   hans: Perico Perez
+   defendants: {
+      mc: Magnus Carlsen
+      playmagnus: Play Magnus Group
+      chesscom: Chess.com
+      naka: Hikaru Nakamura
+      mc -> playmagnus: Owns majority
+      playmagnus <-> chesscom: Merger talks
+      chesscom -> naka: Sponsoring
+   }
+   # Accusations
+   hans -> defendants: 'sueing for $100M'
+   # Offense
+   defendants.naka -> hans: Accused of cheating on his stream
+   defendants.mc -> hans: Lost then withdrew with accusations
+   defendants.chesscom -> hans: 72 page report of cheating
+-->
 
 <?xml version="1.0" encoding="utf-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" d2Version="v0.4.0-HEAD" preserveAspectRatio="xMinYMin meet" viewBox="0 0 916 1116"><svg id="d2-svg" class="d2-3355679560" width="916" height="1116" viewBox="-101 -101 916 1116"><rect x="-101.000000" y="-101.000000" width="916.000000" height="1116.000000" rx="0.000000" class=" fill-N7" stroke-width="0" /><style type="text/css"><![CDATA[
 .d2-3355679560 .text {
@@ -148,11 +167,11 @@
 </mask></svg></svg>
    </div>
    </li>
-   <li id="mainlist.2"><a href='#mainlist.2' class='selfref'><b>2.</b></a> The browser sends a request to the Packet Delivery portal server.
+   <li id='mainlist.2'><a href='#mainlist.2' class='selfref'><b>2.</b></a> The browser sends a request to the Packet Delivery portal server.
    </li>
-   <li id="mainlist.3"><a href='#mainlist.3' class='selfref'><b>3.</b></a> Happy Pets customer gets forwarded to a page for selecting the desired Identity Provider for login. One of the login options is “Login with Verifiable Credentials” or something similar.
+   <li id='mainlist.3'><a href='#mainlist.3' class='selfref'><b>3.</b></a> Happy Pets customer gets forwarded to a page for selecting the desired Identity Provider for login. One of the login options is “Login with Verifiable Credentials” or something similar.
    </li>
-   <li id="mainlist.4"><a href='#mainlist.4' class='selfref'><b>4.</b></a> Happy Pets customer selects the “Verifiable Credentials” login method, which causes the Packet delivery company portal to generate a QR containing inside the URL of the /authentication-requests endpoint of the RP (Relying Party) component of Packet Delivery. A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in <a href="#SIOPv2" class="xref">[SIOPv2]</a>.
+   <li id='mainlist.4'><a href='#mainlist.4' class='selfref'><b>4.</b></a> Happy Pets customer selects the “Verifiable Credentials” login method, which causes the Packet delivery company portal to generate a QR containing inside the URL of the /authentication-requests endpoint of the RP (Relying Party) component of Packet Delivery. A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in <a href="#SIOPv2" class="xref">[SIOPv2]</a>.
    <div>
       <p>The QR code includes a nonce called <code>state</code> that will be used later by the portal to know when a specific login session has finished. In our use case, the URL inside the QR could look like this:
       </p>
@@ -162,33 +181,33 @@ Host: rp.packetdelivery.com</code></pre>
 
    </div>
    </li>
-   <li id="mainlist.5"><a href='#mainlist.5' class='selfref'><b>5.</b></a> The QR code is displayed in the customer browser with instructions to scan it and go to the URL inside it.
+   <li id='mainlist.5'><a href='#mainlist.5' class='selfref'><b>5.</b></a> The QR code is displayed in the customer browser with instructions to scan it and go to the URL inside it.
    </li>
-   <li id="mainlist.6"><a href='#mainlist.6' class='selfref'><b>6.</b></a> The customer scans the QR with her mobile and tells the mobile to go to the URL in the QR.
+   <li id='mainlist.6'><a href='#mainlist.6' class='selfref'><b>6.</b></a> The customer scans the QR with her mobile and tells the mobile to go to the URL in the QR.
    </li>
-   <li id="mainlist.7"><a href='#mainlist.7' class='selfref'><b>7.</b></a> The mobile performs a GET request to the url inside the QR (e.g. https://www.packetdelivery.com/api/authentication-requests). This starts a standard SIOP (Self-Issued OpenID Provider) flow, where the Packet Delivery company plays the role of Relying Party (RP in Open ID Connect terminology) and the mobile device of the customer as a Self-Issued IDP (SIOP).
+   <li id='mainlist.7'><a href='#mainlist.7' class='selfref'><b>7.</b></a> The mobile performs a GET request to the url inside the QR (e.g. https://www.packetdelivery.com/api/authentication-requests). This starts a standard SIOP (Self-Issued OpenID Provider) flow, where the Packet Delivery company plays the role of Relying Party (RP in Open ID Connect terminology) and the mobile device of the customer as a Self-Issued IDP (SIOP).
    </li>
-   <li id="mainlist.8"><a href='#mainlist.8' class='selfref'><b>8.</b></a> Packet Delivery company RP creates a SIOP Authentication Request. The parameters comprising a request for verifiable presentations are given in section 5 of <a href="#OIDC4VP" class="xref">[OIDC4VP]</a> and in section 10.1 of <a href="#SIOPv2" class="xref">[SIOPv2]</a> and are reproduced here with the particularities of this use case, in particular that this is a cross-device interaction:
+   <li id='mainlist.8'><a href='#mainlist.8' class='selfref'><b>8.</b></a> Packet Delivery company RP creates a SIOP Authentication Request. The parameters comprising a request for verifiable presentations are given in section 5 of <a href="#OIDC4VP" class="xref">[OIDC4VP]</a> and in section 10.1 of <a href="#SIOPv2" class="xref">[SIOPv2]</a> and are reproduced here with the particularities of this use case, in particular that this is a cross-device interaction:
    <div>
 
       <ul>
-         <li id="list_69.response_type"><a href='#list_69.response_type' class='selfref'><b>response_type.</b></a> REQUIRED. Must be <b>"vp_token"</b>. This parameter is defined in <a href="#RFC6749" class="xref">[RFC6749]</a>. The possible values are determined by the response type registry established by <a href="#RFC6749" class="xref">[RFC6749]</a>. The <a href="#OIDC4VP" class="xref">[OIDC4VP]</a> specification introduces the response type <b>"vp_token"</b>. This response type asks the SIOP to return only a VP Token in the Authorization Response, which is what we want in our case.
+         <li id='list_69.response_type'><a href='#list_69.response_type' class='selfref'><b>response_type.</b></a> REQUIRED. Must be <b>"vp_token"</b>. This parameter is defined in <a href="#RFC6749" class="xref">[RFC6749]</a>. The possible values are determined by the response type registry established by <a href="#RFC6749" class="xref">[RFC6749]</a>. The <a href="#OIDC4VP" class="xref">[OIDC4VP]</a> specification introduces the response type <b>"vp_token"</b>. This response type asks the SIOP to return only a VP Token in the Authorization Response, which is what we want in our case.
          </li>
-         <li id="list_69.scope"><a href='#list_69.scope' class='selfref'><b>scope.</b></a> REQUIRED. This parameter is defined in <a href="#RFC6749" class="xref">[RFC6749]</a> which allows it to be used by verifiers to request presentation of credentials by utilizing a pre-defined scope value designating the type of credential. See section <a href="#request_scope" class="xref">Request Scope</a> for more details. We use in this instance the value <code>gaiax.credentials.presentation.CustomerCredential</code> which means that the RP (PacketDelivery) is asking the SIOP (customer wallet) to send a credential of type CustomerCredential issued by any participant in the ecosystem.
+         <li id='list_69.scope'><a href='#list_69.scope' class='selfref'><b>scope.</b></a> REQUIRED. This parameter is defined in <a href="#RFC6749" class="xref">[RFC6749]</a> which allows it to be used by verifiers to request presentation of credentials by utilizing a pre-defined scope value designating the type of credential. See section <a href="#request_scope" class="xref">Request Scope</a> for more details. We use in this instance the value <code>gaiax.credentials.presentation.CustomerCredential</code> which means that the RP (PacketDelivery) is asking the SIOP (customer wallet) to send a credential of type CustomerCredential issued by any participant in the ecosystem.
          </li>
-         <li id="list_69.response_mode"><a href='#list_69.response_mode' class='selfref'><b>response_mode.</b></a> REQUIRED. MUST be “post”. As this is a cross-device scenario, this response mode is used to request the Self-Issued OP to deliver the result of the authentication process to a certain endpoint using the HTTP POST method. This endpoint to which the SIOP shall deliver the authentication result is conveyed in the parameter <code>redirect_uri</code>.
+         <li id='list_69.response_mode'><a href='#list_69.response_mode' class='selfref'><b>response_mode.</b></a> REQUIRED. MUST be “post”. As this is a cross-device scenario, this response mode is used to request the Self-Issued OP to deliver the result of the authentication process to a certain endpoint using the HTTP POST method. This endpoint to which the SIOP shall deliver the authentication result is conveyed in the parameter <code>redirect_uri</code>.
          </li>
-         <li id="list_69.redirect_uri"><a href='#list_69.redirect_uri' class='selfref'><b>redirect_uri.</b></a> (REQUIRED). MUST be a valid RP endpoint. The Authentication Response is sent to this endpoint using <code>POST</code> and encoding <code>application/json</code>)
+         <li id='list_69.redirect_uri'><a href='#list_69.redirect_uri' class='selfref'><b>redirect_uri.</b></a> (REQUIRED). MUST be a valid RP endpoint. The Authentication Response is sent to this endpoint using <code>POST</code> and encoding <code>application/json</code>)
          </li>
-         <li id="list_69.client_id"><a href='#list_69.client_id' class='selfref'><b>client_id.</b></a> REQUIRED. MUST be the DID of the RP (Packet Delivery in this case) so it can be resolved by the SIOP and checked against a Trusted List, or rejected if it does not pass validation. This provides a high level of assurance to the SIOP that the RP is really who it claims.
+         <li id='list_69.client_id'><a href='#list_69.client_id' class='selfref'><b>client_id.</b></a> REQUIRED. MUST be the DID of the RP (Packet Delivery in this case) so it can be resolved by the SIOP and checked against a Trusted List, or rejected if it does not pass validation. This provides a high level of assurance to the SIOP that the RP is really who it claims.
          </li>
-         <li id="list_69.nonce"><a href='#list_69.nonce' class='selfref'><b>nonce.</b></a> REQUIRED. This parameter follows the definition given in <a href="#OpenID.Core" class="xref">[OpenID.Core]</a>. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.
+         <li id='list_69.nonce'><a href='#list_69.nonce' class='selfref'><b>nonce.</b></a> REQUIRED. This parameter follows the definition given in <a href="#OpenID.Core" class="xref">[OpenID.Core]</a>. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.
          </li>
-         <li id="list_69.state"><a href='#list_69.state' class='selfref'><b>state.</b></a> REQUIRED. Used by the portal component of Packet Delivery to associate the start of an authentication session with the end of that session when the RP component notifies to the portal.
+         <li id='list_69.state'><a href='#list_69.state' class='selfref'><b>state.</b></a> REQUIRED. Used by the portal component of Packet Delivery to associate the start of an authentication session with the end of that session when the RP component notifies to the portal.
          </li>
-         <li id="list_69.presentation_definition"><a href='#list_69.presentation_definition' class='selfref'><b>presentation_definition.</b></a> CONDITIONAL. A string containing a <code>presentation_definition</code> JSON object as defined in Section 4 of <a href="#DIF.PresentationExchange" class="xref">[DIF.PresentationExchange]</a>. We do not use this parameter because <code>scope</code> already specifies the credential type.
+         <li id='list_69.presentation_definition'><a href='#list_69.presentation_definition' class='selfref'><b>presentation_definition.</b></a> CONDITIONAL. A string containing a <code>presentation_definition</code> JSON object as defined in Section 4 of <a href="#DIF.PresentationExchange" class="xref">[DIF.PresentationExchange]</a>. We do not use this parameter because <code>scope</code> already specifies the credential type.
          </li>
-         <li id="list_69.presentation_definition_uri"><a href='#list_69.presentation_definition_uri' class='selfref'><b>presentation_definition_uri.</b></a> CONDITIONAL. A string containing a URL pointing to a resource where a <code>presentation_definition</code> JSON object as defined in Section 4 of <a href="#DIF.PresentationExchange" class="xref">[DIF.PresentationExchange]</a> can be retrieved. We do not use this parameter because <code>scope</code> already specifies the credential type.
+         <li id='list_69.presentation_definition_uri'><a href='#list_69.presentation_definition_uri' class='selfref'><b>presentation_definition_uri.</b></a> CONDITIONAL. A string containing a URL pointing to a resource where a <code>presentation_definition</code> JSON object as defined in Section 4 of <a href="#DIF.PresentationExchange" class="xref">[DIF.PresentationExchange]</a> can be retrieved. We do not use this parameter because <code>scope</code> already specifies the credential type.
          </li>
       </ul>
 
@@ -197,7 +216,7 @@ Host: rp.packetdelivery.com</code></pre>
       <p>This is an example request (with newlines and leading spaces added for legibility):
       </p>
 
-      <pre><code class="language-http">openid://?
+      <pre class="line-numbers"><code class="language-http">openid://?
    <b>scope</b>=gaiax.credentials.presentation.CustomerCredential
    &amp;<b>response_type</b>=vp_token
    &amp;<b>response_mode</b>=post
@@ -208,7 +227,7 @@ Host: rp.packetdelivery.com</code></pre>
 
    </div>
    </li>
-   <li id="mainlist.9"><a href='#mainlist.9' class='selfref'><b>9.</b></a> The SIOP Authentication Request is returned to the mobile in the reply body of the GET request, as a JWT in JWS form (<x-ref RFC7515 a>), signed with the public key associated with the DID in the client_id field of the Authorization Request. The JWT MUST be generated according to the best practices described in <a href="#RFC8725" class="xref">[RFC8725]</a>. This is an example of the unencoded contents of such JWT:
+   <li id='mainlist.9'><a href='#mainlist.9' class='selfref'><b>9.</b></a> The SIOP Authentication Request is returned to the mobile in the reply body of the GET request, as a JWT in JWS form (<x-ref RFC7515 a>), signed with the public key associated with the DID in the client_id field of the Authorization Request. The JWT MUST be generated according to the best practices described in <a href="#RFC8725" class="xref">[RFC8725]</a>. This is an example of the unencoded contents of such JWT:
    <div>
 
       <pre><code class="language-json">--------------- Header ---------------
@@ -229,7 +248,7 @@ Host: rp.packetdelivery.com</code></pre>
       </p>
    </div>
    </li>
-   <li id="mainlist.10"><a href='#mainlist.10' class='selfref'><b>10.</b></a> In this and steps 11 and 12 the customer SIOP verifies that the RP (in this case Packet Delivery) is a trusted entity belonging to the ecosystem, by resolving the DID of the RP received in the <code>client_id</code> parameter of the Authentication Request and verifying the signature of the JWT.
+   <li id='mainlist.10'><a href='#mainlist.10' class='selfref'><b>10.</b></a> In this and steps 11 and 12 the customer SIOP verifies that the RP (in this case Packet Delivery) is a trusted entity belonging to the ecosystem, by resolving the DID of the RP received in the <code>client_id</code> parameter of the Authentication Request and verifying the signature of the JWT.
    <div>
       <p>Before starting DID resolution, we perform the standard verification of the JWT as described in <a href="#RFC8725" class="xref">[RFC8725]</a> and <a href="#RFC7515" class="xref">[RFC7515]</a>, except for the signature. We also check for the existence of the claim <code>auth_request</code> in the JWT and that its contents are a well-formed Authentication Request.
       </p>
@@ -239,13 +258,13 @@ Host: rp.packetdelivery.com</code></pre>
       </p>
    </div>
    </li>
-   <li id="mainlist.11"><a href='#mainlist.11' class='selfref'><b>11.</b></a> The DID Document (as per W3C) contains relevant information about the entity owning the DID, in particular:
+   <li id='mainlist.11'><a href='#mainlist.11' class='selfref'><b>11.</b></a> The DID Document (as per W3C) contains relevant information about the entity owning the DID, in particular:
    <div>
 
       <ul>
-         <li id="list_134.1">The Public Key of the entity used to verify its digital signatures
+         <li id='list_134.1'>The Public Key of the entity used to verify its digital signatures
          </li>
-         <li id="list_134.2">Status of the entity in the Trusted Participant List
+         <li id='list_134.2'>Status of the entity in the 1 Trusted Participant List
          </li>
       </ul>
 
@@ -305,15 +324,15 @@ Host: rp.packetdelivery.com</code></pre>
       </p>
 
       <ol>
-         <li id="list_195.1">Perform the standard verification of the JWT as described in <a href="#RFC8725" class="xref">[RFC8725]</a> and <a href="#RFC7515" class="xref">[RFC7515]</a>, except for the signature.
+         <li id='list_195.1'>Perform the standard verification of the JWT as described in <a href="#RFC8725" class="xref">[RFC8725]</a> and <a href="#RFC7515" class="xref">[RFC7515]</a>, except for the signature.
          </li>
-         <li id="list_195.2">Check for the existence of the claim <code>auth_request</code> in the JWT and that its contents are a well-formed Authentication Request.
+         <li id='list_195.2'>Check for the existence of the claim <code>auth_request</code> in the JWT and that its contents are a well-formed Authentication Request.
          </li>
-         <li id="list_195.3">Get the DID of the RP from the <code>client_id</code> parameter of the Authentication Request received in the JWT, making sure that it corresponds exactly to the <code>iss</code> claim in the payload of the JWT.
+         <li id='list_195.3'>Get the DID of the RP from the <code>client_id</code> parameter of the Authentication Request received in the JWT, making sure that it corresponds exactly to the <code>iss</code> claim in the payload of the JWT.
          </li>
-         <li id="list_195.4">Send a GET request to the <code>/api/did/v1/identifiers/{did}</code> endpoint of one of the Universal Resolvers in the ecosystem, where <code>{did}</code> should be the DID of the RP retrieved in the previous step (in our case the DID of Packet Delivery). The endpoint returns the DID Document corresponding to the DID of the RP.
+         <li id='list_195.4'>Send a GET request to the <code>/api/did/v1/identifiers/{did}</code> endpoint of one of the Universal Resolvers in the ecosystem, where <code>{did}</code> should be the DID of the RP retrieved in the previous step (in our case the DID of Packet Delivery). The endpoint returns the DID Document corresponding to the DID of the RP.
          </li>
-         <li id="list_195.5">Perform the standard verifications on the DID Document as described in <a href="#VC_DATA" class="xref">[VC_DATA]</a>. In particular it is important to check that the DID inside the DID Document corresponds with the DID that was specified in the GET request.
+         <li id='list_195.5'>Perform the standard verifications on the DID Document as described in <a href="#VC_DATA" class="xref">[VC_DATA]</a>. In particular it is important to check that the DID inside the 1 DID Document corresponds with the DID that was specified in the GET request.
          </li>
       </ol>
 
@@ -323,13 +342,13 @@ Host: rp.packetdelivery.com</code></pre>
       </p>
    </div>
    </li>
-   <li id="mainlist.12"><a href='#mainlist.12' class='selfref'><b>12.</b></a> After DID resolution, we need to check the signature of the JWT containing the Authorization Request.
+   <li id='mainlist.12'><a href='#mainlist.12' class='selfref'><b>12.</b></a> After DID resolution, we need to check the signature of the JWT containing the Authorization Request.
    <div>
       <p>As mentioned above, the DID Document includes one or more public keys inside the <code>verificationMethod</code> array. The keys are identified by the <code>id</code> field in each element of the array. The customer wallet uses the <code>kid</code> field that was received in the Authentication Request (in the protected header of the JWT) to select the corresponding Public Key and verify the signature of the JWT. It also verifies that the top-level <code>id</code> field in the DID Document (<code>did:elsi:EU.EORI.NLPACKETDEL</code>) is equal to the <code>client_id</code> parameter of the Authentication Request.
       </p>
    </div>
    </li>
-   <li id="mainlist.13"><a href='#mainlist.13' class='selfref'><b>13.</b></a> The customer wallet creates an Authentication Response to be posted in the <code>redirect_uri</code> specified by Packet Delivery company in step 8. The contents of the Authentication Response are described below.
+   <li id='mainlist.13'><a href='#mainlist.13' class='selfref'><b>13.</b></a> The customer wallet creates an Authentication Response to be posted in the <code>redirect_uri</code> specified by Packet Delivery company in step 8. The contents of the Authentication Response are described below.
    <div>
       <p>The response is constructed as defined in section 6.1 of <a href="#OIDC4VP" class="xref">[OIDC4VP]</a>. In particular, because the Authorization Request included only <code>vp_token</code> as the <code>response_type</code>, the VP Token is provided directly in the Authorization Response and a separate <code>id_token</code> is not needed.
       </p>
@@ -423,19 +442,19 @@ presentation_submission=[see definition below]
    ]
 }</code></pre>
 
-      <p>The above Verifiable Presentation includes only one Verifiable Credential of type <code>CustomerCredential</code> that was issued by Happy Pets to a customer. The <code>credentialSubject</code> object in the credential has an <code>id</code> field with value <code>did:peer:99ab5bca41bb45b78d242a46f0157b7d</code> which is the DID of the user and that is not registered in any blockchain or centralized repository.
+      <p>The above Verifiable Presentation includes only one Verifiable Credential of type <code>CustomerCredential</code> that was issued by Happy 1 Pets to a customer. The <code>credentialSubject</code> object in the credential has an <code>id</code> field with value <code>did:peer:99ab5bca41bb45b78d242a46f0157b7d</code> which is the DID of the user and that is not registered in any blockchain or centralized repository.
       </p>
    </div>
    </li>
-   <li id="mainlist.14"><a href='#mainlist.14' class='selfref'><b>14.</b></a> The SIOP (customer wallet) sends the Authentication Response to the endpoint passed in the <code>redirect_uri</code> parameter of the Authentication Request, sending a HTTP POST request using <code>application/x-www-form-urlencoded</code> encoding.
+   <li id='mainlist.14'><a href='#mainlist.14' class='selfref'><b>14.</b></a> The SIOP (customer wallet) sends the Authentication Response to the endpoint passed in the <code>redirect_uri</code> parameter of the Authentication Request, sending a HTTP POST request using <code>application/x-www-form-urlencoded</code> encoding.
    </li>
-   <li id="mainlist.15_and_16"><a href='#mainlist.15_and_16' class='selfref'><b>15 and 16.</b></a> The Packet Delivery RP component receives the Authorization Request and has to perform verifications, the standard ones being defined in <a href="#DIF.PresentationExchange" class="xref">[DIF.PresentationExchange]</a>. In order to verify that the Verifiable Credential has been issuer by a trusted participant in the ecosystem, Packet Delivery has to verify:
+   <li id='mainlist.15_and_16'><a href='#mainlist.15_and_16' class='selfref'><b>15 and 16.</b></a> The Packet Delivery RP component receives the Authorization Request and has to perform verifications, the standard ones being defined in <a href="#DIF.PresentationExchange" class="xref">[DIF.PresentationExchange]</a>. In order to verify that the Verifiable Credential has been issuer by a trusted participant in the ecosystem, Packet Delivery has to verify:
    <div>
 
       <ol>
-         <li id="list_317.1">That the DID of the entity which is the issuer of the VC is a trusted participant.
+         <li id='list_317.1'>That the DID of the entity which is the issuer of the VC is a trusted participant.
          </li>
-         <li id="list_317.2">That the VC was digitally signed by that participant.
+         <li id='list_317.2'>That the VC was digitally signed by that participant.
          </li>
       </ol>
 
@@ -447,11 +466,11 @@ presentation_submission=[see definition below]
       </p>
    </div>
    </li>
-   <li id="mainlist.17"><a href='#mainlist.17' class='selfref'><b>17.</b></a> After verifying the credential, Packet Delivery can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the customer and not by a malicious agent. To do so, it uses the Public Key of the customer in the <code>verificationMethod</code> of the <code>credentialSubject</code> structure. That public key is cryptographically bound to the customer DID during the onboarding process that Happy Pets performed with the customer.
+   <li id='mainlist.17'><a href='#mainlist.17' class='selfref'><b>17.</b></a> After verifying the credential, Packet Delivery can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the customer and not by a malicious agent. To do so, it uses the Public Key of the customer in the <code>verificationMethod</code> of the <code>credentialSubject</code> structure. That public key is cryptographically bound to the customer DID during the onboarding process that Happy Pets performed with the customer.
    </li>
-   <li id="mainlist.18"><a href='#mainlist.18' class='selfref'><b>18.</b></a> The RP component of Packet Delivery sends a successful response to the POST request that the SIOP (customer wallet) used to send the Authorization Request to the RP. The wallet receives the response to the POST indicating the success or failure of the process. The RP component of Packet Delivery continues processing because the web portal of Packet Delivery has to be refreshed with the services that this specific customer can access, based on the information received in the Verifiable Credential and the access control policies implemented by Packet Delivery.
+   <li id='mainlist.18'><a href='#mainlist.18' class='selfref'><b>18.</b></a> The RP component of Packet Delivery sends a successful response to the POST request that the SIOP (customer wallet) used to send the Authorization Request to the RP. The wallet receives the response to the POST indicating the success or failure of the process. The RP component of Packet Delivery continues processing because the web portal of Packet Delivery has to be refreshed with the services that this specific customer can access, based on the information received in the Verifiable Credential and the access control policies implemented by Packet Delivery.
    </li>
-   <li id="mainlist.19"><a href='#mainlist.19' class='selfref'><b>19.</b></a> The RP component of Packet Delivery company creates an Access Token for the customer so she can use it to access services in Packet Delivery company in the future. The RP component generates an Access Token in JWT format signed by the RP component. The access token is intended for use as bearer token over HTTP/1.1 [RFC2616] using Transport Layer Security (TLS) [RFC5246] to access protected resources, and it should use the JWT Profile profile described in <a href="#RFC9068" class="xref">[RFC9068]</a>.
+   <li id='mainlist.19'><a href='#mainlist.19' class='selfref'><b>19.</b></a> The RP component of Packet Delivery company creates an Access Token for the customer so she can use it to access services in Packet Delivery company in the future. The RP component generates an Access Token in JWT format signed by the RP component. The access token is intended for use as bearer token over HTTP/1.1 [RFC2616] using Transport Layer Security (TLS) [RFC5246] to access protected resources, and it should use the JWT Profile profile described in <a href="#RFC9068" class="xref">[RFC9068]</a>.
    <div>
       <p>For our use case, the JWT access token looks like:
       </p>
@@ -478,29 +497,29 @@ Claims:
       </p>
 
       <ul>
-         <li id="list_358.1"><b>iss</b> and <b>client_id</b> have the same value because the access token has been generated by the RP component of Packet Delivery, not by an IdP as in the "classic" OIDC flows.
+         <li id='list_358.1'><b>iss</b> and <b>client_id</b> have the same value because the access token has been generated by the RP component of Packet Delivery, not by an IdP as in the "classic" OIDC flows.
          </li>
-         <li id="list_358.2"><b>sub</b> identifies the customer using the DID inside the Verifiable Credential received
+         <li id='list_358.2'><b>sub</b> identifies the customer using the DID inside the Verifiable Credential received
          </li>
-         <li id="list_358.3"><b>aud</b> identifies the RS (Resource Server) component in Packet Delivery. In this case we assume that it is internal and does not have a DID assigned, so we use the URI of the component.
+         <li id='list_358.3'><b>aud</b> identifies the RS (Resource Server) component in Packet Delivery. In this case we assume that it is internal and does not have a DID assigned, so we use the URI of the component.
          </li>
-         <li id="list_358.4"><b>kid</b> in the header identifies the key that is used to sign the JWT and which must be configured up-front and known by the RS (Resource Server.
+         <li id='list_358.4'><b>kid</b> in the header identifies the key that is used to sign the JWT and which must be configured up-front and known by the RS (Resource Server.
          </li>
-         <li id="list_358.5"><b>scope</b> has the same value as the equivalent <b>scope</b> parameter in the initial Authorization Request.
+         <li id='list_358.5'><b>scope</b> has the same value as the equivalent <b>scope</b> parameter in the initial Authorization Request.
          </li>
-         <li id="list_358.6"><b>verifiableCredential</b> contains the Verifiable Credential that was received, specifically the value of the first element of the field <code>verifiableCredential</code> of the Verifiable Presentation.
+         <li id='list_358.6'><b>verifiableCredential</b> contains the Verifiable Credential that was received, specifically the value of the first element of the field <code>verifiableCredential</code> of the Verifiable Presentation.
          </li>
       </ul>
 
    </div>
    </li>
-   <li id="mainlist.20"><a href='#mainlist.20' class='selfref'><b>20.</b></a> The RP component of Packet Delivery notifies the Portal to refresh the login page so it can present the services to the customer. The notification includes the following:
+   <li id='mainlist.20'><a href='#mainlist.20' class='selfref'><b>20.</b></a> The RP component of Packet Delivery notifies the Portal to refresh the login page so it can present the services to the customer. The notification includes the following:
    <div>
 
       <ol>
-         <li id="list_374.1">The <code>state</code> nonce that was generated by the portal when it generated the QR code. The portal uses the <code>state</code> nonce to know what login session is notified.
+         <li id='list_374.1'>The <code>state</code> nonce that was generated by the portal when it generated the QR code. The portal uses the <code>state</code> nonce to know what login session is notified.
          </li>
-         <li id="list_374.2">The access token generated before.
+         <li id='list_374.2'>The access token generated before.
          </li>
       </ol>
 
@@ -518,9 +537,9 @@ access_token=[the access token]
       </p>
    </div>
    </li>
-   <li id="mainlist.21"><a href='#mainlist.21' class='selfref'><b>21.</b></a> The Packet Delivery portal refreshes the screen and displays the services available to customers, sending the Access Token to the browser of the customer.
+   <li id='mainlist.21'><a href='#mainlist.21' class='selfref'><b>21.</b></a> The Packet Delivery portal refreshes the screen and displays the services available to customers, sending the Access Token to the browser of the customer.
    </li>
-   <li id="mainlist.22"><a href='#mainlist.22' class='selfref'><b>22.</b></a> The customer selects the option "Change PTA on delivery order" and the browsers sends a GET request to the Packet Delivery portal, including the Access Token as a Bearer token in the Authorization header of the HTTP request. For example:
+   <li id='mainlist.22'><a href='#mainlist.22' class='selfref'><b>22.</b></a> The customer selects the option "Change PTA on delivery order" and the browsers sends a GET request to the Packet Delivery portal, including the Access Token as a Bearer token in the Authorization header of the HTTP request. For example:
    <div>
 
       <pre><code class="language-http">GET /resource HTTP/1.1
@@ -531,7 +550,7 @@ Authorization: Bearer [the access token]</code></pre>
       </p>
    </div>
    </li>
-   <li id="mainlist.23"><a href='#mainlist.23' class='selfref'><b>23.</b></a> The PEP checks that the request to the protected resource includes an Authorization header with a Bearer token, digitally signed by the RP component of Packet Delivery with one of the keys previously configured in the API gateway.
+   <li id='mainlist.23'><a href='#mainlist.23' class='selfref'><b>23.</b></a> The PEP checks that the request to the protected resource includes an Authorization header with a Bearer token, digitally signed by the RP component of Packet Delivery with one of the keys previously configured in the API gateway.
    <div>
       <p>The way to do this depends on the implementation of the PEP but if it is based on Nginx, an example configuration looks like:
       </p>
@@ -552,23 +571,23 @@ location /[external path of Resource Server] {
       </p>
    </div>
    </li>
-   <li id="mainlist.24"><a href='#mainlist.24' class='selfref'><b>24.</b></a> As described in the previous step, the PEP asks the Policy Decision Point (PDP) to evaluate if the Access Token authorizes the caller to access the target service ("Change PTA on delivery order"). It forwards the original request including the Access Token to the PDP.
+   <li id='mainlist.24'><a href='#mainlist.24' class='selfref'><b>24.</b></a> As described in the previous step, the PEP asks the Policy Decision Point (PDP) to evaluate if the Access Token authorizes the caller to access the target service ("Change PTA on delivery order"). It forwards the original request including the Access Token to the PDP.
    </li>
-   <li id="mainlist.25_and_26"><a href='#mainlist.25_and_26' class='selfref'><b>25 and 26.</b></a> The PDP uses information in the Access Token to retrieve from the Policy Retrieval Point (PRP)the relevant policy definitions required to evaluate authorization for the request. The PRP is where the access authorization policies are stored, typically a database or the filesystem.
+   <li id='mainlist.25_and_26'><a href='#mainlist.25_and_26' class='selfref'><b>25 and 26.</b></a> The PDP uses information in the Access Token to retrieve from the Policy Retrieval Point (PRP)the relevant policy definitions required to evaluate authorization for the request. The PRP is where the access authorization policies are stored, typically a database or the filesystem.
    </li>
-   <li id="mainlist.27"><a href='#mainlist.27' class='selfref'><b>27.</b></a> The PDP uses information in the Access Token and the policies retrieved from the PRP to evaluate policies associated to customer roles and any additional attributes in the token. One of the policies retrieved correwsponds to the purchasing status of the Happy Pets company with respect to the services provided by Packet Delivery.
+   <li id='mainlist.27'><a href='#mainlist.27' class='selfref'><b>27.</b></a> The PDP uses information in the Access Token and the policies retrieved from the PRP to evaluate policies associated to customer roles and any additional attributes in the token. One of the policies retrieved correwsponds to the purchasing status of the Happy Pets company with respect to the services provided by Packet Delivery.
    </li>
-   <li id="mainlist.28"><a href='#mainlist.28' class='selfref'><b>28.</b></a> In our use case, the customer is of category Gold and Packet Delivery is currently paying for the Gold service so the evaluation of the policies grants access to the requested service ("Change PTA on delivery order"), by returning a 2xx response code. If it returns 401 or 403, the access is denied.
+   <li id='mainlist.28'><a href='#mainlist.28' class='selfref'><b>28.</b></a> In our use case, the customer is of category Gold and Packet Delivery is currently paying for the Gold service so the evaluation of the policies grants access to the requested service ("Change PTA on delivery order"), by returning a 2xx response code. If it returns 401 or 403, the access is denied.
    </li>
-   <li id="mainlist.29"><a href='#mainlist.29' class='selfref'><b>29.</b></a> The PEP (API gateway) receives the successful reply and forwards the request, including the Access Token, to the RS (Resource Server). In this case to the Context Broker, not shown in the diagram.
+   <li id='mainlist.29'><a href='#mainlist.29' class='selfref'><b>29.</b></a> The PEP (API gateway) receives the successful reply and forwards the request, including the Access Token, to the RS (Resource Server). In this case to the Context Broker, not shown in the diagram.
    </li>
-   <li id="mainlist.30_and_31"><a href='#mainlist.30_and_31' class='selfref'><b>30 and 31.</b></a> The request is executed and the reply is sent to the customer browser, where the customer can continue using the Packet Delivery portal for any other requests she may want to execute.
+   <li id='mainlist.30_and_31'><a href='#mainlist.30_and_31' class='selfref'><b>30 and 31.</b></a> The request is executed and the reply is sent to the customer browser, where the customer can continue using the Packet Delivery portal for any other requests she may want to execute.
    </li>
 </ul>
 
 
 <section id="request_scope">
-   <h2 class="no-num" id="name-scope">Request Scope</h2>
+   <h2 class='no-num' id="name-scope" .no-num>Request Scope</h2>
 
    <p>According to section 5.3 of <a href="#OIDC4VP" class="xref">[OIDC4VP]</a>, wallets MAY support requesting presentation of credentials using OAuth 2.0 scope values. Such a scope value MUST be an alias for a well-defined presentation definition as it will be refered to in the <code>presentation_submission</code> response parameter.
    </p>
@@ -644,7 +663,9 @@ location /[external path of Resource Server] {
 
 
 <section id="section-11">
-   <h2 class="no-num" id="name-normative-references">Normative References</h2>
+   <h2><span class='secno'>1.2</span> Normative references</h2>
+
+   <h2 class='no-num' id="name-normative-references" .no-num>Normative References</h2>
 
 
    <dl class="references">

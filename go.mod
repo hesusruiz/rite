@@ -7,6 +7,7 @@ require (
 	github.com/urfave/cli/v2 v2.23.7
 	go.uber.org/zap v1.23.0
 	oss.terrastruct.com/d2 v0.4.0
+	rsc.io/edit v1.0.0
 )
 
 require (
