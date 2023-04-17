@@ -1,7 +1,66 @@
 ---
 title: Access to data service
 template: "templates/respec"
-bibliography: bibliography.yaml
+
+editors:
+   - name: "Jesus Ruiz"
+     email: "hesusruiz@gmail.com"
+     company: "JesusRuiz"
+     companyURL: "https://hesusruiz.github.io/hesusruiz"
+
+authors:
+   - name: "Jesus Ruiz"
+     email: "hesusruiz@gmail.com"
+     company: "JesusRuiz"
+     companyURL: "https://hesusruiz.github.io/hesusruiz"
+   - name: "Another Author"
+     email: "another.author@mycompany.com"
+     company: "MyCompany Name"
+     companyURL: "https://mycompany.com/"
+
+codpyright: >
+   Copyright © 2023 the document editors/authors. Text is available under the
+   <a rel="license" href="https://creativecommons.org/licenses/by/4.0/legalcode">
+   Creative Commons Attribution 4.0 International Public License</a>
+
+latestVersion: "https://github.com/hesusruiz/did-method-elsi"
+github: "https://github.com/hesusruiz/did-method-elsi"
+
+localBiblio:
+   "ETSI-CERTOVERVIEW":
+      title: "ETSI EN 319 412-1 V1.4.2 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 1: Overview and common data structures"
+      href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.04.02_20/en_31941201v010402a.pdf"
+      date: "2020-07"
+      publisher: "ETSI"
+   "ETSI-LEGALPERSON":
+      title: "ETSI EN 319 412-3 V1.2.1 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 3: Certificate profile for certificates issued to legal persons"
+      href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941203/01.02.01_60/en_31941203v010201p.pdf"
+      date: "2020-07"
+      publisher: "ETSI"
+   "ETSI-JADES":
+      title: "ETSI TS 119 182-1 V1.1.1 (2021-03) - Electronic Signatures and Infrastructures (ESI); JAdES digital signatures; Part 1: Building blocks and JAdES baseline signatures"
+      href: "https://www.etsi.org/deliver/etsi_ts/119100_119199/11918201/01.01.01_60/ts_11918201v010101p.pdf"
+      date: "2021-03"
+      publisher: "ETSI"
+   "DEP-DSS":
+      title: "Algorithm for Validation of qualified and advanced signatures and seals"
+      href: "https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/Qualified+electronic+signature+-+QES+validation+algorithm"
+      date: "2019-10"
+      publisher: "European Commission"
+   "DID-PRIMER":
+      title: "DID Primer"
+      href: "https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md"
+      authors: ["Drummond Reed", "Manu Sporny"]
+      publisher: "Rebooting the Web of Trust 2017"
+   "DID-DNS":
+      title: "The Decentralized Identifier (DID) in the DNS"
+      href: "https://tools.ietf.org/html/draft-mayrhofer-did-dns-01"
+      authors: ["A. Mayrhofer", "D. Klesev", "M. Sabadello"]
+      status: "Internet Draft"
+      publisher: "IETF"
+   "OWASP-TRANSPORT":
+      title: "Transport Layer Protection Cheatsheet"
+      href: "https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet"
 ---
 
 <section #abstract>
@@ -59,7 +118,7 @@ bibliography: bibliography.yaml
 
             The QR code includes a nonce called <code>state</code> that will be used later by the portal to know when a specific login session has finished. In our use case, the URL inside the QR could look like this:
 
-            <pre><code class="language-http">
+            <x-code .language-http>
                GET /authentication-requests?state=af0ifjsldkj HTTP/1.1
                Host: rp.packetdelivery.com
                   
@@ -109,7 +168,7 @@ bibliography: bibliography.yaml
 
          -(9) The SIOP Authentication Request is returned to the mobile in the reply body of the GET request, as a JWT in JWS form (<x-ref RFC7515 a>), signed with the public key associated with the DID in the client_id field of the Authorization Request. The JWT MUST be generated according to the best practices described in <x-ref RFC8725 >. This is an example of the unencoded contents of such JWT:
 
-            <pre><code class="language-json">
+            <x-code .language-json>
                --------------- Header ---------------
                {
                   "alg": "ES256",      // This should be one of the supported algorithms in the Data Space
@@ -147,7 +206,7 @@ bibliography: bibliography.yaml
 
             An example DID Document (in this example stored in the Alastria RedT blockchain network) is:
 
-            <pre><code class="language-json">
+            <x-code .language-json>
                {
                   "payload": {
                      "@context": [
@@ -226,7 +285,7 @@ bibliography: bibliography.yaml
 
             The contents of the Authentication Response in our specific use case are (shown here with the POST parameters needed to send it):
 
-            <pre><code class="language-http">
+            <x-code .language-http>
                POST /api/siop/authentication_response/cb HTTP/1.1
                Host: www.packetdelivery.com
                Content-Type: application/x-www-form-urlencoded
@@ -236,7 +295,7 @@ bibliography: bibliography.yaml
 
             The content of the <code>presentation_submission</code> parameter in the above Authentication Request is:
 
-            <pre><code class="language-json">
+            <x-code .language-json>
                {
                   "definition_id": "CustomerPresentationDefinition",
                   "id": "CustomerPresentationSubmission",
@@ -255,7 +314,7 @@ bibliography: bibliography.yaml
 
             Which complies with <x-ref DIF.PresentationExchange > and refers to the VP in the <code>vp_token</code> parameter provided in the same response, which looks as follows:
 
-            <pre><code class="language-json">
+            <x-code .language-json>
                {
                   "@context": [
                      "https://www.w3.org/2018/credentials/v1"
@@ -340,7 +399,7 @@ bibliography: bibliography.yaml
 
             For our use case, the JWT access token looks like:
 
-            <pre><code class="language-json">
+            <x-code .language-json>
                Header:
 
                {"typ":"at+JWT","alg":"RS256","kid":"at-key"}
@@ -385,7 +444,7 @@ bibliography: bibliography.yaml
 
             The notification is a simple POST request with both parameters in the body:
 
-            <pre><code class="language-http">
+            <x-code .language-http>
                POST /api/notify HTTP/1.1
                Host: portal.packetdelivery.com
                Content-Type: application/x-www-form-urlencoded
@@ -399,7 +458,7 @@ bibliography: bibliography.yaml
 
          -(22) The customer selects the option "Change PTA on delivery order" and the browsers sends a GET request to the Packet Delivery portal, including the Access Token as a Bearer token in the Authorization header of the HTTP request. For example:
 
-            <pre><code class="language-http">
+            <x-code .language-http>
                GET /resource HTTP/1.1
                Host: contextbroker.example.com
                Authorization: Bearer [the access token]
@@ -410,7 +469,7 @@ bibliography: bibliography.yaml
 
             The way to do this depends on the implementation of the PEP but if it is based on Nginx, an example configuration looks like:
 
-            <pre><code class="language-json">
+            <x-code .language-json>
                location = /auth {
                   proxy_pass [internal address of PDP component]
                   proxy_pass_request_body off;
@@ -452,7 +511,7 @@ bibliography: bibliography.yaml
 
    Scope <b>gaiax.credentials.presentation.EmployeeCredential</b> represents the following presentation definition:
 
-   <pre><code class="language-json">
+   <x-code .language-json>
       {
          "id": "EmployeePresentationDefinition",
          "input_descriptors": [
@@ -486,7 +545,7 @@ bibliography: bibliography.yaml
     
    Scope <b>gaiax.credentials.presentation.CustomerCredential</b>: represents the following presentation definition:
     
-   <pre><code class="language-json">
+   <x-code .language-json>
       {
          "id": "CustomerPresentationDefinition",
          "input_descriptors": [

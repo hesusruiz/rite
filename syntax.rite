@@ -2,33 +2,42 @@
 title: Syntax for Rite
 ---
 
-<h1 .no-num> rite Syntax
+<section #abstract>
 
-The core of `rite` syntax  is essentially semantic HTML5 with some simplifications to make it easier to write. It also allows a reduced set of Markdown features, described below.
+    The core of `rite` syntax  is essentially semantic HTML5 with some simplifications to make it easier to write. It also allows a reduced set of Markdown features, described below.
 
-The most important concept in `rite` is that indentation is relevant for the structure of the document. Indentation is used to eliminate the need to use the end tags.
+    The most important concept in `rite` is that indentation is relevant for the structure of the document. Indentation is used to eliminate the need to use the end tags.
 
-## The structure of a document
+    By defult, `rite` generates HTML prepared for <a href="https://respec.org/docs/">ReSpec</a>, the tool originally designed for writing W3C specifications, but which now supports many output formats. But via a flag `rite` can be instructed to generate HTML that does not depend from ReSpec functionalities so you can control the visual appearance of the final document.
 
-A 'rite' document MAY start with a metadata header denoted by a line of minimum three dashes, where the `title` item is compulsory. Like this:
+<section #conformance>
 
-<pre><code class="language-yaml">
-    ---
-    title: Syntax for Rite
-    ---
+<section>
+    ## The structure of a document
+
+    A 'rite' document MAY start with a metadata header in YAML format started by a line of minimum three dashes and ended by another line of minimum three dashes. The `title` item is compulsory, like this:
+
+    <pre><code class="language-yaml">
+        ---
+        title: Syntax for Rite
+        ---
+
+    The metadata section can contain many more elements, specially the ones required by the <a href="https://respec.org/docs/#respecConfig">ReSpec configuration object</a>
 
 
-## Block syntax
 
-In Rite indentation is relevant, making the document source much easier to understand. The meaning of <i>relevant</i> is the same as in Python, Markdown lists or even natural language.
+<section>
+    ## Block syntax
 
-Block structure is evident from the indentation of the text and takes priority over inline structure.
+    In Rite indentation is relevant, making the document source much easier to understand. The meaning of <i>relevant</i> is the same as in Python, Markdown lists or even natural language.
 
-Items of the same block are separated from one another by blank lines. For a given block item, all contiguos lines are processed as a single paragraph. Processing of paragraphs is explained below.
+    Block structure is evident from the indentation of the text and takes priority over inline structure.
 
-A line which is indented more than the previous one starts a new, indented block.
+    Items of the same block are separated from one another by blank lines. For a given block item, all contiguos lines are processed as a single paragraph. Processing of paragraphs is explained below.
 
-## Headers
+    A line which is indented more than the previous one starts a new, indented block.
 
-A header can be written in two ways, HTML and Rite way.
+    ## Headers
+
+    A header can be written in two ways, HTML and Rite way.
 
