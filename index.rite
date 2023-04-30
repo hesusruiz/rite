@@ -24,7 +24,7 @@ github: "https://github.com/hesusruiz/rite"
 
     In `rite` the convention is that when using those structural elements their start tag should be the at the beginning of a line and the content of the tag should be indented in the following lines. Because indentation is used, the corresponding end tag does not have to be specified (but `rite` ignores the end tag if it is used, to facilitate transition from standard HTML formatting).
 
-    In Rite indentation is relevant, making the document source much easier to understand. The meaning of <i>relevant</i> is the same as in Python, Markdown lists or even natural language.
+    In `rite` indentation is relevant, making the document source much easier to understand. The meaning of <i>relevant</i> is the same as in Python, Markdown lists or even natural language.
 
     Block structure is evident from the indentation of the text and takes priority over inline structure.
 
@@ -63,7 +63,7 @@ github: "https://github.com/hesusruiz/rite"
                 This is an example, marked with the class 'example'.
 
                 <x-code .js>
-                    // A code section withj sutomatic syntax highlighting
+                    // A code section with sutomatic syntax highlighting
                     function someJavaScript(){}
 
             <section>I'm a sub-section
