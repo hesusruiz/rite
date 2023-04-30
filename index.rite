@@ -237,7 +237,7 @@ github: "https://github.com/hesusruiz/rite"
             <section .informative>I'm a sub-section
                 Sub-section text
 
-        You can specify any standard HTML attribute inside the \<section\>` element, whith the semantics exactly as defined in ReSpec. To simplify writing, `rite` defines a small set of shorthands for some of the more common attributes:
+        You can specify any standard HTML attribute inside the `\<section\>` element or any other HTML tag, whith the semantics exactly as defined in ReSpec. To simplify writing, `rite` defines a small set of shorthands for some of the more common attributes:
 
         <ul>
 
