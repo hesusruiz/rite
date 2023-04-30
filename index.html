@@ -51,7 +51,7 @@
     </p>
     <p>In <code>rite</code> the convention is that when using those structural elements their start tag should be the at the beginning of a line and the content of the tag should be indented in the following lines. Because indentation is used, the corresponding end tag does not have to be specified (but <code>rite</code> ignores the end tag if it is used, to facilitate transition from standard HTML formatting).
     </p>
-    <p>In Rite indentation is relevant, making the document source much easier to understand. The meaning of <i>relevant</i> is the same as in Python, Markdown lists or even natural language.
+    <p>In <code>rite</code> indentation is relevant, making the document source much easier to understand. The meaning of <i>relevant</i> is the same as in Python, Markdown lists or even natural language.
     </p>
     <p>Block structure is evident from the indentation of the text and takes priority over inline structure.
     </p>
@@ -90,7 +90,7 @@ editors:
         This is an example, marked with the class &#39;example&#39;.
 
         &lt;x-code .js&gt;
-            // A code section withj sutomatic syntax highlighting
+            // A code section with sutomatic syntax highlighting
             function someJavaScript(){}
 
     &lt;section&gt;I&#39;m a sub-section
@@ -270,7 +270,7 @@ github: &#34;https://github.com/hesusruiz/did-method-elsi&#34;
 &lt;section .informative&gt;I&#39;m a sub-section
     Sub-section text</code></pre>
 
-        <p>You can specify any standard HTML attribute inside the &ltsection&gt` element, whith the semantics exactly as defined in ReSpec. To simplify writing, <code>rite</code> defines a small set of shorthands for some of the more common attributes:
+        <p>You can specify any standard HTML attribute inside the `&ltsection&gt` element or any other HTML tag, whith the semantics exactly as defined in ReSpec. To simplify writing, <code>rite</code> defines a small set of shorthands for some of the more common attributes:
         </p>
         <ul>
             <li id='list_242.class'><a href='#list_242.class' class='selfref'><b>class.</b></a> The <code>class</code> attribute `class="a_class"` can be shortened to <code>.a_class</code> where the <code>class</code> is specified without quotes and so it can be only one word. For several classes you can use the shorthand several times, or just use the standard HTML syntax.            </li>
