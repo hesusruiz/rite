@@ -1,0 +1,306 @@
+---
+title: DID ETSI Legal Semantic Person Identifier Method Specification (did:elsi)
+template: "assets/templates/respec"
+
+editors:
+   - name: "Jesus Ruiz"
+     email: "hesusruiz@gmail.com"
+     company: "JesusRuiz"
+     companyURL: "https://hesusruiz.github.io/hesusruiz"
+
+authors:
+   - name: "Jesus Ruiz"
+     email: "hesusruiz@gmail.com"
+     company: "JesusRuiz"
+     companyURL: "https://hesusruiz.github.io/hesusruiz"
+   - name: "Alejandro Nieto"
+     email: "alejandro.nieto@madisonmk.com"
+     company: "DigitelTS"
+     companyURL: "https://digitelts.es/"
+   - name: "Alejandro Alfonso"
+     email: "alejandro.alfonso@madisonmk.com"
+     company: "DigitelTS"
+     companyURL: "https://digitelts.es/"
+   - name: "Oriol Canades"
+     email: "oriol.canades@in2.es"
+     company: "IN2"
+     companyURL: "https://www.in2.es/"
+
+codpyright: >
+   Copyright © 2023 the document editors/authors. Text is available under the
+   <a rel="license" href="https://creativecommons.org/licenses/by/4.0/legalcode">
+   Creative Commons Attribution 4.0 International Public License</a>
+
+latestVersion: "https://github.com/hesusruiz/did-method-elsi"
+github: "https://github.com/hesusruiz/did-method-elsi"
+
+localBiblio:
+   "ETSI-CERTOVERVIEW":
+      title: "ETSI EN 319 412-1 V1.4.2 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 1: Overview and common data structures"
+      href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.04.02_20/en_31941201v010402a.pdf"
+      date: "2020-07"
+      publisher: "ETSI"
+   "ETSI-LEGALPERSON":
+      title: "ETSI EN 319 412-3 V1.2.1 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 3: Certificate profile for certificates issued to legal persons"
+      href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941203/01.02.01_60/en_31941203v010201p.pdf"
+      date: "2020-07"
+      publisher: "ETSI"
+   "ETSI-JADES":
+      title: "ETSI TS 119 182-1 V1.1.1 (2021-03) - Electronic Signatures and Infrastructures (ESI); JAdES digital signatures; Part 1: Building blocks and JAdES baseline signatures"
+      href: "https://www.etsi.org/deliver/etsi_ts/119100_119199/11918201/01.01.01_60/ts_11918201v010101p.pdf"
+      date: "2021-03"
+      publisher: "ETSI"
+   "DEP-DSS":
+      title: "Algorithm for Validation of qualified and advanced signatures and seals"
+      href: "https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/Qualified+electronic+signature+-+QES+validation+algorithm"
+      date: "2019-10"
+      publisher: "European Commission"
+   "DID-PRIMER":
+      title: "DID Primer"
+      href: "https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md"
+      publisher: "Rebooting the Web of Trust 2017"
+   "DID-DNS":
+      title: "The Decentralized Identifier (DID) in the DNS"
+      href: "https://tools.ietf.org/html/draft-mayrhofer-did-dns-01"
+      status: "Internet Draft"
+      publisher: "IETF"
+   "OWASP-TRANSPORT":
+      title: "Transport Layer Protection Cheatsheet"
+      href: "https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet"
+---
+
+<section #abstract>
+    This is a DID method for legal persons, bridging the world of the eIDAS regulation with the world of W3C Verifiable Credentials, maximising both regulatory compliance and decentralisation.
+
+    Natural persons MUST not use this DID method, or for that matter, any DID method that registers anything related to personal information in any type of Verifiable Registry or shared data store. See later the Appendix on a DID method for natural persons that can be used to complement the one for legal persons described here.
+
+    Any legal person than can digitally sign a document using an advanced or qualified e-seal valid in the EU has already a DID identifier under this method without any further action.
+
+    The identifiers in this DID method are based on the unique identifiers that are already used in the eIDAS certificates that comply to the relevant ETSI standards for electronic signatures and seals. This is in contrast to most other did methods, which invent identifiers and mechanims that are not well integrated with the legal framework and which are not in general legally recognised in the EU for economic transactions (e.g., that can be used in electronic invoices across the EU).
+
+    This DID method is intented to be used in W3C Verifiable Credentials which, when signed using JAdES digital signatures, can be used to meet the requirements of electronic signatures, advanced electronic signatures, qualified electronic signatures, electronic seals, advanced electronic seals, and qualified electronic seals as defined in Regulation (EU) No 910/2014 (eIDAS).
+
+<section>Introduction
+
+    <section>Preface
+
+        The `elsi` DID method specification conforms to the requirements specified in the Decentralized Identifiers v1.0 Specification [[DID-CORE]]. For more information about DIDs and DID method specifications, please also see the [[?DID-PRIMER]]
+
+    <section #conformance>
+        <!-- This section is filled automatically by ReSpec. -->
+
+    <section>Examples
+
+        Some example DIDs are the following:
+
+        <ul>
+            - Gaia-X: `did:elsi:VATBE-0762747721`
+            - International Data Spaces: `did:elsi:VATDE-325984196`
+            - FIWARE Foundation: `did:elsi:VATDE-309937516`
+            - TNO: `did:elsi:LEIXG-724500AZSGBRY55MNS59`
+
+        The corresponding DID Documents are described later in this document.
+
+<section>The did:elsi format
+
+    The format for the `did:elsi` method conforms to the [[DID-CORE]] specification and is simple. It consists of the `did:elsi` prefix, followed by the `organizationIdentifier` field which is used in the eIDAS certificates for legal persons as defined in [[ETSI-LEGALPERSON]].
+
+    The ABNF for the key format is described below:
+
+    <pre>
+        did-key-format := did:elsi:<organizationIdentifier>
+
+    <section>
+        ## About the <code>organizationIdentifier</code>
+
+        The [[ETSI-LEGALPERSON]] standard states about the `organizationIdentifier` field in the digital certificates for legal persons:
+
+        <blockquote>
+            The subject field shall include at least the following attributes as specified
+            in Recommendation ITU-T X.520:
+
+            <ul>
+                - countryName
+                - organizationName
+                - <strong>organizationIdentifier</strong>
+                - commonName
+
+        And regarding the `organizationIdentifier` attribute it says:
+
+        <blockquote>
+            The `organizationIdentifier` attribute shall contain an
+            identification of the subject organization different from the organization
+            name. Certificates may include one or more semantics identifiers as
+            specified in clause 5 of ETSI EN 319 412-1.
+
+        And the document referenced, [[ETSI-CERTOVERVIEW]] states:
+
+        <blockquote>
+            When the legal person semantics identifier is included, any present
+            organizationIdentifier attribute in the subject field shall contain
+            information using the following structure in the presented order:
+
+            <ul>
+                - 3 character legal person identity type reference
+                - 2 character ISO 3166 [2] country code
+                - hyphen-minus "-" (0x2D (ASCII), U+002D (UTF-8)) and
+                - identifier (according to country and identity type reference)
+
+            The three initial characters shall have one of the following defined values:
+
+            <ol>
+                - "VAT" for identification based on a national value added tax identification number.
+
+                - "NTR" for identification based on an identifier from a national trade register.
+
+                - "PSD" for identification based on the national authorization number of a payment service provider under Payments Services Directive (EU) 2015/2366 [i.13]. This shall use the extended structure as defined in ETSI TS 119 495 [3], clause 5.2.1.
+
+                - "LEI" for a global Legal Entity Identifier as specified in ISO 17442 [4]. The 2 character ISO 3166 [2] country code shall be set to 'XG'.
+
+                - Two characters according to local definition within the specified country and name registration authority, identifying a national scheme that is considered appropriate for national and European level, followed by the character ":" (colon).
+
+            Other initial character sequences are reserved for future amendments of the present document. In case "VAT" legal person identity type reference is used in combination with the "EU" transnational country code, the identifier value should comply with Council Directive 2006/112/EC [i.12], article 215.
+
+        That means that any eIDAS digital certificate issued by TSPs to legal persons compliant with the ETSI standards including an `organizationIdentifier` attribute can be used to derive a DID for a legal person from the ETSI standard identifier by applying the rule described above.
+
+        Some examples of DIDs are:
+
+        <pre class="example " title="Example ELSI Method DIDs">
+            International Data Spaces: did:elsi:VATDE-325984196
+            Gaia-X: did:elsi:VATBE-0762747721
+            FIWARE Foundation: did:elsi:VATDE-309937516
+            TNO: did:elsi:LEIXG-724500AZSGBRY55MNS59
+
+    <section>
+        ## Proving control of the DID
+
+        When sending and receiving Verifiable Credentials, a legal person may be required to prove that it controls a DID included in the Verifiable Credential.
+
+        Proving the control of an ELSI DID can be done using the associated digital
+        certificate: including the certificate with any signature can do that. By the
+        way, this means that any existing digital signature of any type of document (not
+        only Verifiable Credentials) is already compliant with this DID method
+        specification, just by making the corresponding translation.
+
+        Any legal person can have a standard eIDAS certificate with an automatically
+        associated DID identifier complying with the ELSI did method specification.
+        There is no need to invent new identifiers or have a central entity assign
+        identifiers to participants.
+
+<section>
+    ## DID method operations
+
+        The following section describes the DID operations for the did:elsi method. This DID Method is purely derivative, based on the current Trust Framework of eIDAS and so it does not require look ups in any additional registry.
+
+     <section>
+        ## Create
+
+        If a legal person can digitally sign a document using an advanced or
+        qualified e-seal in the EU, then it already has a valid digital
+        certificate. Digital certificates are provided by over 200 Trust Service
+        Providers in the EU.
+
+        If the legal entity can not perform those digital signatures, then it does
+        not make sense that it wants an ELSI DID, because it is not really
+        transacting digitally and most probably is performing most processes
+        manually and with paper. Before entering the world of digital transactions
+        with Verifiable Credentials, the legal entity has to become digital at least
+        until it can digitally sign legally-binding documents.
+
+        So any legal person than can digitally sign a document using an advanced or
+        qualified e-seal in the EU already has an ELSI DID without any further
+        action, using the `organizationIdentifier` in the certificate
+        used to sign.
+
+    <section>
+        ## Read (Resolve)
+
+        This DID Method is purely derivative, based on the current Trust Framework of eIDAS and so it does not require look ups in any additional registry, and the DID document does not have to contain a `verificationMethod` property.
+
+        Reading a `did:elsi` value consists on deterministically expanding the value to a minimalist DID Document, like the following:
+
+        <pre .example>
+            {
+              "@context": [
+                "https://www.w3.org/ns/did/v1"
+              ],
+              "id": "did:elsi:exampleOrganizationIdentifier",
+            }
+
+        One of the common situations where DID resolution is required is in the verification of Verifiable Credentials. This DID method is intented to be used in W3C Verifiable Credentials which, when signed using JAdES digital signatures, can be used to meet the requirements of electronic signatures, advanced electronic signatures, qualified electronic signatures, electronic seals, advanced electronic seals, and qualified electronic seals as defined in Regulation (EU) No 910/2014 (eIDAS).
+
+        Section <a href="#didresolution"></a> describes the verification of those credentials and why a `verificationMethod` property in the DID document is not required.
+
+    <section>
+        ## Update
+
+        This DID method does not support updates. Management of the DID lifecycle and associated information (e.g., cyptographic material) is performed according to the eIDAS regulation and its implementatin.
+
+    <section>
+        ## Deactivate (Revoke)
+
+        This DID method does not support deactivation. Management of the DID lifecycle and associated information (e.g., cyptographic material) is performed according to the eIDAS regulation and its implementatin.
+
+<section #didresolution>
+    ## DID resolution and the verification of Verifiable Credentials
+
+    The main use case for this DID method is to use `did:elsi` identifiers in W3C Verifiable Credentials signed using JAdES digital signatures [[ETSI-JADES]], which is a specification for JSON Web Electronic Signatures or Seals fulfilling the requirements of the European Union eIDAS Regulation for advanced electronic signatures and seals and regulatory requirements for many different services.
+
+    <section>
+        ## JSON Advanced Electronic Signatures (JAdES)
+
+        The JAdES digital signature specification is based on JSON Web Signature and contains the features already defined in the related ETSI standards for AdES (advanced electronic signature/seal) applied to other data formats including XML, PDF and binary.
+
+        [[ETSI-JADES]] can be used for any transaction between an individual and a company, between two companies, between an individual and a governmental body, etc. applicable to any electronic communications. The technical features of the specification can therefore be applied to the use of PKI based digital signature technology and in both regulated and general commercial environments.
+
+        Essentially, JAdES specifies a JSON [[RFC8259]] format for AdES signatures (JAdES signatures) built on JSON Web Signatures (JWS) as specified in [[RFC7515]]:
+
+        <ul>
+            - Extends the JSON Web Signatures specified in [[RFC7515]] by defining an additional set of JSON header parameters that can be incorporated in the JOSE Header.
+
+            - Specifies the mechanisms for incorporating the above JSON components in JSON Web Signatures to build JAdES signatures, offering the same features as CAdES and XAdES in JSON syntax, and therefore fulfilling the same requirements.
+
+    <section>
+        ## Validation of the signature of Verifiable Credentials
+
+        The process of validation of verifiable credentials or verifiable presentations is composed of different individual validations, depending on several factors like type of credential and use case requirements.
+
+        One of those validations which is normally critical is the verification of signatures in the credential, for example the signature of the issuer. In the case of credentials signed with eIDAS certificates/seals using the JAdES format, the verification process can be based in the guidelines described in the implementation of the algorithm of the Digital Europe eSignature Building Block for the validation of qualified and advanced electronic signatures (e-signatures) and electronic seals (e-seals).
+
+        The algorithm [[DEP-DSS]] focuses on determining 3 sub-conclusions:
+
+        <ol>
+            - Whether the certificate is qualified
+            - What is the type of this certificate
+            - Whether the corresponding private key is protected by a QSCD.
+
+<section .informative>
+    ## Security and privacy considerations
+
+    <section>
+        ## Security considerations
+
+        When using this DID method and signing Verifiable Credentials with eIDAS certificates/seals using the JAdES format, the credential is essentially a signed document with the same security profile as any other document with an advanced signature in the eIDAS framework.
+
+        This security profile is very well understood and described in many places, for example in the <a href="https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/eSignature">eSignature building block of the Digital Europe Program</a>.
+
+    <section>
+        ## Privacy considerations
+
+        This DID method is only for legal persons. Natural persons MUST not use it, due to privacy considerations.
+
+        For legal persons, this DID method does not add any privacy consideration to the ones managed in the eIDAS framework.
+
+        Actually, the EU regulatory environment requires that identities (and identifiers) of any legal person be completely public and subject to public scrutiny, whether from regulators, consumer organisations, industry watchdogs or any other interested party. Some examples:
+
+        <ul>
+            <li> Any of the 30 million businesses in the EU is required by law to register with the appropriate national or international body before being able to engage in any relevant activity. During the process, an identifier is assigned to the business. The registration process and the way to obtain the identifier varies depending on the industry regulation (e.g., banking, telco, health, ...) and other factors.
+
+            <li> The identities of businesses are public and anybody can access all related information from the relevant registries. Even if in some EU countries access is not free, it is public. Information includes many details about the business, including identifier, ownership and place of stablishment.
+
+            <li> Businesses are required to include those identifiers in any relevant transaccion, whether they are electronic or offline. When citizens buy any product or service, they have the right to obtain documentation about the purchase including the identifier of the company.
+
+            <li> Any relevant process in the real economy (agrifood, health, manufacturing, transportation, ...) imposes requirements on traceability of the supply chain, related among other with safety, health and consumer protection and the ability to react properly to emergencies. Information recorded and custodied by all businesses participating in the chain has to use the legally valid identifiers of each business.
+
+<section id="references">
+

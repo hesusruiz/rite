@@ -483,6 +483,7 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 		theLine := &LineStruct{}
 		theLine.indentation = indentation
 		theLine.line = line
+		theLine.number = lineNum
 		doc.theLines = append(doc.theLines, theLine)
 
 		// If the line is empty we are done
@@ -711,18 +712,21 @@ func (doc *Document) preprocessTagSpec(lineNum int) (*TagStruct, error) {
 	// Process the special shortcut syntax we provide
 	for i := 1; i < len(fields); i++ {
 		f := fields[i]
-		if len(f) < 2 {
-			return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
-		}
 
 		switch f[0] {
 		case '#':
+			if len(f) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
+			}
 			// Shortcut for id="xxxx"
 			// Only the first id attribute is used, others are ignored
 			if len(t.Id) == 0 {
 				t.Id = f[1:]
 			}
 		case '.':
+			if len(f) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
+			}
 			// Shortcut for class="xxxx"
 			// The tag may specify more than one class and all are accumulated
 			if len(t.Class) > 0 {
@@ -733,24 +737,36 @@ func (doc *Document) preprocessTagSpec(lineNum int) (*TagStruct, error) {
 			}
 			// t.Class = f[1:]
 		case '@':
+			if len(f) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
+			}
 			// Shortcut for src="xxxx"
 			// Only the first attribute is used
 			if len(t.Src) == 0 {
 				t.Src = f[1:]
 			}
 		case '-':
+			if len(f) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
+			}
 			// Shortcut for href="xxxx"
 			// Only the first attribute is used
 			if len(t.Href) == 0 {
 				t.Href = f[1:]
 			}
 		case ':':
+			if len(f) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
+			}
 			// Special attribute "type" for item classification and counters
 			// Only the first attribute is used
 			if len(t.Bucket) == 0 {
 				t.Bucket = f[1:]
 			}
 		case '=':
+			if len(f) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
+			}
 			// Special attribute "number" for list items
 			// Only the first attribute is used
 			if len(t.Number) == 0 {
@@ -771,12 +787,13 @@ func (doc *Document) preprocessTagSpec(lineNum int) (*TagStruct, error) {
 }
 
 func (doc *Document) printPreprocessStats() {
+	fmt.Println("----")
 	fmt.Printf("Number of lines: %v\n", doc.Len())
-	fmt.Println()
 	fmt.Printf("Number of ids: %v\n", len(doc.ids))
 	for k, v := range doc.figs {
 		fmt.Printf("  %v: %v\n", k, v)
 	}
+	fmt.Println("----")
 }
 
 // ***************************************************************
@@ -1150,6 +1167,9 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 
 	// Get the tag which starts the line
 	tag := doc.StartTagForLine(sectionLineNum)
+	if tag == nil {
+		log.Fatalf("processCodeSection: error processing tag in line %d", sectionLineNum+1)
+	}
 
 	// Get the rendered tag and end tag
 	_, startTag, endTag, _ := tag.Render()
