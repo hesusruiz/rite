@@ -3,5 +3,5 @@
 
 {{.HTML}}
 
-{{block "last_part" .}}
+{{- block "last_part" .}}
 {{end}}

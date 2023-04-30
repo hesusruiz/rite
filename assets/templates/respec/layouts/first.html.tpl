@@ -8,9 +8,12 @@
     <script src="https://www.w3.org/Tools/respec/respec-w3c" async="" class="remove"></script>
     <script class="remove">
         var respecConfig = {
-            {{with .Config.latestVersion -}} latestVersion: "{{.}}",{{end}}
-            {{with .Config.github -}} github: "{{.}}",{{end}}
-
+            {{- with .Config.latestVersion }}
+            latestVersion: "{{.}}",
+            {{- end}}
+            {{- with .Config.github }}
+            github: "{{.}}",
+            {{- end}}
             {{- with .Config.editors }}
             editors: [
             {{- range . }}
@@ -35,7 +38,7 @@
             ],
             {{- end }}
 
-            {{- with .Config.localBiblio }}
+            {{- with .Biblio }}
             localBiblio: {
             {{- range $refName, $refObject := . }}
                 "{{$refName}}": {

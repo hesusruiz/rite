@@ -1,0 +1,39 @@
+---
+title: Replace me with a real title
+editors:
+- name: "Jesus Ruiz"
+  email: "hesusruiz@gmail.com"
+  url: "https://hesusruiz.github.io/hesusruiz"
+---
+
+<section #abstract>
+    This is required. This is a section with an id of 'abstract'.
+
+<section .informative>Introduction
+    
+    Some informative introductory text, marked with the class 'informative'.
+
+    <aside .note title="A useful note">
+        I'm a note! marked with the class 'note'
+
+<section>This is a normal section
+
+    Anything indented at this level or more belongs to this section.
+
+    <aside .example>
+        This is an example, marked with the class 'example'.
+
+        <x-code .js>
+            // A code section with sutomatic syntax highlighting
+            function someJavaScript(){}
+
+    <section>I'm a sub-section
+
+        This is a subsection because it is indented with respect to the parent section
+
+<section>Another top-level section
+
+    <ul>
+        - First item in a list
+
+        - Second item

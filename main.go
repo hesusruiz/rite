@@ -8,10 +8,11 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"embed"
 	"fmt"
+	"html"
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"text/template"
@@ -42,7 +43,7 @@ var voidElements = []string{
 	"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr",
 }
 var noSectionElements = []string{
-	"b", "i", "hr", "em", "strong", "small", "s",
+	"code", "b", "i", "hr", "em", "strong", "small", "s",
 }
 var headingElements = []string{"h1", "h2", "h3", "h4", "h5", "h6"}
 
@@ -74,13 +75,13 @@ func (o *Outline) addHeading(tag *TagStruct) ([]byte, error) {
 		return nil, fmt.Errorf("addHeading, line %v: invalid tag %s, expecting a heading", o.doc.lastLine, tagName)
 	}
 
-	_, htmlTag, rest := tag.Render()
+	_, startTag, _, rest := tag.Render()
 
 	newHeading := &Heading{}
 	switch tagName {
 	case "h1":
 		o.subheadings = append(o.subheadings, newHeading)
-		r := fmt.Appendf([]byte{}, "%s<span class='secno'>%d</span> %s", htmlTag, len(o.subheadings), rest)
+		r := fmt.Appendf([]byte{}, "%s<span class='secno'>%d</span> %s", startTag, len(o.subheadings), rest)
 		return r, nil
 	case "h2":
 		if len(o.subheadings) == 0 {
@@ -89,7 +90,7 @@ func (o *Outline) addHeading(tag *TagStruct) ([]byte, error) {
 		l1 := o.subheadings[len(o.subheadings)-1]
 		l1.subheadings = append(l1.subheadings, newHeading)
 
-		r := fmt.Appendf([]byte{}, "%s<span class='secno'>%d.%d</span> %s", htmlTag, len(o.subheadings), len(l1.subheadings), rest)
+		r := fmt.Appendf([]byte{}, "%s<span class='secno'>%d.%d</span> %s", startTag, len(o.subheadings), len(l1.subheadings), rest)
 		return r, nil
 	case "h3":
 		if len(o.subheadings) == 0 {
@@ -101,7 +102,7 @@ func (o *Outline) addHeading(tag *TagStruct) ([]byte, error) {
 		}
 		l2 := l1.subheadings[len(l1.subheadings)-1]
 		l2.subheadings = append(l2.subheadings, newHeading)
-		r := fmt.Appendf([]byte{}, "%s<span class='secno'>%d.%d.%d</span> %s", htmlTag, len(o.subheadings), len(l1.subheadings), len(l1.subheadings), rest)
+		r := fmt.Appendf([]byte{}, "%s<span class='secno'>%d.%d.%d</span> %s", startTag, len(o.subheadings), len(l1.subheadings), len(l1.subheadings), rest)
 		return r, nil
 	}
 	return nil, nil
@@ -119,6 +120,8 @@ const (
 
 type TagStruct struct {
 	Typ         tagType
+	number      int
+	indentation int
 	OriginalTag []byte
 	Tag         []byte
 	Id          []byte
@@ -131,28 +134,87 @@ type TagStruct struct {
 	RestLine    []byte
 }
 
-func (t *TagStruct) Render() (tagName []byte, htmlTag []byte, rest []byte) {
+func (t *TagStruct) Indentation() int {
+	return t.indentation
+}
+
+func (t *TagStruct) IndentStr() string {
+	return strings.Repeat(" ", t.indentation)
+}
+
+func (t *TagStruct) Render() (tagName []byte, startTag []byte, endTag []byte, rest []byte) {
 	// Sanity check
 	if t == nil {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 
-	htmlTag = fmt.Appendf(htmlTag, "<%s", t.Tag)
+	switch string(t.Tag) {
+
+	case "pre":
+		// Handle the 'pre' tag, with special case when the section started with '<pre><code>
+		startTag = fmt.Appendf(startTag, "<pre")
+		if bytes.HasPrefix(t.RestLine, []byte("<code")) {
+			endTag = fmt.Appendf(endTag, "</code>")
+		}
+		endTag = fmt.Appendf(endTag, "</pre>")
+
+	case "x-code":
+		// Handle the 'x-code' special tag
+		startTag = fmt.Appendf(startTag, "<pre")
+		endTag = fmt.Appendf(endTag, "</code></pre>")
+
+	case "x-img":
+		// Handle the 'x-img' special tag
+		startTag = fmt.Appendf(startTag, "<figure><img")
+		endTag = fmt.Appendf(endTag, "<figcaption>%s</figcaption></figure>", t.RestLine)
+
+	default:
+		startTag = fmt.Appendf(startTag, "<%s", t.Tag)
+		endTag = fmt.Appendf(endTag, "</%s>", t.Tag)
+
+	}
+
 	if len(t.Id) > 0 {
-		htmlTag = fmt.Appendf(htmlTag, " id='%s'", t.Id)
+		startTag = fmt.Appendf(startTag, " id='%s'", t.Id)
 	}
 	if len(t.Class) > 0 {
-		htmlTag = fmt.Appendf(htmlTag, " class='%s'", t.Class)
+		startTag = fmt.Appendf(startTag, " class='%s'", t.Class)
+	}
+	if len(t.Src) > 0 {
+		startTag = fmt.Appendf(startTag, " src='%s'", t.Src)
 	}
 	if len(t.Href) > 0 {
-		htmlTag = fmt.Appendf(htmlTag, " href='%s'", t.Href)
+		startTag = fmt.Appendf(startTag, " href='%s'", t.Href)
 	}
 	if len(t.StdFields) > 0 {
-		htmlTag = fmt.Appendf(htmlTag, " %s", t.StdFields)
+		startTag = fmt.Appendf(startTag, " %s", t.StdFields)
 	}
-	htmlTag = fmt.Appendf(htmlTag, ">")
 
-	return t.Tag, htmlTag, t.RestLine
+	restLine := t.RestLine
+
+	// Handle the special cases
+	switch string(t.Tag) {
+	case "section":
+		startTag = fmt.Appendf(startTag, ">")
+		if len(t.RestLine) > 0 {
+			startTag = fmt.Appendf(startTag, "<h2>%s</h2>\n", t.RestLine)
+		}
+		restLine = nil
+
+	case "x-code":
+		startTag = fmt.Appendf(startTag, "><code>")
+		restLine = nil
+
+	case "x-img":
+		startTag = fmt.Appendf(startTag, "/>")
+		restLine = nil
+
+	default:
+		startTag = fmt.Appendf(startTag, ">")
+
+	}
+
+	return t.Tag, startTag, endTag, restLine
 
 }
 
@@ -199,29 +261,18 @@ func (doc *Document) UpdateLine(lineNum int, newLine []byte) {
 	doc.theLines[lineNum].line = newLine
 
 	// Update the tag spec
-	tagFields, err := doc.preprocessTagSpec(newLine)
+	tagFields, err := doc.preprocessTagSpec(lineNum)
 	if err != nil {
 		log.Fatalf("UpdateLine, line %d: %s", doc.lastLine, err)
 	}
 	doc.theLines[lineNum].startTag = tagFields
 }
 
-func (doc *Document) StartingTag(lineNum int) *TagStruct {
+func (doc *Document) StartTagForLine(lineNum int) *TagStruct {
 	if !doc.ValidLineNum(lineNum) {
 		log.Fatalw("invalid line number", "line", lineNum)
 	}
 	return doc.theLines[lineNum].startTag
-}
-
-func (doc *Document) RenderTagForLine(lineNum int) (tagName []byte, htmlTag []byte, rest []byte) {
-	if !doc.ValidLineNum(lineNum) {
-		log.Fatalw("invalid line number", "line", lineNum)
-	}
-
-	tagFields := doc.StartingTag(lineNum)
-
-	return tagFields.Render()
-
 }
 
 func (doc *Document) StartTagType(lineNum int) tagType {
@@ -248,19 +299,29 @@ func trimLeft(input []byte, c byte) []byte {
 	return input
 }
 
+func lineStartsWithVerbatim(line []byte) bool {
+	if lineStartsWithPre(line) || lineStartsWithD2(line) || lineStartsWithCode(line) {
+		return true
+	}
+	return false
+}
+
+// lineStartsWithPre returns true if the line starts with '<pre'
 func lineStartsWithPre(line []byte) bool {
 	return bytes.HasPrefix(line, []byte("<pre"))
 }
 
+// lineStartsWithCode returns true if the line starts with '<x-code'
 func lineStartsWithCode(line []byte) bool {
 	return bytes.HasPrefix(line, []byte("<x-code"))
 }
 
+// lineStartsWithD2 returns true if the line starts with '<x-diagram .d2>'
 func lineStartsWithD2(line []byte) bool {
 	return bytes.HasPrefix(line, []byte("<x-diagram .d2>"))
 }
 
-// lineStartsWithTag returns true if the line starts with a start tags character
+// lineStartsWithTag returns true if the line starts with a start tags character '<'
 func lineStartsWithTag(line []byte) bool {
 	// Check standard HTML tag
 	return len(line) > 0 && line[0] == startHTMLTag
@@ -277,14 +338,12 @@ func (doc *Document) lineStartsWithHeaderTag(lineNum int) bool {
 	return contains(headingElements, line[1:3])
 }
 
-// lineStartsWithSectionTag returns true if the line:
-//
-//	starts either with the HTML tag ('<') or our special tag
-//	and it is followed by a blank line or a line which is more indented
+// lineStartsWithSectionTag returns true if the line
+// starts with one of the block tags that we recognize.
 func (doc *Document) lineStartsWithSectionTag(lineNum int) bool {
 
 	// Decompose the tag into its elements
-	tagFields, _ := doc.preprocessTagSpec(doc.Line(lineNum))
+	tagFields, _ := doc.preprocessTagSpec(lineNum)
 
 	// Return false if there is no tag or it is in the sets that we know should not start a section
 	// For example, void elements
@@ -306,19 +365,15 @@ func (doc *Document) lineStartsWithListTag(lineNum int) bool {
 // *******************************************
 // *******************************************
 
-func (doc *Document) readLine(s *bufio.Scanner) *LineStruct {
-
-	if !s.Scan() {
-		return nil
-	}
+func (doc *Document) readLine(s *bufio.Scanner) (*LineStruct, []byte) {
 
 	// Get a rawLine from the file
 	rawLine := bytes.Clone(s.Bytes())
 
-	// Strip blanks at the beginning of the line and calculate indentation based on the difference in length
-	// We do not support other whitespace like tabs
-	line := trimLeft(rawLine, ' ')
-	indentation := len(rawLine) - len(line)
+	// // Strip blanks at the beginning of the line and calculate indentation based on the difference in length
+	// // We do not support other whitespace like tabs
+	// line := trimLeft(rawLine, ' ')
+	// indentation := len(rawLine) - len(line)
 
 	// Calculate the line number
 	lineNum := doc.Len()
@@ -327,24 +382,22 @@ func (doc *Document) readLine(s *bufio.Scanner) *LineStruct {
 	// Create and add the line struct
 	theLine := &LineStruct{}
 	theLine.number = lineNum
-	theLine.indentation = indentation
-	theLine.line = line
 	doc.theLines = append(doc.theLines, theLine)
 
-	return theLine
+	return theLine, rawLine
 
 }
 
-func (doc *Document) preprocessYAMLHeaderNew(s *bufio.Scanner) error {
+func (doc *Document) preprocessYAMLHeader(s *bufio.Scanner) error {
 	var err error
 
-	// We need at leaast one line
+	// We need at least one line
 	if !s.Scan() {
 		return fmt.Errorf("no YAML metadata found")
 	}
 
-	// Get a rawLine from the file
-	line := bytes.Clone(s.Bytes())
+	// Get a line from the file
+	_, line := doc.readLine(s)
 
 	// We accept YAML data only at the beginning of the file
 	if !bytes.HasPrefix(line, []byte("---")) {
@@ -357,8 +410,8 @@ func (doc *Document) preprocessYAMLHeaderNew(s *bufio.Scanner) error {
 
 	for s.Scan() {
 
-		// Get a rawLine from the file
-		line := bytes.Clone(s.Bytes())
+		// Get a line from the file
+		_, line := doc.readLine(s)
 
 		if bytes.HasPrefix(line, []byte("---")) {
 			endYamlFound = true
@@ -405,7 +458,7 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 	outline.doc = doc
 
 	// Process the YAML header if there is one. It should be at the beginning of the file
-	err := doc.preprocessYAMLHeaderNew(s)
+	err := doc.preprocessYAMLHeader(s)
 	if err != nil {
 		return nil, err
 	}
@@ -432,7 +485,7 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 		theLine.line = line
 		doc.theLines = append(doc.theLines, theLine)
 
-		// Do not process the line if it is empty
+		// If the line is empty we are done
 		if len(line) == 0 {
 			continue
 		}
@@ -444,11 +497,12 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 			if indentation > indentationVerbatim {
 				continue
 			}
-			// Check if we exited the verbatim area
-			if indentation <= indentationVerbatim {
-				insideVerbatim = false
-			}
-		} else if lineStartsWithPre(line) || lineStartsWithD2(line) || lineStartsWithCode(line) {
+
+			// We have already exited the verbatim area
+			insideVerbatim = false
+		}
+
+		if lineStartsWithVerbatim(line) {
 			// The verbatim area is indicated by a <pre> or diagram D2 tag
 			insideVerbatim = true
 
@@ -456,16 +510,12 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 			// Verbatim content has to be indented (indentation > indentationVerbatim)
 			indentationVerbatim = indentation
 
-			// Convert the <x-code tag to the HTML equivalent
-			if lineStartsWithCode(line) {
-				line = bytes.Replace(line, []byte("<x-code"), []byte("<pre><code"), 1)
-			}
-
 		}
 
 		// We ignore any line starting with an end tag
 		if bytes.HasPrefix(line, []byte("</")) {
-			doc.theLines[lineNum] = nil
+			doc.theLines[lineNum].startTag = nil
+			doc.theLines[lineNum].line = nil
 			continue
 		}
 
@@ -492,9 +542,6 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 			// Build the new line and store it
 			line = append([]byte("<h"), hnum, '>')
 			line = append(line, plainLine...)
-			// if debug {
-			// 	fmt.Println("preprocessed Header ##:", string(doc.lines[lineNum]))
-			// }
 
 		}
 
@@ -536,7 +583,7 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 		doc.theLines[lineNum].line = line
 
 		// Parse the tag at the beginning of the line
-		tagFields, _ := doc.preprocessTagSpec(line)
+		tagFields, _ := doc.preprocessTagSpec(lineNum)
 		if tagFields == nil {
 			// No tag found, just continue with the next line
 			continue
@@ -611,18 +658,24 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 
 }
 
-// preprocessTagSpec returns a structure with the tag fields, or nil if not a tag
-func (doc *Document) preprocessTagSpec(rawLine []byte) (*TagStruct, error) {
+// preprocessTagSpec returns a structure with the tag fields of the tag at the beginning of the line.
+// It returns nil and an error if the line does not start with a tag.
+func (doc *Document) preprocessTagSpec(lineNum int) (*TagStruct, error) {
 	var tagSpec, restLine []byte
 
+	rawLine := doc.Line(lineNum)
+
 	// Sanity check
-	if rawLine[0] != startHTMLTag {
+	if len(rawLine) == 0 || rawLine[0] != startHTMLTag {
 		return nil, fmt.Errorf("preprocessTagSpec, line %d: line does not start with a tag", doc.lastLine)
 	}
 
 	t := &TagStruct{}
 
-	// Trim the start and end tag chars
+	t.number = lineNum
+	t.indentation = doc.Indentation(lineNum)
+
+	// Extract the whole tag string between the start and end tags
 	// The end bracket is optional if there is no more text in the line after the tag attributes
 	indexRightBracket := bytes.IndexByte(rawLine, endHTMLTag)
 	if indexRightBracket == -1 {
@@ -665,22 +718,44 @@ func (doc *Document) preprocessTagSpec(rawLine []byte) (*TagStruct, error) {
 		switch f[0] {
 		case '#':
 			// Shortcut for id="xxxx"
-			t.Id = f[1:]
+			// Only the first id attribute is used, others are ignored
+			if len(t.Id) == 0 {
+				t.Id = f[1:]
+			}
 		case '.':
 			// Shortcut for class="xxxx"
-			t.Class = f[1:]
+			// The tag may specify more than one class and all are accumulated
+			if len(t.Class) > 0 {
+				f[0] = ' '
+				t.Class = append(t.Class, f...)
+			} else {
+				t.Class = f[1:]
+			}
+			// t.Class = f[1:]
 		case '@':
 			// Shortcut for src="xxxx"
-			t.Src = f[1:]
+			// Only the first attribute is used
+			if len(t.Src) == 0 {
+				t.Src = f[1:]
+			}
 		case '-':
 			// Shortcut for href="xxxx"
-			t.Href = f[1:]
+			// Only the first attribute is used
+			if len(t.Href) == 0 {
+				t.Href = f[1:]
+			}
 		case ':':
 			// Special attribute "type" for item classification and counters
-			t.Bucket = f[1:]
+			// Only the first attribute is used
+			if len(t.Bucket) == 0 {
+				t.Bucket = f[1:]
+			}
 		case '=':
 			// Special attribute "number" for list items
-			t.Number = f[1:]
+			// Only the first attribute is used
+			if len(t.Number) == 0 {
+				t.Number = f[1:]
+			}
 		default:
 			// This should be a standard attribute
 			standardAttributes = append(standardAttributes, f)
@@ -749,7 +824,15 @@ func (doc *Document) AtEOF(lineNum int) bool {
 }
 
 func (doc *Document) Indentation(lineNum int) int {
-	return doc.theLines[lineNum].indentation
+	if doc.ValidLineNum(lineNum) {
+		if doc.theLines[lineNum] == nil {
+			log.Panicf("invalid line struct at line %d", lineNum)
+		}
+		return doc.theLines[lineNum].indentation
+	} else {
+		log.Panicf("invalid line number %d", lineNum)
+		return 0
+	}
 }
 
 // skipBlankLines returns the line number of the first non-blank line,
@@ -775,6 +858,23 @@ func (doc *Document) skipBlankLines(lineNumber int) int {
 	return doc.Len()
 }
 
+func (doc *Document) Render(inputs ...any) {
+	for _, s := range inputs {
+		switch v := s.(type) {
+		case string:
+			doc.renderer.WriteString(v)
+		case []byte:
+			doc.renderer.Write(v)
+		case byte:
+			doc.renderer.WriteByte(v)
+		case rune:
+			doc.renderer.WriteRune(v)
+		default:
+			log.Fatalf("attemping to write something not a string, []byte or byte: %T", s)
+		}
+	}
+}
+
 func (doc *Document) ToHTML() string {
 	// Start processing the main block
 	doc.ProcessBlock(0)
@@ -782,30 +882,47 @@ func (doc *Document) ToHTML() string {
 	return doc.postProcess()
 }
 
+//go:embed assets
+var assets embed.FS
+
 // postProcess performs any process that can only be done after the whole document has been processed,
 // like cross references between sections.
 // It returns the final document as a string
 func (doc *Document) postProcess() string {
 
 	// Initialise the template system
-	templateDir := doc.config.String("template", "templates/respec")
+	templateDir := doc.config.String("template", "assets/templates/respec")
 	fmt.Println("Using template dir:", templateDir)
 
 	// Parse all templates in the following directories
-	t := template.Must(template.ParseGlob(filepath.Join(templateDir, "layouts/*")))
-	t = template.Must(t.ParseGlob(filepath.Join(templateDir, "partials/*")))
-	t = template.Must(t.ParseGlob(filepath.Join(templateDir, "pages/*")))
+	t := template.Must(template.ParseFS(assets, templateDir+"/layouts/*"))
+	t = template.Must(t.ParseFS(assets, templateDir+"/partials/*"))
+	t = template.Must(t.ParseFS(assets, templateDir+"/pages/*"))
+
+	// Get the bibliography for the references.
+	// It can be specified in the YAML header or in a separate file.
+	// The bibliography in the header has precedence if it exists.
+	bibData := doc.config.Map("localBiblio", nil)
+	if bibData == nil {
+
+		// Read the bibliography file if it exists
+		// First try reading the file specified in the YAML header, otherwise use the default name
+		bd, err := yaml.ParseYamlFile(doc.config.String("localBiblioFile", "localbiblio.yaml"))
+		if err == nil {
+			bibData = bd.Map("")
+		}
+	}
 
 	// Set the data that will be available for the templates
 	var data = map[string]any{
 		"Config": doc.config.Data(),
+		"Biblio": bibData,
 		"HTML":   doc.renderer.String(),
 	}
 
 	// Execute the template and store the result in memory
 	var out bytes.Buffer
-	err := t.ExecuteTemplate(&out, "index.html.tpl", data)
-	if err != nil {
+	if err := t.ExecuteTemplate(&out, "index.html.tpl", data); err != nil {
 		panic(err)
 	}
 
@@ -822,6 +939,10 @@ func (doc *Document) postProcess() string {
 		edBuf.ReplaceAllString(searchString, newValue)
 	}
 
+	// Replace the HTML escaped codes
+	edBuf.ReplaceAllString("\\<", "&lt")
+	edBuf.ReplaceAllString("\\>", "&gt")
+
 	// Apply the changes to the buffer and get the HTML
 	html := edBuf.String()
 
@@ -829,119 +950,52 @@ func (doc *Document) postProcess() string {
 }
 
 // processParagraph reads all contiguous lines of a block, unless it encounters some special tag at the beginning
-func (doc *Document) processParagraph(startLineNum int) int {
-	var tagName, htmlTag, startLine []byte
-	var i int
-	var nextLineNum int
+func (doc *Document) processParagraph(startLineNum int) (nextLineNum int) {
 
-	// We process all contiguous lines without taking into account its indentation
-	rawLine := doc.Line(startLineNum)
+	// Process all contiguous lines in the block, writing them without any processing,
+	// except for addint the <p> tag at the beginning and at the end.
+	// The indentation of all lines will be the same as the first line.
+	for nextLineNum = startLineNum; nextLineNum < doc.Len(); nextLineNum++ {
 
-	if lineStartsWithTag(rawLine) {
-
-		// Process the paragraph with attributes
-		tagName, htmlTag, startLine = doc.RenderTagForLine(startLineNum)
-
-		if isNoSectionElement(tagName) {
-			// A normal paragraph without any command
-			startLine = rawLine
-			nextLineNum = startLineNum + 1
-			tagName = []byte("p")
-
-			// Write the first line
-			doc.renderer.WriteString(fmt.Sprintf("%v<%v>%v\n", strings.Repeat(" ", doc.Indentation(startLineNum)), string(tagName), string(startLine)))
-
-		} else {
-			// Write the first line
-			doc.renderer.WriteString(fmt.Sprintf("%v%v%v\n", strings.Repeat(" ", doc.Indentation(startLineNum)), string(htmlTag), string(startLine)))
-
-			// Point to the next line in the block (if there are any)
-			nextLineNum = startLineNum + 1
-
-		}
-
-	} else {
-
-		// A raw text which starts without any tag
-		startLine = rawLine
-		nextLineNum = startLineNum + 1
-		tagName = []byte("p")
-
-		// Write the first line
-		doc.renderer.WriteString(fmt.Sprintf("%v<%v>%v\n", strings.Repeat(" ", doc.Indentation(startLineNum)), string(tagName), string(startLine)))
-	}
-
-	// Process the rest of contiguous lines in the block, writing them without any processing
-	for i = nextLineNum; i < doc.Len(); i++ {
-		line := doc.Line(i)
-		if len(line) > 0 {
-			doc.renderer.WriteString(fmt.Sprintf("%v%v\n", strings.Repeat(" ", doc.Indentation(i)), string(line)))
-		} else {
+		line := doc.Line(nextLineNum)
+		if len(line) == 0 {
 			break
 		}
+
+		if nextLineNum == startLineNum {
+			// The first line starts with a <p> tag
+			doc.Render(doc.IndentStr(startLineNum), "<p>", line, '\n')
+
+		} else {
+			doc.Render(doc.IndentStr(startLineNum), line, '\n')
+		}
+
 	}
 
-	// Write the end tag
-	if isVoidElement(tagName) {
-		// HTML spec says no end tag should be used
-		doc.renderer.WriteString(fmt.Sprintln())
-	} else {
-		doc.renderer.WriteString(fmt.Sprintf("%v</%v>\n", strings.Repeat(" ", doc.Indentation(startLineNum)), string(tagName)))
-	}
+	// Write the end </p> tag
+	doc.Render(doc.IndentStr(startLineNum), "</p>\n")
 
 	// Return the next line to process
-	return i
+	return nextLineNum
 
 }
 
-// processHeaderParagraph processes the headers, eg. for <hgroup>
+// processHeaderParagraph processes the headers
 func (doc *Document) processHeaderParagraph(headerLineNum int) int {
-	var tagName, htmlTag, restLine []byte
-	var i int
 
-	if debug {
-		fmt.Println("********** Start HEADER", headerLineNum+1)
-		defer fmt.Println("********** End HEADER", headerLineNum+1)
-	}
+	// Get the rendered tag
+	tag := doc.StartTagForLine(headerLineNum)
+	_, startTag, endTag, restLine := tag.Render()
 
-	// The header should be just the first line
-	thisIndentation := doc.Indentation(headerLineNum)
-	nextIndentation := doc.Indentation(headerLineNum + 1)
-	indentStr := strings.Repeat(" ", thisIndentation)
+	// Write everything in a single line, with extra newlines for aesthetics
+	doc.Render(tag.IndentStr(), startTag, restLine, endTag, "\n\n")
 
-	// Process the paragraph with attributes
-	tagName, htmlTag, restLine = doc.RenderTagForLine(headerLineNum)
-
-	if !contains(headingElements, tagName) {
-		log.Fatalf("No header tag found in line %v\n", headerLineNum+1)
-	}
-
-	// If the next line is empty or indented less than the header, we are done with the header
-	if len(doc.Line(headerLineNum+1)) == 0 || nextIndentation < thisIndentation {
-		// Write the first line and the end tag
-		doc.renderer.WriteString(fmt.Sprintf("%v%v%v</%v>\n\n", indentStr, string(htmlTag), string(restLine), string(tagName)))
-
-		// Return the next line number to continue processing
-		return headerLineNum + 1
-	}
-
-	// Here we have a header line and the next lines specifies a subheader
-	// Create an hgroup with the header and the rest of contiguous lines in the paragraph
-	doc.renderer.WriteString(fmt.Sprintf("%v<hgroup>\n", indentStr))
-	doc.renderer.WriteString(fmt.Sprintf("%v  %v%v\n", indentStr, string(htmlTag), string(restLine)))
-	doc.renderer.WriteString(fmt.Sprintf("%v  </%v>\n", indentStr, string(tagName)))
-
-	// Process the rest of contiguous lines in the block
-	i = doc.processParagraph(headerLineNum + 1)
-
-	doc.renderer.WriteString(fmt.Sprintf("%v</%v>\n\n", indentStr, "hgroup"))
-
-	// Return the next line to process
-	return i
+	// Return the next line number to continue processing
+	return headerLineNum + 1
 
 }
 
-func (doc *Document) indentStr(lineNum int) string {
+func (doc *Document) IndentStr(lineNum int) string {
 	return strings.Repeat(" ", doc.Indentation(lineNum))
 }
 
@@ -955,43 +1009,38 @@ func (doc *Document) ProcessList(startLineNum int) int {
 	log.Debugw("ProcessList enter", "line", startLineNum+1)
 	defer log.Debugw("ProcessList exit", "line", startLineNum+1)
 
-	tagFields := doc.StartingTag(startLineNum)
+	listTag := doc.StartTagForLine(startLineNum)
 
 	// Sanity check: verify that only "ol" or "ul" are accepted
-	if tagFields == nil {
+	if listTag == nil {
 		log.Fatalw("no tag, expecting lists ol or ul", "line", startLineNum+1)
 	}
-	if string(tagFields.Tag) != "ol" && string(tagFields.Tag) != "ul" {
+	if string(listTag.Tag) != "ol" && string(listTag.Tag) != "ul" {
 		log.Fatalw("invalid tag, expecting lists ol or ul", "line", startLineNum+1)
 	}
 
 	// Calculate the unique list ID, if it was not specified by the user
-	listID := tagFields.Id
+	listID := listTag.Id
 	if len(listID) == 0 {
 		listID = fmt.Appendf(listID, "list_%v", startLineNum+1)
 	}
 
 	// Prepare for rendering the <li> line
-	listTagName, listHtmlTag, listRestLine := tagFields.Render()
+	_, listStartTag, listEndTag, _ := listTag.Render()
 
 	// List items must have indentation greater than the ol/ul tags
 	listIndentation := doc.Indentation(startLineNum)
 
-	// Write the first line, wrapping its text in a <p> if not empty
-	// We also add a newline at the beginning for better readability of the generated HTML (this has
-	// no influence on the displayed page).
+	// Write the list tag line
 	log.Debugw("ProcessList start-of-list tag", "line", startLineNum+1)
-	if len(listRestLine) > 0 {
-		doc.renderer.WriteString(fmt.Sprintf("\n%v%v<p>%v</p>\n", doc.indentStr(startLineNum), string(listHtmlTag), string(listRestLine)))
-	} else {
-		doc.renderer.WriteString(fmt.Sprintf("\n%v%v\n", doc.indentStr(startLineNum), string(listHtmlTag)))
-	}
+	doc.Render(listTag.IndentStr(), listStartTag, "\n")
 
-	listContentIndentation := 0
+	var itemIndentStr string
+	itemIndentation := 0
 	listItemNumber := 0
 
 	// Process each of the list items until end of list or end of file
-	for currentLineNum = startLineNum + 1; currentLineNum < doc.Len(); {
+	for currentLineNum = startLineNum + 1; !doc.AtEOF(currentLineNum); {
 
 		// Do nothing if the line is empty
 		if len(doc.Line(currentLineNum)) == 0 {
@@ -1004,9 +1053,10 @@ func (doc *Document) ProcessList(startLineNum int) int {
 
 		// Remember the indentation of the first line.
 		// Its indentation sets the expected indentation for all other items.
-		if listContentIndentation == 0 {
+		if itemIndentation == 0 {
 			// This is done only once for the whole list
-			listContentIndentation = doc.Indentation(currentLineNum)
+			itemIndentation = doc.Indentation(currentLineNum)
+			itemIndentStr = strings.Repeat(" ", itemIndentation)
 		}
 
 		// If the line has less or equal indentation than the ol/ul tags, stop processing this block
@@ -1016,42 +1066,47 @@ func (doc *Document) ProcessList(startLineNum int) int {
 
 		// We have a line that must be a list item
 		var bulletText string
-		var tagName, htmlTag, restLine []byte
 
 		// Check if line starts with '<li'
-		if bytes.HasPrefix(line, []byte("<li")) {
+		if !bytes.HasPrefix(line, []byte("<li")) {
+			log.Fatalf("line %d, this is not a list element: %s", currentLineNum+1, line)
+		}
 
-			// This is a list item, increment the counter
-			listItemNumber++
+		// This is a list item, increment the counter (items are numbered starting at 1)
+		listItemNumber++
 
-			// Decompose the tag in its elements
-			tagFields := doc.StartingTag(currentLineNum)
+		// Decompose the tag in its elements
+		itemTag := doc.StartTagForLine(currentLineNum)
 
-			// The user may have specified a bullet text to start the list
-			if len(tagFields.Number) > 0 {
-				itemID := fmt.Appendf(listID, ".%s", bytes.ReplaceAll(tagFields.Number, []byte("%20"), []byte("_")))
-				listNumber := bytes.ReplaceAll(tagFields.Number, []byte("%20"), []byte(" "))
-				tagFields.Id = itemID
-				bulletText = fmt.Sprintf("<a href='#%v' class='selfref'><b>%v.</b></a>", string(itemID), string(listNumber))
-			} else {
-				// Calculate the list item ID if it was not specified by the user
-				itemID := tagFields.Id
-				if len(itemID) == 0 {
-					itemID = fmt.Appendf(listID, ".%d", listItemNumber)
-					tagFields.Id = itemID
-				}
-			}
+		if len(itemTag.Number) > 0 {
+			// The user has specified a bullet text to start the list item
 
-			// Build the tag for presentation
-			tagName, htmlTag, restLine = tagFields.Render()
+			// Overwrite any existing item ID with a calculated one.
+			// Create itemID concatenating listID and the user-specified value for this item.
+			// Replace the encoded space chars with an underscore.
+			itemTag.Id = fmt.Appendf(listID, ".%s", bytes.ReplaceAll(itemTag.Number, []byte("%20"), []byte("_")))
+
+			// the listNumber is the displayed value of the item number.
+			// Replace the encoded space chars by the ASCII equivalent
+			listNumber := bytes.ReplaceAll(itemTag.Number, []byte("%20"), []byte(" "))
+
+			// Create the bullet text for the item, with itemID as achor and a bold display of listNumber
+			bulletText = fmt.Sprintf("<a href='#%s' class='selfref'><b>%s.</b></a>", itemTag.Id, listNumber)
 
 		} else {
-			log.Fatalf("line %v, this is not a list element: %v", currentLineNum+1, string(line))
+			// The user did not specify explicitly a bullet text, but she may have set an explicit item ID.
+			// If the user did not specify anything, we calculate the item ID based on the item sequence number.
+			if len(itemTag.Id) == 0 {
+				itemTag.Id = fmt.Appendf(listID, ".%d", listItemNumber)
+			}
 		}
+
+		// Build the tag for presentation
+		_, itemStartTag, itemEndTag, restLine := itemTag.Render()
 
 		// Write the first line of the list item
 		log.Debugw("ProcessList item open tag", "line", currentLineNum+1)
-		doc.renderer.WriteString(fmt.Sprintf("%v%v%v%v\n", strings.Repeat(" ", listContentIndentation), string(htmlTag), bulletText, string(restLine)))
+		doc.Render(itemTag.IndentStr(), itemStartTag, bulletText, restLine)
 
 		// Skip all the blank lines after the first line
 		currentLineNum = doc.skipBlankLines(currentLineNum + 1)
@@ -1064,51 +1119,52 @@ func (doc *Document) ProcessList(startLineNum int) int {
 
 		// Each list item can have additional content which should be more indented
 		// We wrap that content in a <div></div> section
-		if doc.Indentation(currentLineNum) > listContentIndentation {
+		if doc.Indentation(currentLineNum) > itemIndentation {
 			log.Debugw("ProcessList before ProcessBlock", "line", currentLineNum+1)
 
 			// Process the following lines as a block, inside a <div> section
-			doc.renderer.WriteString(fmt.Sprintf("%v<div>\n", strings.Repeat(" ", listContentIndentation)))
+			doc.Render(itemIndentStr, "<div>\n")
 			currentLineNum = doc.ProcessBlock(currentLineNum)
-			doc.renderer.WriteString(fmt.Sprintf("%v</div>\n", strings.Repeat(" ", listContentIndentation)))
+			doc.Render(itemIndentStr, "</div>\n")
 
 			log.Debugw("ProcessList after ProcessBlock", "line", currentLineNum+1)
 		}
 
 		// Write the list item end tag
 		log.Debugw("ProcessList item close tag", "line", currentLineNum+1)
-		doc.renderer.WriteString(fmt.Sprintf("%v</%v>\n", strings.Repeat(" ", listContentIndentation), string(tagName)))
+		doc.Render(itemIndentStr, itemEndTag, '\n')
 
 	}
 
 	// Write the end-of-list tag
 	log.Debugw("ProcessList end-of-list tag", "line", startLineNum+1)
-	doc.renderer.WriteString(fmt.Sprintf("%v</%v>\n\n", strings.Repeat(" ", listIndentation), string(listTagName)))
+	doc.Render(listTag.IndentStr(), listEndTag, "\n\n")
 
 	// Return the line number following the already processed list
 	return currentLineNum
 
 }
 
-func (doc *Document) processCodeSection(startLineNum int) int {
-	log.Debugw("ProcessCodeSection", "line", startLineNum+1)
+// processCodeSection renders a '<x-code> section
+func (doc *Document) processCodeSection(sectionLineNum int) int {
 
-	// This is a verbatim section, so we write it without processing
-	tagName, htmlTag, restLine := doc.RenderTagForLine(startLineNum)
+	// Get the tag which starts the line
+	tag := doc.StartTagForLine(sectionLineNum)
 
-	verbatimSectionIndentation := doc.Indentation(startLineNum)
-	indentStr := strings.Repeat(" ", verbatimSectionIndentation)
+	// Get the rendered tag and end tag
+	_, startTag, endTag, _ := tag.Render()
 
+	contentFirstLineNum := sectionLineNum + 1
 	startOfNextBlock := 0
-	lastNonEmptyLineNum := 0
-	minimumIndentation := doc.Indentation(startLineNum + 1)
+	contentLastLineNum := 0
+	minimumIndentation := doc.Indentation(contentFirstLineNum)
 
 	// We have to calculate the minimum indentation of all the lines in the section.
 	// The lines with that minimum indentation will be left aligned when we generate the section.
 	// So we have to perform two passes, one to calculate the minimum indentation and th esecond one to
 	// generate the section in the HTML with the proper indentation.
 	// Blank lines are assumed to pertain to the verbatim section.
-	for i := startLineNum + 1; !doc.AtEOF(i); i++ {
+	for i := contentFirstLineNum; !doc.AtEOF(i); i++ {
 
 		startOfNextBlock = i
 
@@ -1119,14 +1175,14 @@ func (doc *Document) processCodeSection(startLineNum int) int {
 		// If the line is non-blank
 		if len(doc.Line(i)) > 0 {
 
-			// Break the loop if indentation of this line is less or equal than pre section
-			if thisLineIndentation <= verbatimSectionIndentation {
+			// Break the loop if indentation of this line is less or equal than the section
+			if thisLineIndentation <= tag.Indentation() {
 				// This line is part of the next block
 				break
 			}
 
 			// Update the number of the last line of the verbatim section
-			lastNonEmptyLineNum = i
+			contentLastLineNum = i
 
 			// Update the minimum indentation in the whole section
 			if thisLineIndentation < minimumIndentation {
@@ -1137,128 +1193,66 @@ func (doc *Document) processCodeSection(startLineNum int) int {
 
 	}
 
-	for i := startLineNum + 1; i <= lastNonEmptyLineNum; i++ {
+	// Do nothing if section is empty
+	if contentLastLineNum == 0 {
+		return startOfNextBlock
+	}
 
+	// Write a newline to visually separate from the preceding content
+	doc.Render('\n')
+
+	for i := contentFirstLineNum; i <= contentLastLineNum; i++ {
+
+		// Calculate and write the indentation for the line
 		thisIndentationStr := ""
 		if doc.Indentation(i)-minimumIndentation > 0 {
 			thisIndentationStr = strings.Repeat(" ", doc.Indentation(i)-minimumIndentation)
 		}
+		doc.Render(thisIndentationStr)
 
-		if i == startLineNum+1 && i == lastNonEmptyLineNum {
-			doc.renderer.WriteString(fmt.Sprintf("\n%v%v%v%v", indentStr, string(htmlTag), string(restLine), string(doc.Line(i))))
-			// As a very common special case, if there was a <code> in the same line as <pre>, write the end tag too
-			if bytes.HasPrefix(restLine, []byte("<code")) {
-				doc.renderer.WriteString(fmt.Sprintf("</code></%v>\n\n", string(tagName)))
-			} else {
-				doc.renderer.WriteString(fmt.Sprintf("</%v>\n\n", string(tagName)))
-			}
-		} else if i == startLineNum+1 {
-			// Write the first line
-			doc.renderer.WriteString(fmt.Sprintf("\n%v%v%v%v\n", indentStr, string(htmlTag), string(restLine), string(doc.Line(i))))
+		// Escape any HTML in the content line
+		escapedContentLine := html.EscapeString(string(doc.Line(i)))
 
-		} else if i == lastNonEmptyLineNum {
-			// Write the end tag
-			// As a very common special case, if there was a <code> in the same line as <pre>, write the end tag too
-			if bytes.HasPrefix(restLine, []byte("<code")) {
-				doc.renderer.WriteString(fmt.Sprintf("%v%v</code></%v>\n\n", thisIndentationStr, string(doc.Line(i)), string(tagName)))
-			} else {
-				doc.renderer.WriteString(fmt.Sprintf("%v%v</%v>\n\n", thisIndentationStr, string(doc.Line(i)), string(tagName)))
-			}
+		switch {
+		case i == contentFirstLineNum && i == contentLastLineNum:
+			// Special case: the section has only one line
+			// We have to write the start tag for the section, the content line and the end tag for the section in only one line
 
-		} else {
-			// Write the verbatim line
-			doc.renderer.WriteString(fmt.Sprintf("%v%v\n", thisIndentationStr, string(doc.Line(i))))
+			// Write the start tag, escaped content line and the end tag
+			// This line is indented according to the indentation of the section tag
+			doc.Render(tag.IndentStr(), startTag, escapedContentLine, endTag, "\n")
+
+		case i == contentFirstLineNum:
+			// We are at the first line of a section with several lines
+			// We have to write the start tag for the section, and the first line of content in the same line
+
+			// Write the start tag and escaped content line
+			// This first line is indented according to the indentation of the section tag
+			doc.Render(tag.IndentStr(), startTag, escapedContentLine)
+
+		case i > contentFirstLineNum && i < contentLastLineNum:
+			// We are in the middle of a section with several lines
+
+			// Write the content line, escaped for HTML tags
+			// All lines are left aligned
+			doc.Render(escapedContentLine)
+
+		case i == contentLastLineNum:
+			// We are at the last line of a section with several lines
+
+			// Write the content line, escaped for HTML tags
+			doc.Render(escapedContentLine)
+
+			// Write the end tag for the section
+			doc.Render(endTag, "\n")
 
 		}
+
+		// Write the endline
+		doc.Render("\n")
 
 	}
 
-	log.Debugw("ProcessCodeSection", "startOfNextBlock", startOfNextBlock+1)
-	return startOfNextBlock
-
-}
-
-func (doc *Document) processVerbatim(startLineNum int) int {
-	log.Debugw("ProcessVerbatim", "line", startLineNum+1)
-
-	// This is a verbatim section, so we write it without processing
-	tagName, htmlTag, restLine := doc.RenderTagForLine(startLineNum)
-
-	verbatimSectionIndentation := doc.Indentation(startLineNum)
-	indentStr := strings.Repeat(" ", verbatimSectionIndentation)
-
-	startOfNextBlock := 0
-	lastNonEmptyLineNum := 0
-	minimumIndentation := doc.Indentation(startLineNum + 1)
-
-	// Loop until the end of the document or until we find a line with less indentation
-	// Blank lines are assumed to pertain to the verbatim section
-	for i := startLineNum + 1; !doc.AtEOF(i); i++ {
-
-		startOfNextBlock = i
-
-		// This is the indentation of the text in the verbatim section
-		// We do not require that it is left-alligned, but calculate its offset
-		thisLineIndentation := doc.Indentation(i)
-
-		// If the line is non-blank
-		if len(doc.Line(i)) > 0 {
-
-			// Break the loop if indentation of this line is less or equal than pre section
-			if thisLineIndentation <= verbatimSectionIndentation {
-				// This line is part of th enext block
-				break
-			}
-
-			// Update the number of the last line of the verbatim section
-			lastNonEmptyLineNum = i
-
-			// Update the minimum indentation in the whole section
-			if thisLineIndentation < minimumIndentation {
-				minimumIndentation = thisLineIndentation
-			}
-
-		}
-
-	}
-
-	for i := startLineNum + 1; i <= lastNonEmptyLineNum; i++ {
-
-		thisIndentationStr := ""
-		if doc.Indentation(i)-minimumIndentation > 0 {
-			thisIndentationStr = strings.Repeat(" ", doc.Indentation(i)-minimumIndentation)
-		}
-
-		if i == startLineNum+1 && i == lastNonEmptyLineNum {
-			doc.renderer.WriteString(fmt.Sprintf("\n%v%v%v%v", indentStr, string(htmlTag), string(restLine), string(doc.Line(i))))
-			// As a very common special case, if there was a <code> in the same line as <pre>, write the end tag too
-			if bytes.HasPrefix(restLine, []byte("<code")) {
-				doc.renderer.WriteString(fmt.Sprintf("</code></%v>\n\n", string(tagName)))
-			} else {
-				doc.renderer.WriteString(fmt.Sprintf("</%v>\n\n", string(tagName)))
-			}
-		} else if i == startLineNum+1 {
-			// Write the first line
-			doc.renderer.WriteString(fmt.Sprintf("\n%v%v%v%v\n", indentStr, string(htmlTag), string(restLine), string(doc.Line(i))))
-
-		} else if i == lastNonEmptyLineNum {
-			// Write the end tag
-			// As a very common special case, if there was a <code> in the same line as <pre>, write the end tag too
-			if bytes.HasPrefix(restLine, []byte("<code")) {
-				doc.renderer.WriteString(fmt.Sprintf("%v%v</code></%v>\n\n", thisIndentationStr, string(doc.Line(i)), string(tagName)))
-			} else {
-				doc.renderer.WriteString(fmt.Sprintf("%v%v</%v>\n\n", thisIndentationStr, string(doc.Line(i)), string(tagName)))
-			}
-
-		} else {
-			// Write the verbatim line
-			doc.renderer.WriteString(fmt.Sprintf("%v%v\n", thisIndentationStr, string(doc.Line(i))))
-
-		}
-
-	}
-
-	log.Debugw("ProcessVerbatim", "startOfNextBlock", startOfNextBlock+1)
 	return startOfNextBlock
 
 }
@@ -1334,61 +1328,51 @@ func (doc *Document) processD2(startLineNum int) int {
 	if err != nil {
 		log.Fatalw("processD2", "line", startLineNum)
 	}
-	// err = os.WriteFile(filepath.Join("out.svg"), out, 0600)
-	// if err != nil {
-	// 	log.Fatalw("processD2", "line", startLineNum)
-	// }
 
 	// Write the diagram as an HTML comment to enhance readability
-	doc.renderer.WriteString("<!--Original D2 diagram definition\n")
-	doc.renderer.WriteString(string(d2String))
-	doc.renderer.WriteString("-->\n")
+	doc.Render("<!-- Original D2 diagram definition\n", d2String, " -->\n")
 
-	doc.renderer.WriteString("\n")
-	doc.renderer.Write(out)
-	doc.renderer.WriteString("\n")
+	// Write the SVG inline with the HTML
+	doc.Render('\n', out, '\n')
 
 	log.Debugw("ProcessD2 exit", "startOfNextBlock", startOfNextBlock+1)
 	return startOfNextBlock
 
 }
 
-func (doc *Document) ProcessSectionTag(startLineNum int) int {
+func (doc *Document) ProcessSectionTag(sectionLineNum int) int {
 	// Section starts with a tag spec. Process the tag and
 	// advance the line pointer appropriately
-	tagName, htmlTag, restLine := doc.RenderTagForLine(startLineNum)
-	thisIndentation := doc.Indentation(startLineNum)
+	tag := doc.StartTagForLine(sectionLineNum)
+	tagName, startTag, endTag, restLine := tag.Render()
 
-	// Write the first line, wrapping its text in a <p> if not empty and if the tag is not a <p> itself
-	// We add a blank line before, to make the output more readable
-	// if len(restLine) > 0 && tagName != "p" {
-	// 	restLine = "<p>" + restLine + "</p>"
-	// }
-	doc.renderer.WriteString(fmt.Sprintf("\n%v%v%v\n", doc.indentStr(startLineNum), string(htmlTag), string(restLine)))
+	if debug {
+		fmt.Printf("%s(%d)%s\n", tag.IndentStr(), sectionLineNum+1, startTag)
+		defer fmt.Printf("%s(%d)%s\n", tag.IndentStr(), sectionLineNum+1, endTag)
+	}
 
-	// If the next non-blank line is indented the same, we write the end tag and return
-	// Otherwise, we start and process a new indented block
+	// Write the first line
+	doc.Render('\n', tag.IndentStr(), startTag, restLine, '\n')
 
-	// Skip all the blank lines
-	nextLineNum := doc.skipBlankLines(startLineNum + 1)
+	// Skip all the blank lines following the section tag
+	nextLineNum := doc.skipBlankLines(sectionLineNum + 1)
 	if doc.AtEOF(nextLineNum) {
-		log.Debugf("EOF reached at line %v", startLineNum+1)
+		log.Debugf("EOF reached at line %v", sectionLineNum+1)
 		return nextLineNum
 	}
 
-	// Start and process an indented block if the next line is more indented
+	// Start and process an indented block if the next line is more indented than the tag
 	nextIndentation := doc.Indentation(nextLineNum)
-	if nextIndentation > thisIndentation {
+	if nextIndentation > tag.Indentation() {
 		nextLineNum = doc.ProcessBlock(nextLineNum)
 	}
 
 	// Write the end tag for the section
 	if isVoidElement(tagName) {
 		// HTML spec says no end tag should be used
-		doc.renderer.WriteString(fmt.Sprintln())
+		doc.Render('\n')
 	} else {
-		doc.renderer.WriteString(fmt.Sprintf("%v</%v>\n\n", doc.indentStr(startLineNum), string(tagName)))
-
+		doc.Render(tag.IndentStr(), endTag, "\n\n")
 	}
 
 	// Return the next line to process
@@ -1400,49 +1384,40 @@ func (doc *Document) ProcessSectionTag(startLineNum int) int {
 // A document is a block and a block is composed of either:
 //   - Paragraphs separated by blank lines
 //   - Indented blocks, called sections
-func (doc *Document) ProcessBlock(startLineNum int) int {
+func (doc *Document) ProcessBlock(blockLineNum int) int {
 	var currentLineNum int
 
-	// Skip all the blank lines at the beginning of the block
-	startLineNum = doc.skipBlankLines(startLineNum)
-	if doc.AtEOF(startLineNum) {
-		log.Debugf("EOF reached at line %v\n", startLineNum)
-		return startLineNum
+	if debug {
+		// This is just for debugging, when printing the start of a line instead of the whole content
+		prefixLen := len(doc.Line(blockLineNum))
+		if prefixLen > 4 {
+			prefixLen = 4
+		}
+		prefix := doc.Line(blockLineNum)[:prefixLen]
+
+		fmt.Printf("%sStartBlock at %d[%s]\n", doc.IndentStr(blockLineNum), blockLineNum+1, prefix)
+		defer fmt.Printf("%sEndBlock at %d[%s]\n", doc.IndentStr(blockLineNum), blockLineNum+1, prefix)
 	}
 
 	// Calculate indentation of the first line to process
 	// This is going to be the indentation of the current block to process
-	thisBlockIndentation := doc.Indentation(startLineNum)
+	blockIndentation := doc.Indentation(blockLineNum)
 
 	// In this loop we process all paragraphs at the same indentation or higher
 	// We stop processing the block when the indentation decreases or we reach the EOF
-	for currentLineNum = startLineNum; !doc.AtEOF(currentLineNum); {
-
-		currentLine := doc.Line(currentLineNum)
-		currentLineIndentation := doc.Indentation(currentLineNum)
+	for currentLineNum = blockLineNum; !doc.AtEOF(currentLineNum); {
 
 		// If the line is empty, just go to the next one
+		currentLine := doc.Line(currentLineNum)
 		if len(currentLine) == 0 {
 			currentLineNum++
 			continue
 		}
 
-		// This is just for debugging, when printing the start of a line instead of the whole content
-		prefixLen := len(currentLine)
-		if prefixLen > 4 {
-			prefixLen = 4
-		}
-		log.Debugw("ProcessBlock", "line", currentLineNum+1, "indent", currentLineIndentation, "l", string(currentLine[:prefixLen]))
-
 		// If the line has less indentation than the block, stop processing this block
-		if currentLineIndentation < thisBlockIndentation {
+		currentLineIndentation := doc.Indentation(currentLineNum)
+		if currentLineIndentation < blockIndentation {
 			break
-		}
-
-		// If indentation is greater, we start a new Block
-		if currentLineIndentation > thisBlockIndentation {
-			currentLineNum = doc.ProcessBlock(currentLineNum)
-			continue
 		}
 
 		// A D2 drawing
@@ -1452,14 +1427,8 @@ func (doc *Document) ProcessBlock(startLineNum int) int {
 		}
 
 		// A diagram
-		if lineStartsWithCode(currentLine) {
+		if lineStartsWithCode(currentLine) || lineStartsWithPre(currentLine) {
 			currentLineNum = doc.processCodeSection(currentLineNum)
-			continue
-		}
-
-		// A verbatim section that is not processed
-		if lineStartsWithPre(currentLine) {
-			currentLineNum = doc.processVerbatim(currentLineNum)
 			continue
 		}
 
@@ -1543,7 +1512,7 @@ func NewDocumentFromFile(fileName string) (*Document, error) {
 	// Read the whole file into memory
 	file, err := os.Open(fileName)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 	defer file.Close()
 
@@ -1613,7 +1582,7 @@ func process(c *cli.Context) error {
 	}
 
 	// This is useful for development.
-	// If the user specified to watch, loop forever processing the input file when modified
+	// If the user specified watch, loop forever processing the input file when modified
 	if c.Bool("watch") {
 		err = processWatch(inputFileName, outputFileName, log)
 		return err
@@ -1651,7 +1620,7 @@ func main() {
 
 	app := &cli.App{
 		Name:     "rite",
-		Version:  "v0.04",
+		Version:  "v0.05",
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
 			{
