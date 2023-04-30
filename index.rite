@@ -18,6 +18,8 @@ github: "https://github.com/hesusruiz/rite"
 
     By default, `rite` generates HTML prepared for <a href="https://respec.org/docs/">ReSpec</a>, the tool originally designed for writing W3C specifications, but which now supports many output formats. Via a flag `rite` can be instructed to generate HTML that does not depend from ReSpec functionalities so you can fully control the visual appearance of the final document.
 
+    This document is itself written in `rite` and you can see the source in <a href="https://github.com/hesusruiz/rite/blob/main/index.rite">index.rite</a>
+
 <section>Structure
 
     `rite` documents are documents which rely on HTML structural elements as in ReSpec, in particular `section`, `aside`, `h2-h6`, `dl`, `ol` etc. By default, `rite` converts the source document into an HTML ReSpec file.
@@ -275,7 +277,7 @@ github: "https://github.com/hesusruiz/rite"
 
     <section>Examples
 
-        Any `\<pre class="example"\>` or `\<aside class="example"\>` gets the additional example header and style. Content inside {pre}/{code} elements is syntax highlighted. You can specify the language in the class attribute, for example {pre class="js"}.
+        Any `\<x-code .example\>` `\<pre .example\>` or `\<aside .example\>` gets the additional example header and style. Content inside `\<pre\>/\<code\>` elements is syntax highlighted. You can specify the language in the class attribute, for example `\<x-code .example .js\>`.
 
 
 <section>(Documentation in progress)
