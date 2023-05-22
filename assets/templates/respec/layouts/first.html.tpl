@@ -5,6 +5,25 @@
     <meta charset="utf-8" />
     <title>{{ .Config.title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Opengraph Facebook Meta Tags -->
+    <meta property="og:title" content="{{ .Config.title }}">
+    <meta property="og:type" content="{{or .Config.og_type "website" }}">
+    {{- with .Config.og_description }}
+    <meta property="og:description" content="{{.}}">
+    {{- end}}
+    {{- with .Config.og_site_name }}
+    <meta property="og:site_name" content="{{.}}">
+    {{- end}}
+    {{- if .Config.og_url }}
+    <meta property="og:url" content="{{.}}">
+    {{- else if .Config.latestVersion}}
+    <meta property="og:url" content="{{.Config.latestVersion}}">
+    {{- end}}
+    {{- with .Config.og_image }}
+    <meta property="og:image" content="{{.}}">
+    {{- end}}
+
     <script src="https://www.w3.org/Tools/respec/respec-w3c" async="" class="remove"></script>
     <script class="remove">
         var respecConfig = {

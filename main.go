@@ -321,12 +321,6 @@ func lineStartsWithD2(line []byte) bool {
 	return bytes.HasPrefix(line, []byte("<x-diagram .d2>"))
 }
 
-// lineStartsWithTag returns true if the line starts with a start tags character '<'
-func lineStartsWithTag(line []byte) bool {
-	// Check standard HTML tag
-	return len(line) > 0 && line[0] == startHTMLTag
-}
-
 // lineStartsWithHeaderTag returns true if the line starts with <h1>, <h2>, ...
 func (doc *Document) lineStartsWithHeaderTag(lineNum int) bool {
 
@@ -1108,7 +1102,7 @@ func (doc *Document) ProcessList(startLineNum int) int {
 			listNumber := bytes.ReplaceAll(itemTag.Number, []byte("%20"), []byte(" "))
 
 			// Create the bullet text for the item, with itemID as achor and a bold display of listNumber
-			bulletText = fmt.Sprintf("<a href='#%s' class='selfref'><b>%s.</b></a>", itemTag.Id, listNumber)
+			bulletText = fmt.Sprintf("<a href='#%s' class='selfref'><b>%s</b></a>", itemTag.Id, listNumber)
 
 		} else {
 			// The user did not specify explicitly a bullet text, but she may have set an explicit item ID.
