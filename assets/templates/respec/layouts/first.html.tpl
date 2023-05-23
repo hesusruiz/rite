@@ -16,7 +16,7 @@
     <meta property="og:site_name" content="{{.}}">
     {{- end}}
     {{- if .Config.og_url }}
-    <meta property="og:url" content="{{.}}">
+    <meta property="og:url" content="{{ .Config.og_url }}">
     {{- else if .Config.latestVersion}}
     <meta property="og:url" content="{{.Config.latestVersion}}">
     {{- end}}
