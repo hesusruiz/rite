@@ -1,0 +1,283 @@
+---
+title: Onboarding example with did:elsi and LEARCredential
+
+editors:
+   - name: "Jesus Ruiz"
+     email: "hesusruiz@gmail.com"
+     company: "JesusRuiz"
+     companyURL: "https://hesusruiz.github.io/hesusruiz"
+
+authors:
+   - name: "Jesus Ruiz"
+     email: "hesusruiz@gmail.com"
+     company: "JesusRuiz"
+     companyURL: "https://hesusruiz.github.io/hesusruiz"
+
+copyright: >
+   Copyright © 2023 the document editors/authors. Text is available under the
+   <a rel="license" href="https://creativecommons.org/licenses/by/4.0/legalcode">
+   Creative Commons Attribution 4.0 International Public License</a>
+
+latestVersion: "https://alastria.github.io/did-method-elsi/"
+github: "https://github.com/alastria/did-method-elsi"
+og_description: >
+    A DID method for legal persons, maximising at the same time regulatory compliance, decentralisation and privacy for W3C Verifiable Credentials in the European Union.
+og_site_name: DID:ELSI Method
+
+localBiblio:
+   "ETSI-CERTOVERVIEW":
+      title: "ETSI EN 319 412-1 V1.4.2 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 1: Overview and common data structures"
+      href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.04.02_20/en_31941201v010402a.pdf"
+      date: "2020-07"
+      publisher: "ETSI"
+   "ETSI-LEGALPERSON":
+      title: "ETSI EN 319 412-3 V1.2.1 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 3: Certificate profile for certificates issued to legal persons"
+      href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941203/01.02.01_60/en_31941203v010201p.pdf"
+      date: "2020-07"
+      publisher: "ETSI"
+   "ETSI-JADES":
+      title: "ETSI TS 119 182-1 V1.1.1 (2021-03) - Electronic Signatures and Infrastructures (ESI); JAdES digital signatures; Part 1: Building blocks and JAdES baseline signatures"
+      href: "https://www.etsi.org/deliver/etsi_ts/119100_119199/11918201/01.01.01_60/ts_11918201v010101p.pdf"
+      date: "2021-03"
+      publisher: "ETSI"
+   "DEP-DSS":
+      title: "Algorithm for Validation of qualified and advanced signatures and seals"
+      href: "https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/Qualified+electronic+signature+-+QES+validation+algorithm"
+      date: "2019-10"
+      publisher: "European Commission"
+   "DID-PRIMER":
+      title: "DID Primer"
+      href: "https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md"
+      publisher: "Rebooting the Web of Trust 2017"
+   "DID-DNS":
+      title: "The Decentralized Identifier (DID) in the DNS"
+      href: "https://tools.ietf.org/html/draft-mayrhofer-did-dns-01"
+      status: "Internet Draft"
+      publisher: "IETF"
+   "OWASP-TRANSPORT":
+      title: "Transport Layer Protection Cheatsheet"
+      href: "https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet"
+---
+
+<section #abstract>
+    This is an example of an onboarding process performed with the LEARCredential using the `did:elsi` method.
+    
+<section>Participants
+
+    Here we introduce the actors of the reference use case we are going to have. There will be an Air Quality App
+    provider who wishes to offer this app in DOME and a given customer (e.g., integrator for a smart city) discovering
+    and procuring the app.
+
+    <section>SmartCityDS: an instance of a Data Space for Smart Cities
+
+        SmartCityDS is a Data Space where local governments can procure data and services from other entities that act as service providers. At the same time, the local governments can also acta as data and service providers for other entities in the Data Space.
+
+        The SmartCityDS Data Space has an onboarding service that allows external entities to perform onboarding in an automated fashion by using Verifiable Credentials that have been issued by trusted entities. The complete Trust Framework used by SmartCityDS is composed from a series of Trust Frameworks, some managed internally using a governance model of SmartCityDS and some others managed externally but by trusted entities. At the root of the Trust Framework of SmartCityDS is the eIDAS Trust Framework and the pan-european recognized list of Trust Service Providers issuing the eIDAS compliant digital identities, in the form of certificates for signatures/seals.
+
+        In order to participate in SmartCityDS, every legal person requires a certificate for seals or that one of its legal representatives has a certificate for signatures (or both).
+
+    <section #participant>GoodAir: the company that wants will perform the onboarding process
+
+        The new participant is a business providing an Air Quality Monitoring application as a service. The business is called GoodAir and it operates the application, which receives data from a set of sensors that may or may not be the property of GoodAir. The sensors must have received a certification to be able to operate and send data to the GoodAir application.
+
+        The company is registered in the tax agency and business registry of Spain with VAT number VATES-12345678
+
+    <section>Jesus Ruiz: COO (Chief Operating Officer) of GoodAir
+
+        The GoodAir company is small and the only person that can sign contracts on behalf of the company is the COO (Chief Operating Officer). The COO is a legal representative of the company and she is registered as so in the business registry of Spain.
+
+        The COO has a certificate for electronic signatures issued by one of the TSPs in Spain enabling the COO to perform electronic qualified signatures as legal representative of GoodAir, instead of doing them manually.
+
+        The X.509 certificate of the COO has the following contents in the `Subject` field (the example below is derived from a real certificate but with the identifiers modified to be an example):
+
+        <x-code>
+            cn=56565656V Jesus Ruiz
+            serialNumber=56565656V
+            givenName=Jesus
+            sn=Ruiz
+            2.5.4.97=VATES-12345678
+            o=GoodAir
+            c=ES
+            2.5.4.13=Notary:Juan Lopez/Protocol Num:7172/Date:07-06-2021
+
+        The above set of fields bind the legal identity of the COO with the identity of the business:
+
+        <ul>
+            - `serialNumber` is the unique number recognized by the Spanish Government for spanish citizens (called NIF).
+            - `2.5.4.97` is the <a href="https://oidref.com/2.5.4.97">official OID for `organizationIdentifier`</a>. The contents of this field in the example certificate is the unique identifier for the legal person GoodAir.
+
+        Before issuing a certificate like the above, the TSP has to perform some validations to ensure that in the official source of truth (the business registry of Spain in this case) there is already registered information that states that the COO has indeed powers to act on behalf of GoodAir as a legal representative.
+
+    <section>RealTruth: a TSP (Trust Service Provider)
+
+        RealTruth is an EU TSP,  which appears in the TL (Trusted List) maintained by the German Government (<https://tl.bundesnetzagentur.de/TL-DE.XML>).
+        
+        RealTruth is a TSP based in Germany but operates in most of the countries of the EU and so being able to provide Trust Services across many countries, including Spain.
+
+        As all TSPs in the TLs of the Member States, its entry in the TL includes one or more "Services" entries which describe the Trust Services provided by the TSP.
+
+        A TSP can have one Service issuing certificates for signatures, another service issuing certificates for seals, another service for timestamping, etc.
+
+        The regulator approves or suspends each service from a TSP individually, and the services are the root anchor for a given trust environment.
+
+        In our case, the entry for RealTruth in the TL includes a `\<TSPService\>` entry, and inside it the `\<ServiceDigitalIdentity\>` entry includes a DER-encoded certificate specifying the digital identity of the root anchor for that trust domain. The certificate for the Service has in the Subject field:
+
+        <x-code>
+            2.5.4.97 = VATDE-170173453
+            CN = DRV QC 11 MA CA 2017ca
+            OU = QC 11 Mitarbeiter CA
+            O = Deutsche Rentenversicherung Westfalen
+            C = DE
+
+        Which in the `organizationIdentifier` field (OID 2.5.4.97) specifies the unique organisation identifier assigned by the German regulatory authority to the TSP: VATDE-170173453.
+
+        RealTruth provides `Legal Person Representative Certificates` which are qualified in accordance with Regulation (EU) No. 910/2014 of the European Parliament and of the Council of 23 July 2014 on electronic identification and trust services for electronic transactions in the internal market.
+
+        The certification policies of RealTruth includes the following sentences:
+
+
+        The Registration Authority must verify the following information in order to authenticate the identity of the organisation:
+
+        <ul>
+            - The data concerning the business name or corporate name of the organisation.
+            - The data relating to the constitution and legal status of the subscriber.
+            - <b>The data concerning the extent and validity of the powers of representation of the applicant.</b>
+            - The data concerning the tax identification code of the organisation or equivalent code used in the country to whose legislation the subscriber is subject.
+
+
+        In accordance to the policies, RealTruth made those validations when issuing the certificate to the COO, in such a way that the Relying Parties verifying the certificate can have a high level of trust in the assertion that the natural person identified in the certificate (with Spanish ID of 56565656V) is a legal representative of he GoodAir company (organizationIdentifier VATES-12345678).
+
+    <section>John Doe: an administrative employee of GoodAir
+
+        This is an employee of the central administration department of GoodAir, who is going to be formally nominated to manage the onboarding process of GoodAir in the Data Space and some other operations in the Data Space once GoodAir is onboarded.. In particular, this employee is going to be nominated as a LEAR (Legal Entity Appointed Representative).
+
+        As it name implies, the LEAR has to be nominated by a <b>legal representative</b> of the GoodAir organisation with the necessary legal authority to commit the organisation for this type of decisions. In our case, the COO of GoodAir will nominate John Doe as the LEAR of GoodAir, delegating on him the capabilities to perform onboarding in the SmartCityDS and some other associated tasks. That means that John Doe will not be empowered to perform other actions like onboarding on other Data Spaces or signing contracts or invoices on behalf of GoodAir.
+
+        To perform the nomination, the COO of GoodAir (a legal representative of GoodAir) will issue a special credential to John Doe and will sign the credential with his certificate for signatures as legal representative of GoodAir. The details are described later in this document.
+
+<section>The LEARCredential
+
+    In this example the LEARCredential will be generated using the certificate of the COO.
+
+    The credential will be generated with an application that the COO will use as VC Issuer and that allows the employee to receive the credential using his credential wallet, using OIDC4VCI to achieve compliance with the EUDI Wallet ARF.
+
+    The application enables the COO to specify the information required to create the LEARCredential, specifying the employee information and the specific type of LEARCredential. In general, there may be different instances of LEARCredentials for different purposes. One employee can have more than one LEARCredential, each having different delegation of powers for different environments.
+
+    An example of LEARCredential is shown below (do not take this as a recommendation, it is just an example based on a real-world onboarding use case):
+
+
+
+    <x-code .json>
+        {
+            "cn": "56565656V Jesus Ruiz",
+            "serialNumber": "56565656V",
+            "organizationIdentifier": "VATES-12345678",
+            "o": "GoodAir",
+            "c": "ES"
+        }
+
+
+
+
+    <x-code .json>
+        {
+            "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://www.dome-project.com/2022/credentials/learcredential/v1"
+            ],
+            "id": "urn:did:elsi:25159389-8dd17b796ac0",
+            "type": ["VerifiableCredential", "LEARCredential"],
+            "issuer": {
+                "id": "did:elsi:VATES-12345678"
+            },
+            "issuanceDate": "2022-03-22T14:00:00Z",
+            "validFrom": "2022-03-22T14:00:00Z",
+            "expirationDate": "2023-03-22T14:00:00Z",
+            "credentialSubject": {
+                "id": "did:peer:99ab5bca41bb45b78d242a46f0157b7d",
+                "title": "Mr.",
+                "first_name": "John",
+                "last_name": "Doe",
+                "gender": "M",
+                "postal_address": "",
+                "email": "johndoe@goodair.com",
+                "telephone": "",
+                "fax": "",
+                "mobile_phone": "+34787426623",
+                "legalRepresentative": {
+                    "cn": "56565656V Jesus Ruiz",
+                    "serialNumber": "56565656V",
+                    "organizationIdentifier": "VATES-12345678",
+                    "o": "GoodAir",
+                    "c": "ES"
+                },
+                "verificationMethod": [
+                    {
+                        "id": "did:peer:99ab5bca41bb45b78d242a46f0157b7d#key1",
+                        "type": "JwsVerificationKey2020",
+                        "controller": "did:peer:99ab5bca41bb45b78d242a46f0157b7d",
+                        "publicKeyJwk": {
+                        "kid": "key1",
+                        "kty": "EC",
+                        "crv": "P-256",
+                        "alg": "ES256"
+                        "x": "lJtvoA5_XptBvcfcrvtGCvXd9bLymmfBSSdNJf5mogo",
+                        "y": "fSc4gZX2R3QKKfHvS3m2vGSVSN8Xc04qsquyfEM55Z0"
+                        }
+                    }
+                ],
+                "rolesAndDuties": [
+                    {
+                        "type": "LEARCredential",
+                        "id": "https://www.dome-project.com/lear/v1/6484994n4r9e990494"
+                    }
+                ]
+            }
+        }
+
+    In the above example the `credentialSubject` includes several sections.
+
+    <aside .note title="Attributes for natural and legal persons">
+
+        The attributes for natural persons and legal persons are derived from the <a href="https://ec.europa.eu/digital-building-blocks/wikis/download/attachments/467109280/eidas_saml_attribute_profile_v1.0_2.pdf?version=1&modificationDate=1639417533738&api=v2">eIDAS SAML Attribute Profile (eIDAS Technical Sub-group, 22 June 2015)</a>.
+
+        All attributes for the eIDAS minimum data sets can be derived from the <a href="https://ec.europa.eu/isa2/solutions/core-vocabularies_en/">ISA Core Vocabulary</a> and <a href="https://joinup.ec.europa.eu/collection/semic-support-centre/specifications">https://joinup.ec.europa.eu/collection/semic-support-centre/specifications</a>.
+
+        In the case of natural persons refer to the <a href="https://joinup.ec.europa.eu/asset/core_person/asset_release/core-person-vocabulary">Core Person Vocabulary</a> and in the case of legal persons refer to definitions for <a href="https://joinup.ec.europa.eu/asset/core_business/asset_release/core-business-vocabulary">Core Business Vocabulary</a>.
+
+
+    <section>Claims identifying the employee
+
+        These are claims identifying the subject of the credential, the person who will act as LEAR. Each Data Space can define their own depending on their specific requirements. For our example, we use the same that are used for accessing the EC portal. The claims in the credential are the digital equivalent of their analog counterparts, displayed here for illustration.
+
+        <figure #lear-appointment-letter-1>
+            <img src="images/lear-appointment-letter-1.png" alt="" />
+
+            <figcaption>LEAR subject identification data.
+
+    <section>`legalRepresentative`
+
+        This section identifies the natural person (the COO) who is a legal representative of the legal person (GoodAir) and that is nominating the employee identified in the credential.
+
+    <section>`rolesAndDuties` of the LEAR
+
+        The `rolesAndDuties` object points to an externally hosted object with the roles and duties of the LEAR. This external object can be either a machine-interpretable definition of the roles and duties in the credential, or just an external definition of the roles and duties in natural language. The ideal approach is the first option, expressing the semantics with a proper machine-readable language, because this will allow automatic access control at the granularity of the individual sentences of that expression language. The `rolesAndDuties` object can also have the definition embedded into it, instead of having a pointer to an external object.
+
+            For illustration, the following figure shows an external object with some of the roles and duties in our LEAR example, in natural language.
+
+            <figure #lear-appointment-letter-2>
+                <img src="images/lear-appointment-letter-2.png" alt="" />
+
+                <figcaption>LEAR roles and duties.
+
+    <section>`verificationMethod`
+
+        The `verificationMethod` contains a public key that corresponds to a keypair that was generated during the LEARCredential issuance process, where the private key was generated by the wallet of the employee and it was always under his control.
+
+        This private key controlled by the employee can be used to sign challenges from Relying Parties that receive the credential to prove that the person sending the credential is the same person that is identified in the `credentialSubject` object of the LEARCredential.
+
+        The signature will not be JAdES-compliant [[ETSI-JADES]].
+        
+
+
+<section id="references">

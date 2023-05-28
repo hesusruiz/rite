@@ -1224,8 +1224,11 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 		}
 		doc.Render(thisIndentationStr)
 
-		// Escape any HTML in the content line
-		escapedContentLine := html.EscapeString(string(doc.Line(i)))
+		escapedContentLine := string(doc.Line(i))
+		if bytes.Contains(tag.Class, []byte("html")) {
+			// Escape any HTML in the content line
+			escapedContentLine = html.EscapeString(string(doc.Line(i)))
+		}
 
 		switch {
 		case i == contentFirstLineNum && i == contentLastLineNum:
