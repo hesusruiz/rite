@@ -163,6 +163,11 @@ func (t *TagStruct) Render() (tagName []byte, startTag []byte, endTag []byte, re
 		startTag = fmt.Appendf(startTag, "<pre")
 		endTag = fmt.Appendf(endTag, "</code></pre>")
 
+	case "x-note":
+		// Handle the 'x-note' special tag
+		startTag = fmt.Appendf(startTag, "<aside class='note'")
+		endTag = fmt.Appendf(endTag, "</aside>")
+
 	case "x-img":
 		// Handle the 'x-img' special tag
 		startTag = fmt.Appendf(startTag, "<figure><img")
@@ -199,6 +204,13 @@ func (t *TagStruct) Render() (tagName []byte, startTag []byte, endTag []byte, re
 		if len(t.RestLine) > 0 {
 			startTag = fmt.Appendf(startTag, "<h2>%s</h2>\n", t.RestLine)
 		}
+		restLine = nil
+
+	case "x-note":
+		if len(t.RestLine) > 0 {
+			startTag = fmt.Appendf(startTag, " title='%s'", t.RestLine)
+		}
+		startTag = fmt.Appendf(startTag, ">")
 		restLine = nil
 
 	case "x-code":
