@@ -1,5 +1,5 @@
 ---
-title: Onboarding example with did:elsi and LEARCredential
+title: Onboarding example with LEARCredential using did:elsi
 
 editors:
    - name: "Jesus Ruiz"
@@ -25,38 +25,57 @@ og_description: >
 og_site_name: DID:ELSI Method
 
 localBiblio:
-   "ETSI-CERTOVERVIEW":
-      title: "ETSI EN 319 412-1 V1.4.2 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 1: Overview and common data structures"
-      href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.04.02_20/en_31941201v010402a.pdf"
-      date: "2020-07"
-      publisher: "ETSI"
-   "ETSI-LEGALPERSON":
-      title: "ETSI EN 319 412-3 V1.2.1 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 3: Certificate profile for certificates issued to legal persons"
-      href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941203/01.02.01_60/en_31941203v010201p.pdf"
-      date: "2020-07"
-      publisher: "ETSI"
-   "ETSI-JADES":
-      title: "ETSI TS 119 182-1 V1.1.1 (2021-03) - Electronic Signatures and Infrastructures (ESI); JAdES digital signatures; Part 1: Building blocks and JAdES baseline signatures"
-      href: "https://www.etsi.org/deliver/etsi_ts/119100_119199/11918201/01.01.01_60/ts_11918201v010101p.pdf"
-      date: "2021-03"
-      publisher: "ETSI"
-   "DEP-DSS":
-      title: "Algorithm for Validation of qualified and advanced signatures and seals"
-      href: "https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/Qualified+electronic+signature+-+QES+validation+algorithm"
-      date: "2019-10"
-      publisher: "European Commission"
-   "DID-PRIMER":
-      title: "DID Primer"
-      href: "https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md"
-      publisher: "Rebooting the Web of Trust 2017"
-   "DID-DNS":
-      title: "The Decentralized Identifier (DID) in the DNS"
-      href: "https://tools.ietf.org/html/draft-mayrhofer-did-dns-01"
-      status: "Internet Draft"
-      publisher: "IETF"
-   "OWASP-TRANSPORT":
-      title: "Transport Layer Protection Cheatsheet"
-      href: "https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet"
+    "ETSI-CERTOVERVIEW":
+        title: "ETSI EN 319 412-1 V1.4.2 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 1: Overview and common data structures"
+        href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.04.02_20/en_31941201v010402a.pdf"
+        date: "2020-07"
+        publisher: "ETSI"
+    "ETSI-LEGALPERSON":
+        title: "ETSI EN 319 412-3 V1.2.1 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 3: Certificate profile for certificates issued to legal persons"
+        href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941203/01.02.01_60/en_31941203v010201p.pdf"
+        date: "2020-07"
+        publisher: "ETSI"
+    "ETSI-JADES":
+        title: "ETSI TS 119 182-1 V1.1.1 (2021-03) - Electronic Signatures and Infrastructures (ESI); JAdES digital signatures; Part 1: Building blocks and JAdES baseline signatures"
+        href: "https://www.etsi.org/deliver/etsi_ts/119100_119199/11918201/01.01.01_60/ts_11918201v010101p.pdf"
+        date: "2021-03"
+        publisher: "ETSI"
+    "DEP-DSS":
+        title: "Algorithm for Validation of qualified and advanced signatures and seals"
+        href: "https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/Qualified+electronic+signature+-+QES+validation+algorithm"
+        date: "2019-10"
+        publisher: "European Commission"
+    "DID-PRIMER":
+        title: "DID Primer"
+        href: "https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md"
+        publisher: "Rebooting the Web of Trust 2017"
+    "DID-DNS":
+        title: "The Decentralized Identifier (DID) in the DNS"
+        href: "https://tools.ietf.org/html/draft-mayrhofer-did-dns-01"
+        status: "Internet Draft"
+        publisher: "IETF"
+    "OWASP-TRANSPORT":
+        title: "Transport Layer Protection Cheatsheet"
+        href: "https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet"
+    "OIDCVCI":
+        title: "OpenID for Verifiable Credential Issuance"
+        href: "https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html"
+    "RFC6749":
+        title: "The OAuth 2.0 Authorization Framework"
+        href: "https://www.rfc-editor.org/rfc/rfc6749.html"
+    "RFC8414":
+        title: "OAuth 2.0 Authorization Server Metadata"
+        href: "https://www.rfc-editor.org/rfc/rfc8414"
+    "RFC7515":
+        title: "JSON Web Signature (JWS)"
+        href: "https://www.rfc-editor.org/rfc/rfc7515"
+    "RFC8725":
+        title: "JSON Web Token Best Current Practices"
+        href: "https://www.rfc-editor.org/rfc/rfc8725"
+    "RFC7519":
+        title: "JSON Web Token (JWT)"
+        href: "https://www.rfc-editor.org/rfc/rfc7519"
+
 ---
 
 <section #abstract>
@@ -64,17 +83,90 @@ localBiblio:
     
 <section>Participants
 
-    Here we introduce the actors of the reference use case we are going to have. There will be an Air Quality App
-    provider who wishes to offer this app in DOME and a given customer (e.g., integrator for a smart city) discovering
-    and procuring the app.
+    Here we introduce the actors of the reference use case we are going to have. The main actors are marked in yellow in the following diagram.
+    
+    RealTruth is a Trust Service Provider operating under the eIDAS Trust Framework, which issues a certificate for seals to the company GoodAir. GoodAir is a business that provides some services using an Air Quality application operated by GoodAir.
 
-    <section>SmartCityDS: an instance of a Data Space for Smart Cities
+    RealTruth also provides a certificate for signatures to the COO of the GoodAir company, so the COO can use the certificate to sign documents on behalf of GoodAir (like contracts, invoices, financial reports, ...) in a way that is compliant with eIDAS.
 
-        SmartCityDS is a Data Space where local governments can procure data and services from other entities that act as service providers. At the same time, the local governments can also acta as data and service providers for other entities in the Data Space.
+    The COO of GoodAir will issue a verifiable credential of type LEARCredential to an employee of GoodAir, signing the credential with his certificate for signatures.
 
-        The SmartCityDS Data Space has an onboarding service that allows external entities to perform onboarding in an automated fashion by using Verifiable Credentials that have been issued by trusted entities. The complete Trust Framework used by SmartCityDS is composed from a series of Trust Frameworks, some managed internally using a governance model of SmartCityDS and some others managed externally but by trusted entities. At the root of the Trust Framework of SmartCityDS is the eIDAS Trust Framework and the pan-european recognized list of Trust Service Providers issuing the eIDAS compliant digital identities, in the form of certificates for signatures/seals.
 
-        In order to participate in SmartCityDS, every legal person requires a certificate for seals or that one of its legal representatives has a certificate for signatures (or both).
+    <x-diagram .d2>
+        classes: {
+            participant: {
+                style: {
+                    fill: "yellow"
+                }
+            }
+        }
+
+        eIDAS: eIDAS Trust Framework {
+
+            DE_TL: Germany Trusted List {
+                RealTruth: RealTruth TSP {
+
+                    Seal: Service\nCertificate\nfor seal
+                    Seal.shape: circle
+
+                    Sign: Service\ncertificate\nfor signature
+                    Sign.shape: circle
+
+                }
+                RealTruth.class: participant
+
+                Other TSPs {
+                    S3.shape: circle
+                    S3: Cert\nfor Sign
+                    S4.shape: circle
+                    S4: Cert\nfor Seal
+                }
+            }
+            DE_TL.style.fill: transparent
+
+            SP_TL: Spain Trusted List {
+                TSP1 {
+                    S1.shape: circle
+                    S1: Cert\nfor Sign
+                    S2.shape: circle
+                    S2: Cert\nfor Seal
+                }
+
+                TSP2 {
+                    S3.shape: circle
+                    S3: Cert\nfor Sign
+                    S4.shape: circle
+                    S4: Cert\nfor Seal
+                }
+            }
+            SP_TL.style.fill: transparent
+
+            Other countries {
+
+            }
+        }
+        eIDAS.style.fill: transparent
+
+
+        GoodAir {
+            COO
+            Employee
+        }
+        GoodAir.class: participant
+
+        eIDAS.DE_TL.RealTruth.Seal -> GoodAir: Issue Cert for Seals
+        eIDAS.DE_TL.RealTruth.Sign -> GoodAir.COO: Issue Cert for Signatures
+
+        GoodAir.COO -> GoodAir.Employee: LEARCredential
+
+
+    <section>DOME: an instance of a Data Space for Smart Cities
+
+        DOME is a Data Space where local governments can procure data and services from other entities that act as service providers. At the same time, the local governments can also act as data and service providers for other entities in the Data Space.
+
+        The DOME Data Space has an onboarding service that allows external entities to perform onboarding in an automated fashion by using Verifiable Credentials that have been issued by trusted entities. The complete Trust Framework used by DOME is composed from a series of Trust Frameworks, some managed internally using a governance model of DOME and some others managed externally but by trusted entities. At the root of the Trust Framework of DOME is the eIDAS Trust Framework and the pan-european recognized list of Trust Service Providers issuing the eIDAS compliant digital identities, in the form of certificates for signatures/seals.
+
+        In order to participate in DOME, every legal person requires a certificate for seals or that one of its legal representatives has a certificate for signatures (or both).
 
     <section #participant>GoodAir: the company that wants will perform the onboarding process
 
@@ -90,7 +182,7 @@ localBiblio:
 
         The X.509 certificate of the COO has the following contents in the `Subject` field (the example below is derived from a real certificate but with the identifiers modified to be an example):
 
-        <x-code>
+        <x-code .yaml>
             cn=56565656V Jesus Ruiz
             serialNumber=56565656V
             givenName=Jesus
@@ -110,7 +202,7 @@ localBiblio:
 
     <section>RealTruth: a TSP (Trust Service Provider)
 
-        RealTruth is an EU TSP,  which appears in the TL (Trusted List) maintained by the German Government (<https://tl.bundesnetzagentur.de/TL-DE.XML>).
+        RealTruth is an EU TSP, which appears in the TL (Trusted List) maintained by the <a href="https://tl.bundesnetzagentur.de/TL-DE.XML">German Government</a>.
         
         RealTruth is a TSP based in Germany but operates in most of the countries of the EU and so being able to provide Trust Services across many countries, including Spain.
 
@@ -122,7 +214,7 @@ localBiblio:
 
         In our case, the entry for RealTruth in the TL includes a `\<TSPService\>` entry, and inside it the `\<ServiceDigitalIdentity\>` entry includes a DER-encoded certificate specifying the digital identity of the root anchor for that trust domain. The certificate for the Service has in the Subject field:
 
-        <x-code>
+        <x-code .yaml>
             2.5.4.97 = VATDE-170173453
             CN = DRV QC 11 MA CA 2017ca
             OU = QC 11 Mitarbeiter CA
@@ -135,14 +227,43 @@ localBiblio:
 
         The certification policies of RealTruth includes the following sentences:
 
+        <blockquote>
+            The Registration Authority must verify the following information in order to authenticate the identity of the organisation:
 
-        The Registration Authority must verify the following information in order to authenticate the identity of the organisation:
+            <ul>
+                - The data concerning the business name or corporate name of the organisation.
+                - The data relating to the constitution and legal status of the subscriber.
+                - <b>The data concerning the extent and validity of the powers of representation of the applicant.</b>
+                - The data concerning the tax identification code of the organisation or equivalent code used in the country to whose legislation the subscriber is subject.
 
-        <ul>
-            - The data concerning the business name or corporate name of the organisation.
-            - The data relating to the constitution and legal status of the subscriber.
-            - <b>The data concerning the extent and validity of the powers of representation of the applicant.</b>
-            - The data concerning the tax identification code of the organisation or equivalent code used in the country to whose legislation the subscriber is subject.
+        The TSP (RealTruth in this case) performs the verifications against `Authentic Sources`.
+
+        <blockquote>
+            Authentic Sources are the public or private repositories or systems recognised or required by law containing attributes about a natural or legal persons.
+            
+            The Authentic Sources in scope of Annex VI of the [eIDAS2] legislative proposal are sources for attributes on address, age, gender, civil status, family composition, nationality, education and training qualifications titles and licences, professional qualifications titles and licences, public permits and licences, financial and company data.
+            
+            Authentic Sources in scope of Annex VI are required to provide interfaces to Qualified Electronic Attestation of Attributes  (QEAA) Providers to verify the authenticity of the above attributes, either directly or via designated intermediaries recognised at national level.
+            
+            Authentic Sources may also issue (Q)EAA-s themselves if they meet the requirements of the eIDAS Regulation. It is up to the Member States to define terms and conditions for the provisioning of these services, but according to the minimum technical specifications, standards, and procedures applicable to the verification procedures for qualified electronic attestations of attributes.
+
+        <x-diagram .d2>
+            shape: sequence_diagram
+
+            COO: COO of GoodAir { shape: person }
+            TSP: Trust\nService\nProvider
+            registry: Authentic\nSources { shape: cylinder }
+
+            COO -> TSP: Request a\ncertificate for signatures
+
+            Verification {
+                TSP."Data about the legal status of the company and powers of representation of the applicant"
+                TSP <-> registry: Verify trusted data
+
+            }
+            
+
+            TSP -> COO: Provide certificate for signature
 
 
         In accordance to the policies, RealTruth made those validations when issuing the certificate to the COO, in such a way that the Relying Parties verifying the certificate can have a high level of trust in the assertion that the natural person identified in the certificate (with Spanish ID of 56565656V) is a legal representative of he GoodAir company (organizationIdentifier VATES-12345678).
@@ -151,7 +272,7 @@ localBiblio:
 
         This is an employee of the central administration department of GoodAir, who is going to be formally nominated to manage the onboarding process of GoodAir in the Data Space and some other operations in the Data Space once GoodAir is onboarded.. In particular, this employee is going to be nominated as a LEAR (Legal Entity Appointed Representative).
 
-        As it name implies, the LEAR has to be nominated by a <b>legal representative</b> of the GoodAir organisation with the necessary legal authority to commit the organisation for this type of decisions. In our case, the COO of GoodAir will nominate John Doe as the LEAR of GoodAir, delegating on him the capabilities to perform onboarding in the SmartCityDS and some other associated tasks. That means that John Doe will not be empowered to perform other actions like onboarding on other Data Spaces or signing contracts or invoices on behalf of GoodAir.
+        As its name implies, the LEAR has to be nominated by a <b>legal representative</b> of the GoodAir organisation with the necessary legal authority to commit the organisation for this type of decision. In our case, the COO of GoodAir will nominate John Doe as the LEAR of GoodAir, delegating to him the capabilities to perform onboarding in the DOME and some other associated tasks. That means that John Doe will not be empowered to perform other actions like onboarding on other Data Spaces or signing contracts or invoices on behalf of GoodAir.
 
         To perform the nomination, the COO of GoodAir (a legal representative of GoodAir) will issue a special credential to John Doe and will sign the credential with his certificate for signatures as legal representative of GoodAir. The details are described later in this document.
 
@@ -159,92 +280,9 @@ localBiblio:
 
     In this example the LEARCredential will be generated using the certificate of the COO.
 
-    The credential will be generated with an application that the COO will use as VC Issuer and that allows the employee to receive the credential using his credential wallet, using OIDC4VCI to achieve compliance with the EUDI Wallet ARF.
+    The credential will be generated with an application that the COO will use as VC Issuer and that allows the employee to receive the credential using his credential wallet, using OIDCVCI to achieve compliance with the EUDI Wallet ARF.
 
-    The application enables the COO to specify the information required to create the LEARCredential, specifying the employee information and the specific type of LEARCredential. In general, there may be different instances of LEARCredentials for different purposes. One employee can have more than one LEARCredential, each having different delegation of powers for different environments.
-
-    An example of LEARCredential is shown below (do not take this as a recommendation, it is just an example based on a real-world onboarding use case):
-
-
-
-    <x-code .json>
-        {
-            "cn": "56565656V Jesus Ruiz",
-            "serialNumber": "56565656V",
-            "organizationIdentifier": "VATES-12345678",
-            "o": "GoodAir",
-            "c": "ES"
-        }
-
-
-
-
-    <x-code .json>
-        {
-            "@context": [
-                "https://www.w3.org/2018/credentials/v1",
-                "https://www.dome-project.com/2022/credentials/learcredential/v1"
-            ],
-            "id": "urn:did:elsi:25159389-8dd17b796ac0",
-            "type": ["VerifiableCredential", "LEARCredential"],
-            "issuer": {
-                "id": "did:elsi:VATES-12345678"
-            },
-            "issuanceDate": "2022-03-22T14:00:00Z",
-            "validFrom": "2022-03-22T14:00:00Z",
-            "expirationDate": "2023-03-22T14:00:00Z",
-            "credentialSubject": {
-                "id": "did:peer:99ab5bca41bb45b78d242a46f0157b7d",
-                "title": "Mr.",
-                "first_name": "John",
-                "last_name": "Doe",
-                "gender": "M",
-                "postal_address": "",
-                "email": "johndoe@goodair.com",
-                "telephone": "",
-                "fax": "",
-                "mobile_phone": "+34787426623",
-                "legalRepresentative": {
-                    "cn": "56565656V Jesus Ruiz",
-                    "serialNumber": "56565656V",
-                    "organizationIdentifier": "VATES-12345678",
-                    "o": "GoodAir",
-                    "c": "ES"
-                },
-                "verificationMethod": [
-                    {
-                        "id": "did:peer:99ab5bca41bb45b78d242a46f0157b7d#key1",
-                        "type": "JwsVerificationKey2020",
-                        "controller": "did:peer:99ab5bca41bb45b78d242a46f0157b7d",
-                        "publicKeyJwk": {
-                        "kid": "key1",
-                        "kty": "EC",
-                        "crv": "P-256",
-                        "alg": "ES256"
-                        "x": "lJtvoA5_XptBvcfcrvtGCvXd9bLymmfBSSdNJf5mogo",
-                        "y": "fSc4gZX2R3QKKfHvS3m2vGSVSN8Xc04qsquyfEM55Z0"
-                        }
-                    }
-                ],
-                "rolesAndDuties": [
-                    {
-                        "type": "LEARCredential",
-                        "id": "https://www.dome-project.com/lear/v1/6484994n4r9e990494"
-                    }
-                ]
-            }
-        }
-
-    In the above example the `credentialSubject` includes several sections.
-
-    <aside .note title="Attributes for natural and legal persons">
-
-        The attributes for natural persons and legal persons are derived from the <a href="https://ec.europa.eu/digital-building-blocks/wikis/download/attachments/467109280/eidas_saml_attribute_profile_v1.0_2.pdf?version=1&modificationDate=1639417533738&api=v2">eIDAS SAML Attribute Profile (eIDAS Technical Sub-group, 22 June 2015)</a>.
-
-        All attributes for the eIDAS minimum data sets can be derived from the <a href="https://ec.europa.eu/isa2/solutions/core-vocabularies_en/">ISA Core Vocabulary</a> and <a href="https://joinup.ec.europa.eu/collection/semic-support-centre/specifications">https://joinup.ec.europa.eu/collection/semic-support-centre/specifications</a>.
-
-        In the case of natural persons refer to the <a href="https://joinup.ec.europa.eu/asset/core_person/asset_release/core-person-vocabulary">Core Person Vocabulary</a> and in the case of legal persons refer to definitions for <a href="https://joinup.ec.europa.eu/asset/core_business/asset_release/core-business-vocabulary">Core Business Vocabulary</a>.
-
+    The application enables the COO to specify the information required to create the LEARCredential, specifying the employee information and the specific type of LEARCredential. In general, there may be different instances of LEARCredentials for different purposes. One employee can have more than one LEARCredential, each having a different delegation of powers for different environments.
 
     <section>Claims identifying the employee
 
@@ -255,29 +293,864 @@ localBiblio:
 
             <figcaption>LEAR subject identification data.
 
+        From the above form we can derive the following claims:
+
+        <x-code .json>
+            {
+                "title": "Mr.",
+                "first_name": "John",
+                "last_name": "Doe",
+                "gender": "M",
+                "postal_address": "",
+                "email": "johndoe@goodair.com",
+                "telephone": "",
+                "fax": "",
+                "mobile_phone": "+34787426623"
+            }
+
+        Where the `id` field is the `did:key` identifier assigned to the employee when issuing the credential, for privacy reasons. This is explained in more detail below.
+
+
+    <section>DID of the employee
+
+        In this example we use the `did:key` method for the DID of the employee, which provides a very high level of privacy and given the way the LEARCredential is generated it supports the verification of the chain of responsibility with a proper level of guarantee.
+
+        If the highest levels of assurance and legal compliance is desired and the employee has an eIDAS certificate for signatures (in this case a personal one, not one like the COO), we could use the `elsi:did` for identification of the employee. However, the company (GoodAir) should make sure that the employee is aware of and agree to the possible privacy implications of doing so, given the personal details leaked from the eIDAS certificate.
+
+        Those "exposed" personal details are exactly the same as if the employee signs any "normal" document with a digital certificate, but care should be taken by GoodAir because in this case the signature would be done "on behalf of" his employer and not as an individual personal action.
+
+        Even though this is not unique to the `did:elsi` method, this also implies that the onboarding service has to handle those personal details in the same way as if it would be accepting any other document signed with a certificate for signatures, and ensure compliance with GDPR.
+
+        In this example we assume the usage of the `did:key` method for the employee to protect his privacy as much as possible.
+
+        This DID for the employee is an additional claim to the ones presented above, using the `id` field in the `credentialSubject` object. The DID corresponds to a keypair that was generated during the LEARCredential issuance process, where the private key was generated by the wallet of the employee and it was always under his control.
+
+        This private key controlled by the employee can be used to sign challenges from Relying Parties that receive the credential to prove that the person sending the credential is the same person that is identified in the `credentialSubject` object of the LEARCredential.
+
+        An example could be:
+
+        <x-code .json>
+            {
+                "id": "did:key:99ab5bca41bb45b78d242a46f0157b7d#key1"
+            }
+
+        In this example, the signatures performed with the private key can not be JAdES-compliant ([[ETSI-JADES]]), but if the LEARCredential is attached to any other credential that is signed with this private key, then they can be traced up to the eIDAS certificate of the COO and so the chain of responsibility can be determined..
+
+        With the DID for the employee, the set of claims identifying him would be then:
+
+        <x-code .json>
+            {
+                "id": "did:key:99ab5bca41bb45b78d242a46f0157b7d",
+                "title": "Mr.",
+                "first_name": "John",
+                "last_name": "Doe",
+                "gender": "M",
+                "postal_address": "",
+                "email": "johndoe@goodair.com",
+                "telephone": "",
+                "fax": "",
+                "mobile_phone": "+34787426623"
+            }
+
     <section>`legalRepresentative`
 
         This section identifies the natural person (the COO) who is a legal representative of the legal person (GoodAir) and that is nominating the employee identified in the credential.
+
+        <x-code .json>
+            "legalRepresentative": {
+                "cn": "56565656V Jesus Ruiz",
+                "serialNumber": "56565656V",
+                "organizationIdentifier": "VATES-12345678",
+                "o": "GoodAir",
+                "c": "ES"
+            }
+
+
+        <aside .note title="Attributes for natural and legal persons">
+
+            The attributes for natural persons and legal persons are derived from the <a href="https://ec.europa.eu/digital-building-blocks/wikis/download/attachments/467109280/eidas_saml_attribute_profile_v1.0_2.pdf?version=1&modificationDate=1639417533738&api=v2">eIDAS SAML Attribute Profile (eIDAS Technical Sub-group, 22 June 2015)</a>.
+
+            All attributes for the eIDAS minimum data sets can be derived from the <a href="https://ec.europa.eu/isa2/solutions/core-vocabularies_en/">ISA Core Vocabulary</a> and <a href="https://joinup.ec.europa.eu/collection/semic-support-centre/specifications">https://joinup.ec.europa.eu/collection/semic-support-centre/specifications</a>.
+
+            In the case of natural persons refer to the <a href="https://joinup.ec.europa.eu/asset/core_person/asset_release/core-person-vocabulary">Core Person Vocabulary</a> and in the case of legal persons refer to definitions for <a href="https://joinup.ec.europa.eu/asset/core_business/asset_release/core-business-vocabulary">Core Business Vocabulary</a>.
+
 
     <section>`rolesAndDuties` of the LEAR
 
         The `rolesAndDuties` object points to an externally hosted object with the roles and duties of the LEAR. This external object can be either a machine-interpretable definition of the roles and duties in the credential, or just an external definition of the roles and duties in natural language. The ideal approach is the first option, expressing the semantics with a proper machine-readable language, because this will allow automatic access control at the granularity of the individual sentences of that expression language. The `rolesAndDuties` object can also have the definition embedded into it, instead of having a pointer to an external object.
 
-            For illustration, the following figure shows an external object with some of the roles and duties in our LEAR example, in natural language.
+        For illustration, the following figure shows an external object with some of the roles and duties in our LEAR example, in natural language.
 
-            <figure #lear-appointment-letter-2>
-                <img src="images/lear-appointment-letter-2.png" alt="" />
+        <figure #lear-appointment-letter-2>
+            <img src="images/lear-appointment-letter-2.png" alt="" />
 
-                <figcaption>LEAR roles and duties.
+            <figcaption>LEAR roles and duties.
 
-    <section>`verificationMethod`
+        A simplistic implementation of the object inside the credential could be:
 
-        The `verificationMethod` contains a public key that corresponds to a keypair that was generated during the LEARCredential issuance process, where the private key was generated by the wallet of the employee and it was always under his control.
+        <x-code .json>
+            "rolesAndDuties": [
+                {
+                    "type": "LEARCredential",
+                    "id": "https://www.dome-project.com/lear/v1/6484994n4r9e990494"
+                }
+            ]
 
-        This private key controlled by the employee can be used to sign challenges from Relying Parties that receive the credential to prove that the person sending the credential is the same person that is identified in the `credentialSubject` object of the LEARCredential.
+        Where the last part of the url can correspond to the hash of the external linked document to ensure that any modification or tampering can be detected. 
 
-        The signature will not be JAdES-compliant [[ETSI-JADES]].
+    <section>Assembling the pieces together
+
+        With the above values for the example, the complete LEARCredential would become something like this:
+
+        <x-code .json>
+            {
+                "@context": [
+                    "https://www.w3.org/2018/credentials/v1",
+                    "https://www.dome-project.com/2022/credentials/learcredential/v1"
+                ],
+                "id": "urn:did:elsi:25159389-8dd17b796ac0",
+                "type": ["VerifiableCredential", "LEARCredential"],
+                "issuer": {
+                    "id": "did:elsi:VATES-12345678"
+                },
+                "issuanceDate": "2022-03-22T14:00:00Z",
+                "validFrom": "2022-03-22T14:00:00Z",
+                "expirationDate": "2023-03-22T14:00:00Z",
+                "credentialSubject": {
+                    "id": "did:key:99ab5bca41bb45b78d242a46f0157b7d",
+                    "title": "Mr.",
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "gender": "M",
+                    "postal_address": "",
+                    "email": "johndoe@goodair.com",
+                    "telephone": "",
+                    "fax": "",
+                    "mobile_phone": "+34787426623",
+                    "legalRepresentative": {
+                        "cn": "56565656V Jesus Ruiz",
+                        "serialNumber": "56565656V",
+                        "organizationIdentifier": "VATES-12345678",
+                        "o": "GoodAir",
+                        "c": "ES"
+                    },
+                    "rolesAndDuties": [
+                        {
+                            "type": "LEARCredential",
+                            "id": "https://www.dome-project.com/lear/v1/6484994n4r9e990494"
+                        }
+                    ]
+                }
+            }
+
+
+<section>Issuing the LEARCredential
+
+    <section>Overview
+
+        In this example we use what we call a <i>profile</i> of the [[OIDCVCI]] protocol. The standard is very flexible, and we restrict the different options available in the standard and implement a set of the options with given values that are adequate for our use case, without impacting flexibility in practice.
+
+        The following figure describes the main components that interact in the issuance of a credential in this profile.
+
+        The description of the issuance process is general enough to be used for many types of credentials, but the text includes notes describing the concrete application of the process to the case of the LEARCredential.
+
+        <figure #iss-overview>
+            <img src="images/issuance/issuance_background.svg" alt="" />
+
+            <figcaption>Overview of participants.
+
+        <b>End user</b>
+
+        This profile is valid for both natural and juridical persons, but because we are focusing on the issuance of the LEARCredential, in the detailed examples below we assume a natural person as the user.
+
+        <b>Wallet</b>
+
+        The wallet is assumed to be a Web application with a wallet backend, maybe implemented as a PWA so it has some offline capabilities and can be installed in the device, providing a user experience similar to a native application. Private key management and most sensitive operations are performed in a backend server, operated by an entity trusted by the end user. Other profiles can support native and completely offline PWA mobile applications, for end users.
+
+        This type of wallet supports natural persons, juridical persons and natural persons who are legal entity representatives of juridical persons. For juridical persons the wallet is usually called an `enterprise wallet` but we will use here just the term `wallet` unless the distinction is required.
+
+        In this profile we assume that the wallet is not previously registered with the Issuer and that the wallet does not expose public endpoints that are called by the Issuer, even if the wallet has a backend server that could implement those endpoints. That makes the wallet implementations in this profile to be very similar in interactions to a full mobile implementation, making migration to a full mobile implementation easier.
+
+        In other words, from the point of view of the Issuer, the wallet in this profile is almost indistinguishable from a full mobile wallet.
+
+        <b>User Laptop</b>
+
+        For clarity of exposition, we assume in this profile that the End User starts the interactions with the Issuer with an internet browser (user agent) in her laptop. However, there is nothing in the interactions which limits those interactions to a laptop form factor and the End User can interact with any internet browser in any device (mobile, tablet, kiosk).
+
+        <b>Issuer</b>
+
+        In this profile we assume that the Issuer is composed of two components:
+
+        <ul>
+            - Authorization server: the backend component implementing the existing authentication/authorization functionalities for the Issuer entity.
+            - Issuer backend: the main server implementing the business logic as a web application and additional backend APIs required for issuance of credentials.
+
+        The Issuer backend and the Authorization server could be implemented as a single component in a real use case, but we assume here that they are separated to make the profile more general, especially for big entities and also when using Trust Service Providers for cloud signature and credential issuance, for example.
+
+        <b>Authentication of End User and previous Issuer-End User relationship</b>
+
+        We assume that the Issuer and End User have a previous relationship and that the Issuer has performed the KYC required by regulation and needed to be able to issue Verifiable Credentials attesting some attributes about the End User. We assume that there is an existing trusted authentication mechanism (not necessarily related to Verifiable Credentials) that the End User employs to access protected resources from the Issuer. For example, the user is an employee or a customer of the Issuer, or the Issuer is a Local Administration and the End User is a citizen living in that city.
+
+
+    <section>Authentication
+
+        <figure #iss-authentication>
+            <img src="images/issuance/issuance_authentication.svg" alt="" />
+
+            <figcaption>Issuance authentication.
+
+
+        Before requesting a new credential, the End User has to authenticate with the Issuer with whatever mechanism is already implemented by the Issuer. This profile does not require that it is based on OIDC, Verifiable Credentials or any other specific mechanism.
+
+        The level of assurance (LoA) of this authentication mechanism is one of the factors that will determine the confidence that the Verifiers can have on the credentials received by them from a given Issuer.
+
+        <x-note>LEARCredential
+            In the case of the LEARCredential, the End User (John Doe) is an employee of GoodAir and in order to receive the credential John first has to authenticate into the company systems using whatever mechanism GoodAir uses for employee authentication.
+            
+            Being a modern company, GoodAir uses Verifiable Credentials IAM but this is not a requirement for the issuance of the LEARCredential.
+
+
+    <section>Credential Offer
+
+        <figure #iss-credentialoffer>
+            <img src="images/issuance/issuance_credentialoffer.svg" alt="" />
+
+            <figcaption>Credential offer.
+
+        In this profile the wallet does not have to implement the Credential Offer Endpoint described in section 4 of [[OIDCVCI]].
+
+        Instead, the Credential Issuer renders a QR code containing a reference to the Credential Offer that can be scanned by the End-User using a Wallet, as described in section 4.1 of [[OIDCVCI]].
+
+        According to the spec, the Credential Offer object is a JSON object containing the Credential Offer parameters and can be sent by value or by reference. To avoid problems with the size of the QR travelling in the URL, this profile requires that the QR contains the `credential_offer_uri`, which is a URL using the `https` scheme referencing a resource containing a JSON object with the Credential Offer parameters. The `credential_offer_uri` endpoint should be implemented by the Issuer backend.
+
+
+        <section>Credential Offer Parameters
+
+            This profile restricts the options available in section 4.1.1 of [[OIDCVCI]]. The profile defines a Credential Offer object containing the following parameters:
+
+            <ul>
+                - `credential_issuer`: REQUIRED. The URL of the Credential Issuer that will be used by the Wallet to obtain one or more Credentials.
+
+                - `credentials`: REQUIRED. A JSON array, where every entry is a JSON string. To achieve interoperability faster, this profile defines a global Trusted Credential Schemas List where well-known credential schemas are defined, in addition to the individual credentials that each Issuer can define themselves. The string value MUST be one of the id values in one of the objects in the `credentials_supported` metadata parameter of the Trusted Credential Schemas List (described later), or one of the id values in one of the objects in the `credentials_supported` Credential Issuer metadata parameter provided by the Credential Issuer. When processing, the Wallet MUST resolve this string value to the respective object. The credentials defined in the global Trusted Credential Schema List have precedence over the ones defined by the Credential Issuer.
+
+                    <x-note>LEARCredential
+                        The only credential being offered in our case is the LEARCredential, so this is the credential schema that should be specified here. The LEARCredential is a credential known globally to the DOME ecosystem, so its schema should be published and be available in the Trusted Credential Schemas List.
+
+                - `grants`: REQUIRED. A JSON object indicating to the Wallet the Grant Type `pre-authorized_code`. This grant is represented by a key and an object, where the key is `urn:ietf:params:oauth:grant-type:pre-authorized_code`. In this profile the credential issuance flow requires initial authentication of the End User by the Credential Issuer, so the Pre-Authorized Code Flow achieves a good level of security and we do not need the more general Authorization Code Flow.
+
+                    In other scenarios like when the wallet is a native mobile application and the user interacts with the Issuer exclusively with the mobile (without the laptop), then the Authorization Code Flow has to be used. This can be described in detail in a different profile.
+
+            The grant object contains the following values:
+
+            <ul>
+                - `pre-authorized_code`: REQUIRED. The code representing the Credential Issuer's authorization for the Wallet to obtain Credentials of a certain type. This code MUST be short lived and single-use. This parameter value MUST be included in the subsequent Token Request with the Pre-Authorized Code Flow.
+
+                - `user_pin_required`: REQUIRED. The OIDCVCI standard says it is RECOMMENDED, but this profile specifies the user pin to achieve a greater level of security. This field is a boolean value specifying whether the Credential Issuer expects presentation of a user PIN along with the Token Request in a Pre-Authorized Code Flow. Default is false. This PIN is intended to bind the Pre-Authorized Code to a certain transaction in order to prevent replay of this code by an attacker that, for example, scanned the QR code while standing behind the legit user. It is RECOMMENDED to send a PIN via a separate channel. The PIN value MUST be sent in the `user_pin` parameter with the respective Token Request.
+
+            The following non-normative example shows a Credential Offer object where the Credential Issuer offers the issuance of one Credential ("LEARCredential"):
+
+            <x-code .json>
+                {
+                    "credential_issuer": "https://credential-issuer.example.com",
+                    "credentials": [
+                        "LEARCredential"
+                    ],
+                    "grants": {
+                        "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+                            "pre-authorized_code": "asju68jgtyk9ikkew",
+                            "user_pin_required": true
+                        }
+                    }
+                }
+
+
+        <section>Contents of the QR code
+
+            Below is a non-normative example of the Credential Offer displayed by the Credential Issuer as a QR code when the Credential Offer is passed by reference, as required in this profile:
+
+            <x-code .http>
+                https://credential-issuer.example.com/credential-offer?
+                credential_offer_uri=https%3A%2F%2Fserver%2Eexample%2Ecom%2Fcredential-offer%2F5j349k3e3n23j
+
+            Which in plain text would be:
+
+            <x-code .http>
+                https://credential-issuer.example.com/credential-offer?
+                credential_offer_uri=https://server.example.com/credential-offer/5j349k3e3n23j
+
+
+            To increase security, the Issuer MUST make sure that every Credential Offer URI is unique for all credential offers created. This is the purpose of the nonce (`5j349k3e3n23j`) at the end of the url in the example. Issuers can implement whatever mechanism they wish, as far as it is transparent to the wallet.
+
+    <section>Credential Issuer Metadata
+
+        The Wallet backend retrieves the Credential Issuer's configuration using the Credential Issuer Identifier that was received in the Credential Offer.
+
+        A Credential Issuer is identified in this context by a case sensitive URL using the https scheme that contains scheme, host and, optionally, port number and path components, but no query or fragment components. No DID is used in this context.
+
+        Credential Issuers MUST make a JSON document available at the path formed by concatenating the string `/.well-known/openid-credential-issuer` to the Credential Issuer Identifier. If the Credential Issuer value contains a path component, any terminating / MUST be removed before appending `/.well-known/openid-credential-issuer`.
+
+        `openid-credential-issuer` MUST point to a JSON document compliant with this specification and MUST be returned using the `application/json` content type.
+
+        The retrieval of the Credential Issuer configuration is illustrated below.
+
+        <figure #iss-issuermetadata>
+            <img src="images/issuance/issuance_issuermetadata.svg" alt="" />
+
+            <figcaption>Issuer metadata.
+
+        <section>Credential Issuer Metadata Parameters
+
+            The object contained in `openid-credential-issuer` contains the following:
+
+            <ul>
+                - `credential_issuer`: REQUIRED. The Credential Issuer's identifier.
+
+                - `credential_endpoint`: REQUIRED. URL of the Credential Issuer's Credential Endpoint. This URL MUST use the https scheme and MAY contain port, path and query parameter components.
+
+                - `credentials_supported`: REQUIRED. A JSON array containing a list of JSON objects, each of them representing metadata about a separate credential type that the Credential Issuer can issue. The JSON objects in the array MUST conform to the structure of the Section XXXX.
+
+            TODO: define a global directory of credentials supported to eliminate requirement for each individual Issuer to publish its own list.
+
+            This profile does not make use of the following parameters:
+
+            <ul>
+                - `authorization_server` parameter, because it uses the `pre-authorized_code` Grant type.
+
+                - `batch_credential_endpoint` parameter. It indicates that the Credential Issuer does not support the Batch Credential Endpoint.
+
+                - `display` parameter.
+
+
+    <section>OAuth 2.0 Authorization Server Metadata
+
+        This specification also defines a new OAuth 2.0 Authorization Server metadata [[RFC8414]] parameter to publish whether the AS that the Credential Issuer relies on for authorization, supports anonymous Token Requests with the Pre-authorized Grant Type. It is defined as follows:
+
+        <ul>
+            - `pre-authorized_grant_anonymous_access_supported`: OPTIONAL. A JSON Boolean indicating whether the issuer accepts a Token Request with a Pre-Authorized Code but without a client id. The default is false.
+
+
+    <section>Access Token
+
+        <figure #issuance_accesstoken>
+            <img src="images/issuance/issuance_accesstoken.svg" alt="" />
+
+            <figcaption>Access Token.
+
+        The Wallet invokes the Token Endpoint implemented by the Authorization Server, which issues an Access Token and, optionally, a Refresh Token in exchange for the Pre-authorized Code that the wallet obtained in the Credential Offer.
+
+        <section>Token Request
+
+            After the wallet receives the Credential Issuer Metadata, a Token Request is made as defined in Section 4.1.3 of [[RFC6749]].
+
+            The following are the extension parameters to the Token Request used in a Pre-Authorized Code Flow as used in this profile:
+
+            <ul>
+                - `pre-authorized_code`: REQUIRED. The code representing the authorization to obtain Credentials of a certain type.
+
+                - `user_pin`: OPTIONAL. String value containing a user PIN. This value MUST be present if user_pin_required was set to true in the Credential Offer. The string value MUST consist of maximum 8 numeric characters (the numbers 0 - 9).
+
+            In this profile the Wallet does not have to authenticate when using the Token Endpoint, because we are using the Pre-Authorized Code Grant Type, given the level of trust between the Issuer and the End User and that authentication was already performed at the beginning of the flow.
+
+            Below is a non-normative example of a Token Request:
+
+            <x-code .http>
+                POST /token HTTP/1.1
+                Host: server.example.com
+                Content-Type: application/x-www-form-urlencoded
+
+                grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Apre-authorized_code
+                &pre-authorized_code=SplxlOBeZQQYbYS6WxSbIA
+                &user_pin=493536
+
+
+        <section>Successful Token Response
+
+            Token Responses are made as defined in [[RFC6749]].
+
+            In addition to the response parameters defined in [[RFC6749]], the Authorization Server returns the following parameters:
+
+            <ul>
+                - `c_nonce`: REQUIRED. JSON string containing a nonce to be used to create a proof of possession of key material when requesting a Credential. The Wallet MUST use this nonce value for its subsequent credential requests until the Credential Issuer provides a fresh nonce.
+
+                - `c_nonce_expires_in`: REQUIRED. JSON integer denoting the lifetime in seconds of the c_nonce.
+
+            Below is a non-normative example of a Token Response:
+
+            <x-code .http>
+                HTTP/1.1 200 OK
+                Content-Type: application/json
+                Cache-Control: no-store
+
+                {
+                    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6Ikp..sHQ",
+                    "token_type": "bearer",
+                    "expires_in": 86400,
+                    "c_nonce": "tZignsnFbp",
+                    "c_nonce_expires_in": 86400
+                }
+
+        <section>Token Error Response
+
+            If the Token Request is invalid or unauthorized, the Authorization Server constructs the error response as defined in section 6.3 of [[OIDCVCI]].
+
+
+    <section>Request and receive Credential
+
+        <figure #issuance_requestcredential>
+            <img src="images/issuance/issuance_requestcredential.svg" alt="" />
+
+            <figcaption>Request and receive Credential.
+
+
+        The Wallet backend invokes the Credential Endpoint, which issues a Credential as approved by the End-User upon presentation of a valid Access Token representing this approval.
+
+        Communication with the Credential Endpoint MUST utilize TLS.
+
+        The client can request issuance of a Credential of a certain type multiple times, e.g., to associate the Credential with different public keys/Decentralized Identifiers (DIDs) or to refresh a certain Credential.
+
+        If the Access Token is valid for requesting issuance of multiple Credentials, it is at the client's discretion to decide the order in which to request issuance of multiple Credentials requested in the Authorization Request.
+
+
+        <section>Binding the Issued Credential to the identifier of the End-User possessing that Credential
+
+            The Issued Credential MUST be cryptographically bound to the identifier of the End-User who possesses the Credential. Cryptographic binding allows the Verifier to verify during the presentation of a Credential that the End-User presenting a Credential is the same End-User to whom that Credential was issued.
+
+            The Wallet has to provide proof of control alongside key material (proof that did).
+
+        <section>Credential Request
+
+            The Wallet backend makes a Credential Request to the Credential Endpoint by sending the following parameters in the entity-body of an HTTP POST request using the `application/json` media type.
+
+            <ul>
+                - `format`: REQUIRED. This profile uses the Credential format identifier `jwt_vc_json`.
+
+                - `proof`: OPTIONAL. JSON object containing proof of possession of the key material the issued Credential shall be bound to. The specification envisions use of different types of proofs for different cryptographic schemes. The proof object MUST contain a proof_type claim of type JSON string denoting the concrete proof type. This type determines the further claims in the proof object and its respective processing rules. Proof types are defined in Section 7.2.1.
+
+            The proof element MUST incorporate a c_nonce value generated by the Credential Issuer and the Credential Issuer Identifier (audience) to allow the Credential Issuer to detect replay. The way that data is incorporated depends on the proof type. In a JWT, for example, the c_nonce is conveyd in the nonce claims whereas the audience is conveyed in the aud claim. In a Linked Data proof, for example, the c_nonce is included as the challenge element in the proof object and the Credential Issuer (the intended audience) is included as the domain element.
+
+            <section>Proof Type
+
+                This specification defines the following values for proof_type:
+
+                `jwt`: objects of this type contain a single jwt element with a JWS [RFC7515] as proof of possession. The JWT MUST contain the following elements:
+
+                    <ul>
+                        - in the JOSE Header,
+
+                            <ul>
+                                - `typ`: REQUIRED. MUST be `openid4vci-proof+jwt`, which explicitly types the proof JWT as recommended in Section 3.11 of [[RFC8725]].
+
+                                - `alg`: REQUIRED. A digital signature algorithm identifier such as per IANA "JSON Web Signature and Encryption Algorithms" registry. MUST NOT be none or an identifier for a symmetric algorithm (MAC).
+
+                                - `kid`: REQUIRED. JOSE Header containing the key ID. The Credential will be bound to a DID, so the kid refers to a DID URL which identifies a particular key in the DID Document that the Credential will be bound to.
+
+                        - in the JWT body,
+
+                            <ul>
+                                - `aud`: REQUIRED (string). The value of this claim MUST be the Credential Issuer URL of the Credential Issuer.
+
+                                - `iat`: REQUIRED (number). The value of this claim MUST be the time at which the proof was issued using the syntax defined in [[RFC7519]].
+
+                                - `nonce`: REQUIRED (string). The value type of this claim MUST be a string, where the value is the `c_nonce` provided by the Credential Issuer.
+
+                The Credential Issuer MUST validate that the proof is actually signed by a key identified in the JOSE Header.
+
+                Below is a non-normative example of a proof parameter (dots in the middle of jwt for display purposes only):
+
+                <x-code .json>
+                    {
+                        "proof_type": "jwt",
+                        "jwt": "eyJraWQiOiJkaWQ6ZXhhb....aZKPxgihac0aW9EkL1nOzM"
+                    }
+
+                where the JWT looks like this:
+
+                <x-code .json>
+                    {
+                        "typ": "openid4vci-proof+jwt",
+                        "alg": "ES256",
+                        "kid":"did:example:ebfeb1f712ebc6f1c276e12ec21/keys/1"
+                    }
+
+                    {
+                        "iss": "s6BhdRkqt3",
+                        "aud": "https://server.example.com",
+                        "iat": 1659145924,
+                        "nonce": "tZignsnFbp"
+                    }
+
+        <section>Credential Response
+
+            This profile restricts Credential Response to be Synchronous and Deferred response is not used. The Credential Issuer MUST be able to immediately issue a requested Credential and send it to the Client.
+
+            The following claims are used in the Credential Response:
+
+            <ul>
+                - `format`: REQUIRED. JSON string denoting the format of the issued Credential. This profile uses the format identifier `jwt_vc_json`.
+
+                - `credential`: REQUIRED. Contains issued Credential. MUST be a JSON string.
+
+                - `c_nonce`: OPTIONAL. JSON string containing a nonce to be used to create a proof of possession of key material when requesting a Credential. When received, the Wallet MUST use this nonce value for its subsequent credential requests until the Credential Issuer provides a fresh nonce.
+
+                - `c_nonce_expires_in`: OPTIONAL. JSON integer denoting the lifetime in seconds of the c_nonce.
+
+            Below is a non-normative example of a Credential Response:
+
+            <x-code .http>
+                HTTP/1.1 200 OK
+                Content-Type: application/json
+                Cache-Control: no-store
+
+                {
+                    "format": "jwt_vc_json",
+                    "credential" : "LUpixVCWJk0eOt4CXQe1NXK....WZwmhmn9OQp6YxX0a2L",
+                    "c_nonce": "fGFF7UkhLa",
+                    "c_nonce_expires_in": 86400
+                }
+
+        <section>Credential Error Response
+
+            When the Credential Request is invalid or unauthorized, the Credential Issuer constructs the error response as defined in section 7.3.1 of OIDCVCI.
+
+        <section>Credential Issuer Provided Nonce
+
+            Upon receiving a Credential Request, the Credential Issuer MUST require the Wallet to send a proof of possession of the key material it wants a Credential to be bound to. This proof MUST incorporate a nonce generated by the Credential Issuer. The Credential Issuer will provide the client with a nonce in an error response to any Credential Request not including such a proof or including an invalid proof.
+
+            Below is a non-normative example of a Credential Response with the Credential Issuer requesting a Wallet to provide in a subsequent Credential Request a proof that is bound to a `c_nonce`:
+
+            <x-code .http>
+                HTTP/1.1 400 Bad Request
+                Content-Type: application/json
+                Cache-Control: no-store
+
+                {
+                    "error": "invalid_or_missing_proof",
+                    "error_description":
+                        "Credential Issuer requires proof to be bound to a Credential Issuer provided nonce.",
+                    "c_nonce": "8YE9hCnyV2",
+                    "c_nonce_expires_in": 86400
+                }
+
+<section>Authenticating with the LEARCredential
+
+    <section>The LEARCredential as a VerifiableID
+
+        DOME has an onboarding service that enables automatic self-onboarding of legal entities. In DOME when an entity (a
+        legal person or a natural person acting on behalf of a legal person) wants to perform an action on a protected
+        resource, we use Verifiable Credentials to perform authentication of the entity and then access control based on the
+        content of the Verifiable Credential(s) presented by that entity, and possibly additional authorisation information
+        that the Relying Party considers relevant for controlling access to the protected resource (for example, the
+        contractual status of the resource, time of the day or other context information).
+
+        Not all types of Verifiable Credentials can be used for authentication, so for the purpose of this discussion we use the
+        same taxonomy as <a href="https://ec.europa.eu/digital-building-blocks/wikis/display/EBSIDOC/Data+Models+and+Schemas">defined in EBSI</a>:
+
+        <figure #vc_taxonomy>
+            <img src="images/login_in_DOME/verifiable_data_model.png" alt="" />
+
+            <figcaption>Request and receive Credential.
+
+        The full explanation is in the EBSI site, but for our purposes an example is enough.
+
+        In the case of a Diploma as a Verifiable Credential (a Verifiable Diploma), it is a Verifiable Attestation which indicates that the subject has certain skills or has achieved certain learning outcomes through formal or non-formal learning context. However, as in the case with normal Diplomas in paper of PDF format, this credential can be presented by anyone that holds the credential. In other words, the credential binds the identity of the subject with the claims inside the credential, but does not bind the identity of the holder of the credential with the identity of the subject of the credential, which requires a special mechanism in the issuance process.
+
+        Instead, <b>a `VerifiableID` is a special form of a Verifiable Credential that a natural or legal person can use in an electronic identification process as evidence of whom he/she/it is</b> (comparable with a passport, physical IDcard, driving licence, social security card, member-card…).
         
+        In general, in an authentication and access control process, the entity willing to perform an action has to present (in a Verifiable Presentation) a VerifiableID and possibly one or more additional Verifiable Attestations. Of course, if the VerifiableID already contains all the information required by the Relying Party, then only one credential is required in the process.
+
+        Most Verifiable Credentials will be issued as Verifiable Attestations, acting as efficient machine-processable and verifiable equivalent to their analog counterparts. Their purpose is to attest some attributes about the subject of the credential and not act as a mechanism for online authentication.
+
+        VerifiableIDs can be of different types and be issued by different entities with different levels of assurance (in eIDAS terminology). They are issued with the purpose of serving as authentication mechanisms in online processes. In the near future, VerifiableIDs of the highest level of assurance (LoA High) will be issued to citizens and businesses by their governments under eIDAS2.
+
+        But <b>any entity can issue VerifiableIDs</b>, though the acceptance by Relying Parties can not be ensured because it is the Relying Party the only one deciding if it trusts on the issuer and its process for generating the VerifiableID.
+        
+        DOME will make use of the future eIDAS2 VerifiableIDs when they are available and when they make sense in the context of DOME. But DOME defines some specific types of VerifiableIDs that are derived from eIDAS certificates for signatures/seals using the regulated standards for signatures, achieving a level of assurance that provides an acceptable level of legal certainty and reduced risk of repudiation.
+        
+        An example is the LEARCredential described in a section above, which has the same level of legal certainty as any document signed with the same certificates (like a contract or an invoice).
+
+        Similarly, a Product provider (like GoodAir) who decides to use the DOME Trust and IAM framework or a compatible one for managing access to associated services by customers of their products will typically define specific types of VerifiableIDs if the standard ones in DOME or the existing and widely accepted ones are not suitable for the provider. In general, if a provider can use an existing and already used VerifiableID then it will facilitate potential customers access to its product because issuers of the VerifiableID do not have to modify or adapt their existing issuing processes.
+
+
+
+
+    <section>The login process
+
+        <section>Starting the Self-Issued OpenID Provider (SIOP) flow
+
+            <x-diagram .d2>
+                shape: sequence_diagram
+
+                user: John\nDoe { shape: person }
+                laptop: John's\nLaptop
+                mobile: Webapp\nin mobile
+
+                portal: DOM\nwebserver
+                verifier: VC Verifier
+
+                user -> laptop: (1) Access DOM portal
+                laptop -> portal: (1) Access DOM
+                # -(1) The user (GoodAir employee) accesses the DOME portal or to perform the onboarding process.
+
+                portal -> laptop: (2) HTTP 302 (redirect)
+                # -(2) The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
+
+                laptop -> verifier: (3) Login page
+                # -(3) The user clicks the button causing the generation and display of a QR, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component.
+
+                verifier -> mobile: (4) Scan QR code
+                mobile -> verifier: (4) /authentication-requests
+                # -(4) The user scans the QR with her mobile and the mobile calls the `/authentication-requests` endpoint.
+
+
+            <ul style="list-style-type: none">
+                -(1) The user (GoodAir employee) accesses the DOME portal or to perform the onboarding process.
+
+                
+
+                
+
+        <section>Authentication Request
+
+            <x-diagram .d2>
+                shape: sequence_diagram
+
+                user: John\nDoe { shape: person }
+                laptop: John's\nLaptop
+                mobile: Webapp\nin mobile
+
+                portal: DOM\nwebserver
+                verifier: VC Verifier
+
+            <ul style="list-style-type: none">
+    
+            This starts a standard SIOP (Self-Issued OpenID Provider) flow, where the DOM portal plays the role of Relying Party (RP in Open ID Connect terminology) and the mobile device of the customer as a Self-Issued IDP. In this step, the Verifier creates a SIOP Authentication Request. As a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in https://openid.net/specs/openid-connect-self-issued-v2-1_0.html.
+
+
+        The Authentication Request travels in the response to the HTTP GET request performed in the previous point, as a JWT signed by Packet Delivery company. The decoded contents of the JWT may be:
+        openid://?
+        response_type=id_token
+        &response_mode=post
+        &client_id=did:elsi:EU.EORI.NLPACKETDEL
+        &redirect_uri=https%3A%2F%2Fidp-pdc.fiware.io%2Fsiop_sessions
+        &scope=openid%20profile
+        &state=af0ifjsldkj
+        &nonce=n-0S6_WzA2Mj
+        &registration=%7B%22subject_syntax_types_supported%22:%5B%22did%22%5D,
+            %22id_token_signing_alg_values_supported%22:%5B%22RS256%22%5D%7
+
+
+
+        The Authentication Request is returned to the customer wallet acting as SIOP. The SIOP flow uses a new response mode post which is used to request the SIOP to deliver the result of the authentication process to a certain endpoint. The parameter response_mode is used to carry this value.
+        This endpoint where the SIOP shall deliver the authentication result is defined in the standard parameter redirect_uri.
+        In this step the customer verifies that the Packet Delivery company is a trusted entity belonging to the ecosystem, by resolving the DID of the Packet Delivery company which is received in the client_id parameter of the Authentication Request. 
+        To resolve a DID, the wallet sends a GET request to the /api/did/v1/identifiers/did:elsi:EU.EORI.NLPACKETDEL endpoint of one of several trusted servers implementing the Universal Resolver functionality. The Universal Resolver includes a blockchain node, and there may be as many as needed. Its mission is to resolve DIDs using the blockchain and return the associated DID Document. The DID Document (as per W3C) contains relevant information about the entity owner of the DID. It contains its Public Key, used to verify the digital signature of the entity. It also contains the status of the entity in the Data Space ecosystem. It is extensible and can contain any public information which may be relevant for the use case. The Universal Resolver server must be operated by a trusted entity for the customer. There may be as many nodes as needed operated by different entities. At least one of those trusted entities has to be configured in the wallet of the user.
+        The wallet receives the DID Document of Packet Delivery company, with trusted information about the company, including the Public Key associated with the Private Key that Packet Delivery company uses to digitally sign tokens. For example:
+        {
+        "payload": {
+            "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://w3id.org/security/v1"
+            ],
+            "id": "did:elsi:EU.EORI.NLPACKETDEL",
+            "verificationMethod": [
+            {
+                "id": "did:elsi:EU.EORI.NLPACKETDEL#key-verification",
+                "type": "JwsVerificationKey2020",
+                "controller": "did:elsi:EU.EORI.NLPACKETDEL",
+                "publicKeyJwk": {
+                "kid": "key-verification",
+                "kty": "EC",
+                "crv": "secp256k1",
+                "x": "V8XptJkb5wplYkExcTF4nkyYVp7t5H5d5C4UPqCCM9c",
+                "y": "kn3nSPxIIvd9iaG0N4v14ceuo8E4PcLXhhGeDzCE7VM"
+                }
+            }
+            ],
+            "service": [
+            {
+                "id": "did:elsi:EU.EORI.NLPACKETDEL#info",
+                "type": "EntityCommercialInfo",
+                "serviceEndpoint": "https://packetdelivery.com/info",
+                "name": "Packet Delivery co."
+            },
+            {
+                "id": "did:elsi:EU.EORI.NLPACKETDEL#sms",
+                "type": "SecureMessagingService",
+                "serviceEndpoint": "https://packetdelivery.com/api"
+            }
+            ],
+            "anchors": [
+            {
+                "id": "redt.alastria",
+                "resolution": "UniversalResolver",
+                "domain": "packetdelivery.ala",
+                "ethereumAddress": "0xbcB9b29eeb28f36fd84f1CfF98C3F1887D831d78"
+            }
+            ],
+            "created": "2021-11-14T13:02:37Z",
+            "updated": "2021-11-14T13:02:37Z"
+        }
+        }
+
+
+        The DID Document includes one or more public keys inside the “verificationMethod” array. The keys are identified by the “id” field in each element of the array. The customer wallet uses the kid field that was received in the Authentication Request (in the protected header of the JWT) to select the corresponding Public Key and verify the signature of the JWT. It also verifies that the top-level “id” field in the DID Document ("did:elsi:EU.EORI.NLPACKETDEL") is equal to the client_id parameter of the Authentication Request.
+        The customer wallet creates an Authentication Response to be posted in the redirect_uri specified by Packet Delivery company in step 5. The contents of the Authentication Response are described below. 
+        The SIOP sends the authentication response to the endpoint passed in the redirect_uri authentication request parameter using a HTTP POST request using "application/x-www-form-urlencoded" encoding. The response contains an ID Token and a VP (Verifiable Presentation) token as defined in https://openid.net/specs/openid-connect-4-verifiable-presentations-1_0.html.
+        POST /siop_sessions HTTP/1.1
+        Host: client.example.com
+        Content-Type: application/x-www-form-urlencoded
+
+        id_token=eyJ0 ... NiJ9.eyJ1c ... I6IjIifX0.DeWt4Qu ... ZXso
+        &vp_token=...
+        &state=af0ifjsldkj
+
+
+        The decoded id_token would be:
+        {
+        "iss": "https://self-issued.me/v2",
+        "aud": "did:elsi:EU.EORI.NLPACKETDEL",
+        "iat": 1615910538,
+        "exp": 1615911138,
+        "sub": "did:peer:99ab5bca41bb45b78d242a46f0157b7d",
+        "auth_time": 1615910535,
+        "nonce": "n-0S6_WzA2Mj"
+        }
+
+
+        The sub claim is did:peer:99ab5bca41bb45b78d242a46f0157b7d which is the DID of the user and that is not registered in any blockchain or centralized repository. It must be the same as the DID included in the VP that was issued by the Happy Pets company when onboarding the customer and which travels in the authentication response.
+        The vp_token includes the Verifiable Presentation, which can be in two formats: jwt_vp (JWT encoded) or ldp_vp (JSON-LD encoded). The following example is using the JWT encoding:
+        {
+            "format":"jwt_vp",
+            "presentation":
+            "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDpleGFtcGxlOmFiZmUxM2Y3MTIxMjA0
+            MzFjMjc2ZTEyZWNhYiNrZXlzLTEifQ.eyJzdWIiOiJkaWQ6ZXhhbXBsZTplYmZlYjFmNzEyZWJjNmYxY
+            zI3NmUxMmVjMjEiLCJqdGkiOiJodHRwOi8vZXhhbXBsZS5lZHUvY3JlZGVudGlhbHMvMzczMiIsImlzc
+            yI6Imh0dHBzOi8vZXhhbXBsZS5jb20va2V5cy9mb28uandrIiwibmJmIjoxNTQxNDkzNzI0LCJpYXQiO
+            jE1NDE0OTM3MjQsImV4cCI6MTU3MzAyOTcyMywibm9uY2UiOiI2NjAhNjM0NUZTZXIiLCJ2YyI6eyJAY
+            29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd
+            3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sInR5cGUiOlsiVmVyaWZpYWJsZ
+            UNyZWRlbnRpYWwiLCJVbml2ZXJzaXR5RGVncmVlQ3JlZGVudGlhbCJdLCJjcmVkZW50aWFsU3ViamVjd
+            CI6eyJkZWdyZWUiOnsidHlwZSI6IkJhY2hlbG9yRGVncmVlIiwibmFtZSI6IjxzcGFuIGxhbmc9J2ZyL
+            UNBJz5CYWNjYWxhdXLDqWF0IGVuIG11c2lxdWVzIG51bcOpcmlxdWVzPC9zcGFuPiJ9fX19.KLJo5GAy
+            BND3LDTn9H7FQokEsUEi8jKwXhGvoN3JtRa51xrNDgXDb0cq1UTYB-rK4Ft9YVmR1NI_ZOF8oGc_7wAp
+            8PHbF2HaWodQIoOBxxT-4WNqAxft7ET6lkH-4S6Ux3rSGAmczMohEEf8eCeN-jC8WekdPl6zKZQj0YPB
+            1rx6X0-xlFBs7cl6Wt8rfBP_tZ9YgVWrQmUWypSioc0MUyiphmyEbLZagTyPlUyflGlEdqrZAv6eSe6R
+            txJy6M1-lD7a5HTzanYTWBPAUHDZGyGKXdJw-W_x0IWChBzI8t3kpG253fg6V3tPgHeKXE94fz_QpYfg
+            --7kLsyBAfQGbg"
+        }
+
+
+        Which decoded could be:
+
+        {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        "type": ["VerifiablePresentation"],
+        "verifiableCredential": [
+            {
+            "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://happypets.fiware.io/2022/credentials/employee/v1"
+            ],
+            "id": "https://happypets.fiware.io/credentials/25159389-8dd17b796ac0",
+            "type": ["VerifiableCredential", "CustomerCredential"],
+            "issuer": {
+                "id": "did:elsi:EU.EORI.NLHAPPYPETS"
+            },
+            "issuanceDate": "2022-03-22T14:00:00Z",
+            "validFrom": "2022-03-22T14:00:00Z",
+            "expirationDate": "2023-03-22T14:00:00Z",
+            "credentialSubject": {
+                "id": "did:peer:99ab5bca41bb45b78d242a46f0157b7d",
+                "verificationMethod": [
+                {
+                    "id": "did:peer:99ab5bca41bb45b78d242a46f0157b7d#key1",
+                    "type": "JwsVerificationKey2020",
+                    "controller": "did:peer:99ab5bca41bb45b78d242a46f0157b7d",
+                    "publicKeyJwk": {
+                    "kid": "key1",
+                    "kty": "EC",
+                    "crv": "P-256",
+                    "x": "lJtvoA5_XptBvcfcrvtGCvXd9bLymmfBSSdNJf5mogo",
+                    "y": "fSc4gZX2R3QKKfHvS3m2vGSVSN8Xc04qsquyfEM55Z0"
+                    }
+                }
+                ],
+                "roles": [
+                {
+                    "target": "did:elsi:EU.EORI.NLPACKETDEL",
+                    "names": ["P.Info.gold"] // Or P.Info.standard
+                }
+                ],
+                "name": "Jane Doe",
+                "given_name": "Jane",
+                "family_name": "Doe",
+                "preferred_username": "j.doe",
+                "email": "janedoe@packetdelivery.com"
+            }
+            }
+        ]
+        }
+
+
+        Packet Delivery company uses its own blockchain node implementing the Universal Resolver functionality to resolve the DID of Happy Pets, which is inside the Verifiable Credential received in the Verifiable Presentation. This DID can be found in the “issuer” field of the “verifiableCredential” structure above.
+        Resolution is performed sending a GET request to the Universal Resolver: /api/did/v1/identifiers/did:elsi:EU.EORI.NLHAPPYPETS
+        Packet Delivery could use a Universal Resolver operated by a different entity, but this would reduce the level of trust compared to using its own server directly connected to the blockchain network.
+        Packet Delivery receives the DID Document of Happy Pets with trusted information about the company, including the Public Key associated to the Private Key that Happy Pets used to digitally sign the Verifiable Credential that the customer has just sent inside a Verifiable Presentation as part of the authentication flow. Using the Public Key and the DID inside the DID Document, it can verify the signature of the Verifiable Credential and that Happy Pets is a trusted entity in the ecosystem.
+        The above is just for verification of the Verifiable Credential. In addition, Packet Delivery company can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the customer and not by a malicious agent. To do so, it uses the Public Key of the customer in the “verificationMethod” of the “credentialSubject” structure. That public key is cryptographically bound to the customer DID during the onboarding process that Happy Pets performed with the customer.
+        Once all verifications have been performed, Packet Delivery company creates an Access Token for the customer so she can use it to access services in Packet Delivery company in the future.
+        The wallet (SIOP) receives a successful reply to the POST request.
+        The Packet Delivery company proxy notifies the Packet Delivery portal that the customer is successfully authenticated, and the portal can display the services available to that customer. The browser of the user receives the Access Token created by Packet Delivery to enable it to request services without going through the previous authentication process. The Access Token is a standard OAuth access token that includes the information that Packet Delivery requires for accessing its services.
+        At this point the Happy Pets customer is logged in on the Packet Delivery company portal/app and is presented with the possible services provided, including the option to change the PTA of its delivery orders.
+        At this moment, the Packet Delivery company knows the following:
+        Happy Pets is a participant in the Data Space and that it is a Trusted Issuer of EmployeeCredentials because this info is in the DID Document retrieved in step 13. Maintenance of this information is performed by the Trusted Anchor entity(or entities) managing the Trusted Participants List and Trusted Issuers List.
+        Happy Pets says that the user is a customer. This info is inside the Verifiable Credential that is digitally signed by Happy Pets. 
+        The category of the customer (and associated policies) with regards to the services offered by Packet Delivery company. This information is also in the Verifiable Credential presented by the customer.
+        The Happy Pets customer is presented with the possible services provided by Packet Delivery, including the option to change the PTA of its delivery orders.
+        Happy Pets customer searches for his packet delivery order and is presented its details. He now requests a change of the PTA of this order on the Packet Delivery company portal/app.
+        Packet Delivery company portal/app sends a request to Packet Delivery company proxy, in order to change the PTA of the delivery order. The request contains the Access Token generated in step 15, with information about the authorisation registry to retrieve policies from.
+
+        > Authorization: Bearer IIeD...NIQ   // Bearer JWT
+        > Content-Type: application/json
+
+        PATCH https://umbrella.fiware.io/ngsi-ld/v1/entities/urn:ngsi-ld:DELIVERYORDER:001/attrs/pta
+
+        > Payload
+        {
+        "value": "<new PTA>",
+        "type": "Property"
+        }
+
+        Decoded Bearer JWT payload:
+        {
+        "iss": "EU.EORI.NLHAPPYPETS",  // Issuer: Happy Pets
+        "sub": "419404e1-07ce-4d80-9e8a-eca94vde0003de", // Customer pseudonym
+        "jti": "d8a7fd7465754a4a9117ee28f5b7fb60",
+        "iat": 1591966224,
+        "exp": 1591966254,
+        "aud": "EU.EORI.NLHAPPYPETS",
+        "authorisationRegistry": {  // AR to retrieve policies from
+            "url": "https://ar.packetdelivery.com",
+            "identifier": "EU.EORI.NLHAPPYPETS",
+            "delegation_endpoint": "https://ar.packetdelivery.com/delegation",
+        }
+        }
+
+
+        Packet Delivery company proxy received the request of step 19 for changing the PTA of a delivery order. The Access Token received from the customer ensures that she was assigned the delegation evidence with a policy for updating the PTA attribute of this specific delivery order (called issuance at user level). Furthermore, since in this scenario the required customer policy was issued by a 3rd party (Happy Pets), the proxy has to check whether Happy Pets itself is allowed to delegate this policy. In general, the rule would be that the proxy needs to check the existence of valid policies through the chain of issuers, until itself (in this case the Packet Delivery company) is the issuer. In this scenario, the proxy will check policies at two different levels: issued at organizational level (from Packet Delivery company to Happy Pets) and issued at user level (from Happy Pets to customer). The Verifiable Credential takes care of the user level policies.
+        At first, the Packet Delivery company proxy validates the JWT which is part of the authorization header of the PATCH request.
+
+
+        In order to check whether Happy Pets is allowed to delegate the policy to its customers, the proxy will check at the Packet Delivery company Authorisation Registry whether this policy exists. The proxy sends a request to the /delegation endpoint of the Packet Delivery company Authorization Registry.
+        The proxy receives the delegation evidence policy issued from Packet Delivery company to Happy Pets.
+        Having received the delegation information from the Packet Delivery company Authorization Registry, the proxy (or more precisely, the PDP) can now evaluate whether the contained organizational policy allows for updating the PTA attribute, and therefore whether Happy Pets is allowed to delegate the access to its customers. If the proxy received a valid policy, access would be granted on an organizational level. 
+        If the requested delegation evidence can not be found or the returned policy contains the Deny rule, the change of the PTA would be denied by the Packet Delivery company proxy and an error would be returned to the Packet Delivery company portal/app, also presented to the Happy Pets customer. The following steps would be omitted.
+        As described in the previous steps, the PDP evaluated that a change of the PTA of the specific delivery order is granted, both on organizational level and user level. As a result, the request for changing the PTA is forwarded by the Packet Delivery company proxy to the Packet Delivery company Context Broker which holds the information of the packet delivery order. The PTA of the packet delivery order is changed and the Context Broker returns a successful response with HTTP code 204. The Context Broker response is returned to the Packet Delivery company portal, in response to the request of step 26.
+        The successful change of the PTA is presented to the Happy Pets customer.
+
+
+
+
+
 
 
 <section id="references">

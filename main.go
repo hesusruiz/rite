@@ -14,6 +14,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -898,6 +899,33 @@ func (doc *Document) Render(inputs ...any) {
 	}
 }
 
+type ByteRenderer struct {
+	b bytes.Buffer
+}
+
+func (r *ByteRenderer) Render(inputs ...any) {
+	for _, s := range inputs {
+		switch v := s.(type) {
+		case string:
+			r.b.WriteString(v)
+		case []byte:
+			r.b.Write(v)
+		case int:
+			r.b.WriteString(strconv.FormatInt(int64(v), 10))
+		case byte:
+			r.b.WriteByte(v)
+		case rune:
+			r.b.WriteRune(v)
+		default:
+			log.Fatalf("attemping to write something not a string, int, []byte or byte: %T", s)
+		}
+	}
+}
+
+func (r *ByteRenderer) Bytes() []byte {
+	return r.b.Bytes()
+}
+
 func (doc *Document) ToHTML() string {
 	// Start processing the main block
 	doc.ProcessBlock(0)
@@ -1286,6 +1314,68 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 
 }
 
+func (doc *Document) processD2Explanation(lineNum int) ([]byte, error) {
+	const bulletPrefix = "# -("
+	const simplePrefix = "# - "
+	var r ByteRenderer
+
+	line := doc.Line(lineNum)
+
+	if !bytes.HasPrefix(line, []byte("# -")) {
+		return nil, fmt.Errorf("processD2Explanation, line %d: invalid prefix", lineNum+1)
+	}
+
+	// Preprocess Markdown list markers
+	// They can start with plain dashes '-' but we support a special format '-(something)'.
+	// The 'something' inside parenthesis will be highlighted in the list item
+	if bytes.HasPrefix(line, []byte(simplePrefix)) {
+
+		restLine := line[len(simplePrefix):]
+
+		// Build the line
+		r.Render("<li id='", lineNum, "'>")
+		r.Render("<a href='#", lineNum, "' class='selfref'>")
+		r.Render("<b>-</b></a> ", restLine)
+
+		l := r.Bytes()
+
+		return l, nil
+
+	} else if bytes.HasPrefix(line, []byte(bulletPrefix)) {
+
+		// Get the end ')'
+		indexRightBracket := bytes.IndexByte(line, ')')
+		if indexRightBracket == -1 {
+			return nil, fmt.Errorf("processD2Explanation, line %d: no closing ')' in list bullet", lineNum+1)
+		}
+
+		// Check that there is at least one character inside the '()'
+		if indexRightBracket == len(bulletPrefix) {
+			return nil, fmt.Errorf("processD2Explanation, line %d: no content inside '()' in list bullet", lineNum+1)
+		}
+
+		// Extract the whole tag spec, eliminating embedded blanks
+		bulletText := line[len(bulletPrefix):indexRightBracket]
+		bulletText = bytes.ReplaceAll(bulletText, []byte(" "), []byte("%20"))
+
+		// And the remaining text in the line
+		restLine := line[indexRightBracket+1:]
+
+		// Build the line
+		r.Render("<li id='", lineNum, ".", bulletText, "'>")
+		r.Render("<a href='#", lineNum, ".", bulletText, "' class='selfref'>")
+		r.Render("<b>", bulletText, "</b></a>", restLine)
+
+		l := r.Bytes()
+
+		return l, nil
+
+	}
+
+	return nil, fmt.Errorf("processD2Explanation, line %v: invalid D2 explanation ')' in list bullet", lineNum+1)
+
+}
+
 func (doc *Document) processD2(startLineNum int) int {
 	log.Debugw("ProcessD2 enter", "line", startLineNum+1)
 
@@ -1306,6 +1396,8 @@ func (doc *Document) processD2(startLineNum int) int {
 	// This will hold the string with the text lines for D2 drawing
 	var d2String []byte
 
+	var explanations [][]byte
+
 	// Loop until the end of the document or until we find a line with less or equal indentation
 	// Blank lines are assumed to pertain to the verbatim section
 	for i := startLineNum + 1; !doc.AtEOF(i); i++ {
@@ -1325,10 +1417,22 @@ func (doc *Document) processD2(startLineNum int) int {
 				break
 			}
 
+			// String with as many blanks as indentation
 			ind := bytes.Repeat([]byte(" "), doc.Indentation(i)-verbatimSectionIndentation)
 			d2String = append(d2String, ind...)
+
+			// Append the line with a newline at the end
 			d2String = append(d2String, doc.Line(i)...)
 			d2String = append(d2String, '\n')
+
+			// Add the line to the explanations list if it is a comment formatted in the proper way
+			if bytes.HasPrefix(doc.Line(i), []byte("# -")) {
+				exp, err := doc.processD2Explanation(i)
+				if err != nil {
+					continue
+				}
+				explanations = append(explanations, exp)
+			}
 
 		}
 
@@ -1363,6 +1467,17 @@ func (doc *Document) processD2(startLineNum int) int {
 
 	// Write the SVG inline with the HTML
 	doc.Render('\n', out, '\n')
+
+	// Write the explanations if there were any
+	if len(explanations) > 0 {
+		// Write the
+		doc.Render("\n", bytes.Repeat([]byte(" "), verbatimSectionIndentation), "<ul style=\"list-style-type: none\">\n")
+
+		for _, s := range explanations {
+			doc.Render(bytes.Repeat([]byte(" "), verbatimSectionIndentation+4), s, '\n')
+		}
+		doc.Render(bytes.Repeat([]byte(" "), verbatimSectionIndentation), "</ul>\n")
+	}
 
 	log.Debugw("ProcessD2 exit", "startOfNextBlock", startOfNextBlock+1)
 	return startOfNextBlock

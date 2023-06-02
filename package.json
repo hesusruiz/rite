@@ -1,0 +1,25 @@
+{
+  "name": "rite",
+  "displayName": "rite",
+  "description": "Rite language syntax",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.78.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "rite",
+      "aliases": ["Rite", "rite"],
+      "extensions": [".rite"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "rite",
+      "scopeName": "source.rite",
+      "path": "./syntaxes/rite.tmLanguage.json"
+    }]
+  }
+}
