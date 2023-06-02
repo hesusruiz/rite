@@ -1317,6 +1317,7 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 func (doc *Document) processD2Explanation(lineNum int) ([]byte, error) {
 	const bulletPrefix = "# -("
 	const simplePrefix = "# - "
+	const additionalPrefix = "# -+"
 	var r ByteRenderer
 
 	line := doc.Line(lineNum)
@@ -1336,6 +1337,17 @@ func (doc *Document) processD2Explanation(lineNum int) ([]byte, error) {
 		r.Render("<li id='", lineNum, "'>")
 		r.Render("<a href='#", lineNum, "' class='selfref'>")
 		r.Render("<b>-</b></a> ", restLine)
+
+		l := r.Bytes()
+
+		return l, nil
+
+	} else if bytes.HasPrefix(line, []byte(additionalPrefix)) {
+
+		restLine := line[len(simplePrefix):]
+
+		// Build the line
+		r.Render("<div>", restLine, "</div>")
 
 		l := r.Bytes()
 
@@ -1471,7 +1483,7 @@ func (doc *Document) processD2(startLineNum int) int {
 	// Write the explanations if there were any
 	if len(explanations) > 0 {
 		// Write the
-		doc.Render("\n", bytes.Repeat([]byte(" "), verbatimSectionIndentation), "<ul style=\"list-style-type: none\">\n")
+		doc.Render("\n", bytes.Repeat([]byte(" "), verbatimSectionIndentation), "<ul>\n")
 
 		for _, s := range explanations {
 			doc.Render(bytes.Repeat([]byte(" "), verbatimSectionIndentation+4), s, '\n')
