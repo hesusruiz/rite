@@ -1723,7 +1723,7 @@ func (doc *Document) processD2Explanation(lineNum int) ([]byte, error) {
 		restLine := line[indexRightBracket+1:]
 
 		// Build the line
-		r.Render("<li style='margin-left:2em; text-indent: -1em;' id='", lineNum, ".", bulletTextEncoded, "'>")
+		r.Render("<li style='text-indent: -1em;' id='", lineNum, ".", bulletTextEncoded, "'>")
 		r.Render("<a href='#", lineNum, ".", bulletTextEncoded, "' class='selfref'>")
 		r.Render("<b>", bulletText, "</b></a>", restLine)
 
