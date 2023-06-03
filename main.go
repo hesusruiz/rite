@@ -1482,9 +1482,9 @@ type preWrapper struct {
 func (p preWrapper) Start(code bool, styleAttr string) string {
 	// <pre tabindex="0" style="background-color:#fff;">
 	if code {
-		return fmt.Sprintf(`<pre class="nohighlight" %s><code>`, styleAttr)
+		return `<pre class="nohighlight" style="padding-left:0.5em;background-color: #fafafa;"><code>`
 	}
-	return fmt.Sprintf(`<pre%s>`, styleAttr)
+	return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
 }
 
 func (p preWrapper) End(code bool) string {
@@ -1503,14 +1503,12 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 	}
 
 	// Get the rendered tag and end tag
-	_, startTag, endTag, _ := tag.Render()
+	//	_, startTag, endTag, _ := tag.Render()
 
 	contentFirstLineNum := sectionLineNum + 1
 	startOfNextBlock := 0
 	contentLastLineNum := 0
 	minimumIndentation := doc.Indentation(contentFirstLineNum)
-
-	var buf bytes.Buffer
 
 	// We have to calculate the minimum indentation of all the lines in the section.
 	// The lines with that minimum indentation will be left aligned when we generate the section.
@@ -1534,11 +1532,6 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 				break
 			}
 
-			thisIndentationStr := bytes.Repeat([]byte(" "), thisLineIndentation-doc.Indentation(sectionLineNum))
-			buf.Write(thisIndentationStr)
-			buf.Write(doc.Line(i))
-			buf.WriteRune('\n')
-
 			// Update the number of the last line of the verbatim section
 			contentLastLineNum = i
 
@@ -1554,6 +1547,20 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 	// Do nothing if section is empty
 	if contentLastLineNum == 0 {
 		return startOfNextBlock
+	}
+
+	var buf bytes.Buffer
+
+	for i := contentFirstLineNum; i <= contentLastLineNum; i++ {
+
+		if (doc.Indentation(i) - minimumIndentation) >= 0 {
+			thisIndentationStr := bytes.Repeat([]byte(" "), doc.Indentation(i)-minimumIndentation)
+			buf.Write(thisIndentationStr)
+			buf.Write(doc.Line(i))
+		}
+
+		buf.WriteRune('\n')
+
 	}
 
 	contentLines := buf.String()
@@ -1594,63 +1601,63 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 
 	}
 
-	// Write a newline to visually separate from the preceding content
-	doc.Render('\n')
+	// // Write a newline to visually separate from the preceding content
+	// doc.Render('\n')
 
-	for i := contentFirstLineNum; i <= contentLastLineNum; i++ {
+	// for i := contentFirstLineNum; i <= contentLastLineNum; i++ {
 
-		// Calculate and write the indentation for the line
-		thisIndentationStr := ""
-		if doc.Indentation(i)-minimumIndentation > 0 {
-			thisIndentationStr = strings.Repeat(" ", doc.Indentation(i)-minimumIndentation)
-		}
-		doc.Render(thisIndentationStr)
+	// 	// Calculate and write the indentation for the line
+	// 	thisIndentationStr := ""
+	// 	if doc.Indentation(i)-minimumIndentation > 0 {
+	// 		thisIndentationStr = strings.Repeat(" ", doc.Indentation(i)-minimumIndentation)
+	// 	}
+	// 	doc.Render(thisIndentationStr)
 
-		escapedContentLine := string(doc.Line(i))
-		if bytes.Contains(tag.Class, []byte("html")) {
-			// Escape any HTML in the content line
-			escapedContentLine = html.EscapeString(string(doc.Line(i)))
-		}
+	// 	escapedContentLine := string(doc.Line(i))
+	// 	if bytes.Contains(tag.Class, []byte("html")) {
+	// 		// Escape any HTML in the content line
+	// 		escapedContentLine = html.EscapeString(string(doc.Line(i)))
+	// 	}
 
-		switch {
-		case i == contentFirstLineNum && i == contentLastLineNum:
-			// Special case: the section has only one line
-			// We have to write the start tag for the section, the content line and the end tag for the section in only one line
+	// 	switch {
+	// 	case i == contentFirstLineNum && i == contentLastLineNum:
+	// 		// Special case: the section has only one line
+	// 		// We have to write the start tag for the section, the content line and the end tag for the section in only one line
 
-			// Write the start tag, escaped content line and the end tag
-			// This line is indented according to the indentation of the section tag
-			doc.Render(tag.IndentStr(), startTag, escapedContentLine, endTag, "\n")
+	// 		// Write the start tag, escaped content line and the end tag
+	// 		// This line is indented according to the indentation of the section tag
+	// 		doc.Render(tag.IndentStr(), startTag, escapedContentLine, endTag, "\n")
 
-		case i == contentFirstLineNum:
-			// We are at the first line of a section with several lines
-			// We have to write the start tag for the section, and the first line of content in the same line
+	// 	case i == contentFirstLineNum:
+	// 		// We are at the first line of a section with several lines
+	// 		// We have to write the start tag for the section, and the first line of content in the same line
 
-			// Write the start tag and escaped content line
-			// This first line is indented according to the indentation of the section tag
-			doc.Render(tag.IndentStr(), startTag, escapedContentLine)
+	// 		// Write the start tag and escaped content line
+	// 		// This first line is indented according to the indentation of the section tag
+	// 		doc.Render(tag.IndentStr(), startTag, escapedContentLine)
 
-		case i > contentFirstLineNum && i < contentLastLineNum:
-			// We are in the middle of a section with several lines
+	// 	case i > contentFirstLineNum && i < contentLastLineNum:
+	// 		// We are in the middle of a section with several lines
 
-			// Write the content line, escaped for HTML tags
-			// All lines are left aligned
-			doc.Render(escapedContentLine)
+	// 		// Write the content line, escaped for HTML tags
+	// 		// All lines are left aligned
+	// 		doc.Render(escapedContentLine)
 
-		case i == contentLastLineNum:
-			// We are at the last line of a section with several lines
+	// 	case i == contentLastLineNum:
+	// 		// We are at the last line of a section with several lines
 
-			// Write the content line, escaped for HTML tags
-			doc.Render(escapedContentLine)
+	// 		// Write the content line, escaped for HTML tags
+	// 		doc.Render(escapedContentLine)
 
-			// Write the end tag for the section
-			doc.Render(endTag, "\n")
+	// 		// Write the end tag for the section
+	// 		doc.Render(endTag, "\n")
 
-		}
+	// 	}
 
-		// Write the endline
-		doc.Render("\n")
+	// 	// Write the endline
+	// 	doc.Render("\n")
 
-	}
+	// }
 
 	return startOfNextBlock
 
