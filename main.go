@@ -58,6 +58,150 @@ type Outline struct {
 	subheadings []*Heading
 }
 
+func main() {
+
+	app := &cli.App{
+		Name:     "rite",
+		Version:  "v0.06",
+		Compiled: time.Now(),
+		Authors: []*cli.Author{
+			{
+				Name:  "Jesus Ruiz",
+				Email: "hesus.ruiz@gmail.com",
+			},
+		},
+		Usage:     "process a rite document and produce HTML",
+		UsageText: "rite [options] [INPUT_FILE] (default input file is index.txt)",
+		Action:    process,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "output",
+				Aliases: []string{"o"},
+				Usage:   "write html to `FILE` (default is input file name with extension .html)",
+			},
+			&cli.BoolFlag{
+				Name:    "norespec",
+				Aliases: []string{"p"},
+				Usage:   "do not generate using respec semantics, just a plain HTML file",
+			},
+			&cli.BoolFlag{
+				Name:    "dryrun",
+				Aliases: []string{"n"},
+				Usage:   "do not generate output file, just process input file",
+			},
+			&cli.BoolFlag{
+				Name:    "debug",
+				Aliases: []string{"d"},
+				Usage:   "run in debug mode",
+			},
+			&cli.BoolFlag{
+				Name:    "watch",
+				Aliases: []string{"w"},
+				Usage:   "watch the file for changes",
+			},
+		},
+	}
+
+	if err := app.Run(os.Args); err != nil {
+		fmt.Println("Error:", err)
+	}
+
+}
+
+// process is the main entry point of the program
+func process(c *cli.Context) error {
+
+	// Default input file name
+	var inputFileName = "index.rite"
+
+	// Output file name command line parameter
+	outputFileName := c.String("output")
+
+	// Dry run
+	dryrun := c.Bool("dryrun")
+
+	debug = c.Bool("debug")
+
+	norespec = c.Bool("norespec")
+
+	var z *zap.Logger
+	var err error
+
+	// Setup the logging system
+	if debug {
+		z, err = zap.NewDevelopment()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		z, err = zap.NewProduction()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	log = z.Sugar()
+	defer log.Sync()
+
+	// Get the input file name
+	if c.Args().Present() {
+		inputFileName = c.Args().First()
+	} else {
+		fmt.Printf("no input file provided, using \"%v\"\n", inputFileName)
+	}
+
+	// Generate the output file name
+	if len(outputFileName) == 0 {
+		ext := path.Ext(inputFileName)
+		if len(ext) == 0 {
+			outputFileName = inputFileName + ".html"
+		} else {
+			outputFileName = strings.Replace(inputFileName, ext, ".html", 1)
+		}
+	}
+
+	// Print a message
+	if !dryrun {
+		fmt.Printf("processing %v and generating %v\n", inputFileName, outputFileName)
+	} else {
+		fmt.Printf("dry run: processing %v without writing output\n", inputFileName)
+	}
+
+	// This is useful for development.
+	// If the user specified watch, loop forever processing the input file when modified
+	if c.Bool("watch") {
+		err = processWatch(inputFileName, outputFileName, log)
+		return err
+	}
+
+	// Preprocess the input file
+	b, err := NewDocumentFromFile(inputFileName)
+	if err != nil {
+		return err
+	}
+
+	// Print stats data if requested
+	if debug {
+		b.printPreprocessStats()
+	}
+
+	// // Generate the HTML from the preprocessed data
+	html := b.ToHTML()
+
+	// Do nothing if flag dryrun was specified
+	if dryrun {
+		return nil
+	}
+
+	// Write the HTML to the output file
+	err = os.WriteFile(outputFileName, []byte(html), 0664)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (o *Outline) addHeading(tag *TagStruct) ([]byte, error) {
 
 	tagName := string(tag.Tag)
@@ -169,6 +313,11 @@ func (t *TagStruct) Render() (tagName []byte, startTag []byte, endTag []byte, re
 		startTag = fmt.Appendf(startTag, "<aside class='note'")
 		endTag = fmt.Appendf(endTag, "</aside>")
 
+	case "x-warning":
+		// Handle the 'x-note' special tag
+		startTag = fmt.Appendf(startTag, "<aside class='warning'")
+		endTag = fmt.Appendf(endTag, "</aside>")
+
 	case "x-img":
 		// Handle the 'x-img' special tag
 		startTag = fmt.Appendf(startTag, "<figure><img")
@@ -207,7 +356,7 @@ func (t *TagStruct) Render() (tagName []byte, startTag []byte, endTag []byte, re
 		}
 		restLine = nil
 
-	case "x-note":
+	case "x-note", "x-warning":
 		if len(t.RestLine) > 0 {
 			startTag = fmt.Appendf(startTag, " title='%s'", t.RestLine)
 		}
@@ -1676,148 +1825,4 @@ func NewDocumentFromFile(fileName string) (*Document, error) {
 	linescanner := bufio.NewScanner(file)
 	b, err := NewDocument(linescanner)
 	return b, err
-}
-
-// process is the main entry point of the program
-func process(c *cli.Context) error {
-
-	// Default input file name
-	var inputFileName = "index.rite"
-
-	// Output file name command line parameter
-	outputFileName := c.String("output")
-
-	// Dry run
-	dryrun := c.Bool("dryrun")
-
-	debug = c.Bool("debug")
-
-	norespec = c.Bool("norespec")
-
-	var z *zap.Logger
-	var err error
-
-	// Setup the logging system
-	if debug {
-		z, err = zap.NewDevelopment()
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		z, err = zap.NewProduction()
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	log = z.Sugar()
-	defer log.Sync()
-
-	// Get the input file name
-	if c.Args().Present() {
-		inputFileName = c.Args().First()
-	} else {
-		fmt.Printf("no input file provided, using \"%v\"\n", inputFileName)
-	}
-
-	// Generate the output file name
-	if len(outputFileName) == 0 {
-		ext := path.Ext(inputFileName)
-		if len(ext) == 0 {
-			outputFileName = inputFileName + ".html"
-		} else {
-			outputFileName = strings.Replace(inputFileName, ext, ".html", 1)
-		}
-	}
-
-	// Print a message
-	if !dryrun {
-		fmt.Printf("processing %v and generating %v\n", inputFileName, outputFileName)
-	} else {
-		fmt.Printf("dry run: processing %v without writing output\n", inputFileName)
-	}
-
-	// This is useful for development.
-	// If the user specified watch, loop forever processing the input file when modified
-	if c.Bool("watch") {
-		err = processWatch(inputFileName, outputFileName, log)
-		return err
-	}
-
-	// Preprocess the input file
-	b, err := NewDocumentFromFile(inputFileName)
-	if err != nil {
-		return err
-	}
-
-	// Print stats data if requested
-	if debug {
-		b.printPreprocessStats()
-	}
-
-	// // Generate the HTML from the preprocessed data
-	html := b.ToHTML()
-
-	// Do nothing if flag dryrun was specified
-	if dryrun {
-		return nil
-	}
-
-	// Write the HTML to the output file
-	err = os.WriteFile(outputFileName, []byte(html), 0664)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func main() {
-
-	app := &cli.App{
-		Name:     "rite",
-		Version:  "v0.05",
-		Compiled: time.Now(),
-		Authors: []*cli.Author{
-			{
-				Name:  "Jesus Ruiz",
-				Email: "hesus.ruiz@gmail.com",
-			},
-		},
-		Usage:     "process a rite document and produce HTML",
-		UsageText: "rite [options] [INPUT_FILE] (default input file is index.txt)",
-		Action:    process,
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "output",
-				Aliases: []string{"o"},
-				Usage:   "write html to `FILE` (default is input file name with extension .html)",
-			},
-			&cli.BoolFlag{
-				Name:    "norespec",
-				Aliases: []string{"p"},
-				Usage:   "do not generate using respec semantics, just a plain HTML file",
-			},
-			&cli.BoolFlag{
-				Name:    "dryrun",
-				Aliases: []string{"n"},
-				Usage:   "do not generate output file, just process input file",
-			},
-			&cli.BoolFlag{
-				Name:    "debug",
-				Aliases: []string{"d"},
-				Usage:   "run in debug mode",
-			},
-			&cli.BoolFlag{
-				Name:    "watch",
-				Aliases: []string{"w"},
-				Usage:   "watch the file for changes",
-			},
-		},
-	}
-
-	if err := app.Run(os.Args); err != nil {
-		fmt.Println("Error:", err)
-	}
-
 }
