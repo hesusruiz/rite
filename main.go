@@ -30,6 +30,11 @@ import (
 	"oss.terrastruct.com/d2/d2renderers/d2svg"
 	"oss.terrastruct.com/d2/d2themes/d2themescatalog"
 	"oss.terrastruct.com/d2/lib/textmeasure"
+
+	"github.com/alecthomas/chroma"
+	hlhtml "github.com/alecthomas/chroma/formatters/html"
+	"github.com/alecthomas/chroma/lexers"
+	"github.com/alecthomas/chroma/styles"
 )
 
 var log *zap.SugaredLogger
@@ -1048,6 +1053,10 @@ func (doc *Document) Render(inputs ...any) {
 	}
 }
 
+func (doc *Document) Write(p []byte) (n int, err error) {
+	return doc.renderer.Write(p)
+}
+
 type ByteRenderer struct {
 	b bytes.Buffer
 }
@@ -1069,6 +1078,10 @@ func (r *ByteRenderer) Render(inputs ...any) {
 			log.Fatalf("attemping to write something not a string, int, []byte or byte: %T", s)
 		}
 	}
+}
+
+func (r *ByteRenderer) Write(p []byte) (n int, err error) {
+	return r.b.Write(p)
 }
 
 func (r *ByteRenderer) Bytes() []byte {
@@ -1346,7 +1359,7 @@ func (doc *Document) ProcessList(startLineNum int) int {
 }
 
 // processCodeSection renders a '<x-code> section
-func (doc *Document) processCodeSection(sectionLineNum int) int {
+func (doc *Document) processCodeSectionOld(sectionLineNum int) int {
 
 	// Get the tag which starts the line
 	tag := doc.StartTagForLine(sectionLineNum)
@@ -1463,6 +1476,186 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 
 }
 
+type preWrapper struct {
+}
+
+func (p preWrapper) Start(code bool, styleAttr string) string {
+	// <pre tabindex="0" style="background-color:#fff;">
+	if code {
+		return fmt.Sprintf(`<pre class="nohighlight" %s><code>`, styleAttr)
+	}
+	return fmt.Sprintf(`<pre%s>`, styleAttr)
+}
+
+func (p preWrapper) End(code bool) string {
+	if code {
+		return `</code></pre>`
+	}
+	return `</pre>`
+}
+
+func (doc *Document) processCodeSection(sectionLineNum int) int {
+
+	// Get the tag which starts the line
+	tag := doc.StartTagForLine(sectionLineNum)
+	if tag == nil {
+		log.Fatalf("processCodeSection: error processing tag in line %d", sectionLineNum+1)
+	}
+
+	// Get the rendered tag and end tag
+	_, startTag, endTag, _ := tag.Render()
+
+	contentFirstLineNum := sectionLineNum + 1
+	startOfNextBlock := 0
+	contentLastLineNum := 0
+	minimumIndentation := doc.Indentation(contentFirstLineNum)
+
+	var buf bytes.Buffer
+
+	// We have to calculate the minimum indentation of all the lines in the section.
+	// The lines with that minimum indentation will be left aligned when we generate the section.
+	// So we have to perform two passes, one to calculate the minimum indentation and th esecond one to
+	// generate the section in the HTML with the proper indentation.
+	// Blank lines are assumed to pertain to the verbatim section.
+	for i := contentFirstLineNum; !doc.AtEOF(i); i++ {
+
+		startOfNextBlock = i
+
+		// This is the indentation of the text in the verbatim section
+		// We do not require that it is left-aligned, but calculate its offset
+		thisLineIndentation := doc.Indentation(i)
+
+		// If the line is non-blank
+		if len(doc.Line(i)) > 0 {
+
+			// Break the loop if indentation of this line is less or equal than the section
+			if thisLineIndentation <= tag.Indentation() {
+				// This line is part of the next block
+				break
+			}
+
+			thisIndentationStr := bytes.Repeat([]byte(" "), thisLineIndentation-doc.Indentation(sectionLineNum))
+			buf.Write(thisIndentationStr)
+			buf.Write(doc.Line(i))
+			buf.WriteRune('\n')
+
+			// Update the number of the last line of the verbatim section
+			contentLastLineNum = i
+
+			// Update the minimum indentation in the whole section
+			if thisLineIndentation < minimumIndentation {
+				minimumIndentation = thisLineIndentation
+			}
+
+		}
+
+	}
+
+	// Do nothing if section is empty
+	if contentLastLineNum == 0 {
+		return startOfNextBlock
+	}
+
+	contentLines := buf.String()
+	if len(contentLines) > 0 {
+
+		// Determine lexer.
+		l := lexers.Get(string(bytes.TrimSpace(tag.Class)))
+		if l == nil {
+			l = lexers.Analyse(contentLines)
+		}
+		if l == nil {
+			l = lexers.Fallback
+		}
+		l = chroma.Coalesce(l)
+
+		// Get the HTML formatter
+		f := hlhtml.New(hlhtml.Standalone(false), hlhtml.WithPreWrapper(preWrapper{}))
+
+		// Determine style.
+		s := styles.Get("xcode")
+		if s == nil {
+			s = styles.Fallback
+		}
+
+		it, err := l.Tokenise(nil, contentLines)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		doc.Render('\n')
+		rb := &bytes.Buffer{}
+		err = f.Format(rb, s, it)
+		if err != nil {
+			log.Fatal(err)
+		}
+		doc.Render(rb.Bytes())
+		doc.Render('\n')
+
+	}
+
+	// Write a newline to visually separate from the preceding content
+	doc.Render('\n')
+
+	for i := contentFirstLineNum; i <= contentLastLineNum; i++ {
+
+		// Calculate and write the indentation for the line
+		thisIndentationStr := ""
+		if doc.Indentation(i)-minimumIndentation > 0 {
+			thisIndentationStr = strings.Repeat(" ", doc.Indentation(i)-minimumIndentation)
+		}
+		doc.Render(thisIndentationStr)
+
+		escapedContentLine := string(doc.Line(i))
+		if bytes.Contains(tag.Class, []byte("html")) {
+			// Escape any HTML in the content line
+			escapedContentLine = html.EscapeString(string(doc.Line(i)))
+		}
+
+		switch {
+		case i == contentFirstLineNum && i == contentLastLineNum:
+			// Special case: the section has only one line
+			// We have to write the start tag for the section, the content line and the end tag for the section in only one line
+
+			// Write the start tag, escaped content line and the end tag
+			// This line is indented according to the indentation of the section tag
+			doc.Render(tag.IndentStr(), startTag, escapedContentLine, endTag, "\n")
+
+		case i == contentFirstLineNum:
+			// We are at the first line of a section with several lines
+			// We have to write the start tag for the section, and the first line of content in the same line
+
+			// Write the start tag and escaped content line
+			// This first line is indented according to the indentation of the section tag
+			doc.Render(tag.IndentStr(), startTag, escapedContentLine)
+
+		case i > contentFirstLineNum && i < contentLastLineNum:
+			// We are in the middle of a section with several lines
+
+			// Write the content line, escaped for HTML tags
+			// All lines are left aligned
+			doc.Render(escapedContentLine)
+
+		case i == contentLastLineNum:
+			// We are at the last line of a section with several lines
+
+			// Write the content line, escaped for HTML tags
+			doc.Render(escapedContentLine)
+
+			// Write the end tag for the section
+			doc.Render(endTag, "\n")
+
+		}
+
+		// Write the endline
+		doc.Render("\n")
+
+	}
+
+	return startOfNextBlock
+
+}
+
 func (doc *Document) processD2Explanation(lineNum int) ([]byte, error) {
 	const bulletPrefix = "# -("
 	const simplePrefix = "# - "
@@ -1496,7 +1689,7 @@ func (doc *Document) processD2Explanation(lineNum int) ([]byte, error) {
 		restLine := line[len(simplePrefix):]
 
 		// Build the line
-		r.Render("<div>", restLine, "</div>")
+		r.Render("<p style='text-indent:0'>", restLine, "</p>")
 
 		l := r.Bytes()
 
@@ -1517,14 +1710,14 @@ func (doc *Document) processD2Explanation(lineNum int) ([]byte, error) {
 
 		// Extract the whole tag spec, eliminating embedded blanks
 		bulletText := line[len(bulletPrefix):indexRightBracket]
-		bulletText = bytes.ReplaceAll(bulletText, []byte(" "), []byte("%20"))
+		bulletTextEncoded := bytes.ReplaceAll(bulletText, []byte(" "), []byte("_"))
 
 		// And the remaining text in the line
 		restLine := line[indexRightBracket+1:]
 
 		// Build the line
-		r.Render("<li id='", lineNum, ".", bulletText, "'>")
-		r.Render("<a href='#", lineNum, ".", bulletText, "' class='selfref'>")
+		r.Render("<li style='margin-left:2em; text-indent: -1em;' id='", lineNum, ".", bulletTextEncoded, "'>")
+		r.Render("<a href='#", lineNum, ".", bulletTextEncoded, "' class='selfref'>")
 		r.Render("<b>", bulletText, "</b></a>", restLine)
 
 		l := r.Bytes()
@@ -1613,7 +1806,7 @@ func (doc *Document) processD2(startLineNum int) int {
 		Ruler:  ruler,
 	})
 	if err != nil {
-		log.Fatalw("processD2", "line", startLineNum)
+		log.Fatalw("processD2", "line", startLineNum, "error", err)
 	}
 	out, err := d2svg.Render(diagram, &d2svg.RenderOpts{
 		Pad:     d2svg.DEFAULT_PADDING,
@@ -1632,7 +1825,7 @@ func (doc *Document) processD2(startLineNum int) int {
 	// Write the explanations if there were any
 	if len(explanations) > 0 {
 		// Write the
-		doc.Render("\n", bytes.Repeat([]byte(" "), verbatimSectionIndentation), "<ul>\n")
+		doc.Render("\n", bytes.Repeat([]byte(" "), verbatimSectionIndentation), "<ul style='list-style: none;'>\n")
 
 		for _, s := range explanations {
 			doc.Render(bytes.Repeat([]byte(" "), verbatimSectionIndentation+4), s, '\n')
