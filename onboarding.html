@@ -104,6 +104,9 @@
         code {
             color: red;
         }
+        pre.nohighlight {
+            padding: 0.5em
+        }
     </style>
 </head>
 
@@ -325,20 +328,20 @@
         <p>The X.509 certificate of the COO has the following contents in the <code>Subject</code> field (the example below is derived from a real certificate but with the identifiers modified to be an example):
         </p>
 
-        <pre class='yaml'><code>cn=56565656V Jesus Ruiz
-serialNumber=56565656V
-givenName=Jesus
-sn=Ruiz
-2.5.4.97=VATES-12345678
-o=GoodAir
-c=ES
-2.5.4.13=Notary:Juan Lopez/Protocol Num:7172/Date:07-06-2021</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span>cn=56565656V Jesus Ruiz
+</span></span><span style="display:flex;"><span>serialNumber=56565656V
+</span></span><span style="display:flex;"><span>givenName=Jesus
+</span></span><span style="display:flex;"><span>sn=Ruiz
+</span></span><span style="display:flex;"><span><span style="color:#ff0;font-weight:bold">2.5.4.97</span>=VATES-12345678
+</span></span><span style="display:flex;"><span>o=GoodAir
+</span></span><span style="display:flex;"><span>c=ES
+</span></span><span style="display:flex;"><span><span style="color:#ff0;font-weight:bold">2.5.4.13</span>=Notary:Juan Lopez/Protocol Num:7172/Date:07-06-2021
+</span></span></code></pre>
         <p>The above set of fields bind the legal identity of the COO with the identity of the business:
         </p>
         <ul>
-            <li id='list_197.1'><code>serialNumber</code> is the unique number recognized by the Spanish Government for spanish citizens (called NIF).            </li>
-            <li id='list_197.2'><code>2.5.4.97</code> is the <a href="https://oidref.com/2.5.4.97">official OID for <code>organizationIdentifier</code></a>. The contents of this field in the example certificate is the unique identifier for the legal person GoodAir.            </li>
+            <li id='list_199.1'><code>serialNumber</code> is the unique number recognized by the Spanish Government for spanish citizens (called NIF).            </li>
+            <li id='list_199.2'><code>2.5.4.97</code> is the <a href="https://oidref.com/2.5.4.97">official OID for <code>organizationIdentifier</code></a>. The contents of this field in the example certificate is the unique identifier for the legal person GoodAir.            </li>
         </ul>
 
         <p>Before issuing a certificate like the above, the TSP has to perform some validations to ensure that in the official source of truth (the business registry of Spain in this case) there is already registered information that states that the COO has indeed powers to act on behalf of GoodAir as a legal representative.
@@ -361,12 +364,12 @@ c=ES
         <p>In our case, the entry for RealTruth in the TL includes a `&ltTSPService&gt` entry, and inside it the `&ltServiceDigitalIdentity&gt` entry includes a DER-encoded certificate specifying the digital identity of the root anchor for that trust domain. The certificate for the Service has in the Subject field:
         </p>
 
-        <pre class='yaml'><code>2.5.4.97 = VATDE-170173453
-CN = DRV QC 11 MA CA 2017ca
-OU = QC 11 Mitarbeiter CA
-O = Deutsche Rentenversicherung Westfalen
-C = DE</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span><span style="color:#ff0;font-weight:bold">2.5.4.97</span> = VATDE-170173453
+</span></span><span style="display:flex;"><span>CN = DRV QC 11 MA CA 2017ca
+</span></span><span style="display:flex;"><span>OU = QC 11 Mitarbeiter CA
+</span></span><span style="display:flex;"><span>O = Deutsche Rentenversicherung Westfalen
+</span></span><span style="display:flex;"><span>C = DE
+</span></span></code></pre>
         <p>Which in the <code>organizationIdentifier</code> field (OID 2.5.4.97) specifies the unique organisation identifier assigned by the German regulatory authority to the TSP: VATDE-170173453.
         </p>
         <p>RealTruth provides `Legal Person Representative Certificates` which are qualified in accordance with Regulation (EU) No. 910/2014 of the European Parliament and of the Council of 23 July 2014 on electronic identification and trust services for electronic transactions in the internal market.
@@ -378,10 +381,10 @@ C = DE</code></pre>
             <p>The Registration Authority must verify the following information in order to authenticate the identity of the organisation:
             </p>
             <ul>
-                <li id='list_233.1'>The data concerning the business name or corporate name of the organisation.                </li>
-                <li id='list_233.2'>The data relating to the constitution and legal status of the subscriber.                </li>
-                <li id='list_233.3'><b>The data concerning the extent and validity of the powers of representation of the applicant.</b>                </li>
-                <li id='list_233.4'>The data concerning the tax identification code of the organisation or equivalent code used in the country to whose legislation the subscriber is subject.                </li>
+                <li id='list_235.1'>The data concerning the business name or corporate name of the organisation.                </li>
+                <li id='list_235.2'>The data relating to the constitution and legal status of the subscriber.                </li>
+                <li id='list_235.3'><b>The data concerning the extent and validity of the powers of representation of the applicant.</b>                </li>
+                <li id='list_235.4'>The data concerning the tax identification code of the organisation or equivalent code used in the country to whose legislation the subscriber is subject.                </li>
             </ul>
 
         </blockquote>
@@ -562,18 +565,18 @@ C = DE</code></pre>
         <p>From the above form we can derive the following claims:
         </p>
 
-        <pre class='json'><code>{
-    "title": "Mr.",
-    "first_name": "John",
-    "last_name": "Doe",
-    "gender": "M",
-    "postal_address": "",
-    "email": "johndoe@goodair.com",
-    "telephone": "",
-    "fax": "",
-    "mobile_phone": "+34787426623"
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;title&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;Mr.&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;first_name&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;John&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;last_name&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;Doe&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;gender&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;M&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;postal_address&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;email&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;johndoe@goodair.com&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;telephone&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;fax&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;mobile_phone&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;+34787426623&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
         <p>Where the <code>id</code> field is the `did:key` identifier assigned to the employee when issuing the credential, for privacy reasons. This is explained in more detail below.
         </p>
     </section>
@@ -598,28 +601,28 @@ C = DE</code></pre>
         <p>An example could be:
         </p>
 
-        <pre class='json'><code>{
-    "id": "did:key:99ab5bca41bb45b78d242a46f0157b7d#key1"
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;id&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;did:key:99ab5bca41bb45b78d242a46f0157b7d#key1&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
         <p>In this example, the signatures performed with the private key can not be JAdES-compliant ([[ETSI-JADES]]), but if the LEARCredential is attached to any other credential that is signed with this private key, then they can be traced up to the eIDAS certificate of the COO and so the chain of responsibility can be determined..
         </p>
         <p>With the DID for the employee, the set of claims identifying him would be then:
         </p>
 
-        <pre class='json'><code>{
-    "id": "did:key:99ab5bca41bb45b78d242a46f0157b7d",
-    "title": "Mr.",
-    "first_name": "John",
-    "last_name": "Doe",
-    "gender": "M",
-    "postal_address": "",
-    "email": "johndoe@goodair.com",
-    "telephone": "",
-    "fax": "",
-    "mobile_phone": "+34787426623"
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;id&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;did:key:99ab5bca41bb45b78d242a46f0157b7d&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;title&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;Mr.&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;first_name&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;John&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;last_name&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;Doe&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;gender&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;M&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;postal_address&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;email&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;johndoe@goodair.com&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;telephone&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;fax&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;mobile_phone&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;+34787426623&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
     </section>
 
 
@@ -628,14 +631,14 @@ C = DE</code></pre>
         <p>This section identifies the natural person (the COO) who is a legal representative of the legal person (GoodAir) and that is nominating the employee identified in the credential.
         </p>
 
-        <pre class='json'><code>"legalRepresentative": {
-    "cn": "56565656V Jesus Ruiz",
-    "serialNumber": "56565656V",
-    "organizationIdentifier": "VATES-12345678",
-    "o": "GoodAir",
-    "c": "ES"
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">&#34;legalRepresentative&#34;</span><span style="color:#f00">:</span> {
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;cn&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;56565656V Jesus Ruiz&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;serialNumber&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;56565656V&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;organizationIdentifier&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;VATES-12345678&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;o&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;GoodAir&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;c&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;ES&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
 
         <aside class='note' title="Attributes for natural and legal persons">
             <p>The attributes for natural persons and legal persons are derived from the <a href="https://ec.europa.eu/digital-building-blocks/wikis/download/attachments/467109280/eidas_saml_attribute_profile_v1.0_2.pdf?version=1&modificationDate=1639417533738&api=v2">eIDAS SAML Attribute Profile (eIDAS Technical Sub-group, 22 June 2015)</a>.
@@ -668,13 +671,13 @@ C = DE</code></pre>
         <p>A simplistic implementation of the object inside the credential could be:
         </p>
 
-        <pre class='json'><code>"rolesAndDuties": [
-    {
-        "type": "LEARCredential",
-        "id": "https://www.dome-project.com/lear/v1/6484994n4r9e990494"
-    }
-]</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">&#34;rolesAndDuties&#34;</span><span style="color:#f00">:</span> [
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;type&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;LEARCredential&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;id&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;https://www.dome-project.com/lear/v1/6484994n4r9e990494&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>]
+</span></span></code></pre>
         <p>Where the last part of the url can correspond to the hash of the external linked document to ensure that any modification or tampering can be detected. 
         </p>
     </section>
@@ -685,46 +688,46 @@ C = DE</code></pre>
         <p>With the above values for the example, the complete LEARCredential would become something like this:
         </p>
 
-        <pre class='json'><code>{
-    "@context": [
-        "https://www.w3.org/2018/credentials/v1",
-        "https://www.dome-project.com/2022/credentials/learcredential/v1"
-    ],
-    "id": "urn:did:elsi:25159389-8dd17b796ac0",
-    "type": ["VerifiableCredential", "LEARCredential"],
-    "issuer": {
-        "id": "did:elsi:VATES-12345678"
-    },
-    "issuanceDate": "2022-03-22T14:00:00Z",
-    "validFrom": "2022-03-22T14:00:00Z",
-    "expirationDate": "2023-03-22T14:00:00Z",
-    "credentialSubject": {
-        "id": "did:key:99ab5bca41bb45b78d242a46f0157b7d",
-        "title": "Mr.",
-        "first_name": "John",
-        "last_name": "Doe",
-        "gender": "M",
-        "postal_address": "",
-        "email": "johndoe@goodair.com",
-        "telephone": "",
-        "fax": "",
-        "mobile_phone": "+34787426623",
-        "legalRepresentative": {
-            "cn": "56565656V Jesus Ruiz",
-            "serialNumber": "56565656V",
-            "organizationIdentifier": "VATES-12345678",
-            "o": "GoodAir",
-            "c": "ES"
-        },
-        "rolesAndDuties": [
-            {
-                "type": "LEARCredential",
-                "id": "https://www.dome-project.com/lear/v1/6484994n4r9e990494"
-            }
-        ]
-    }
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;@context&#34;</span>: [
+</span></span><span style="display:flex;"><span>        <span style="color:#0ff;font-weight:bold">&#34;https://www.w3.org/2018/credentials/v1&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#0ff;font-weight:bold">&#34;https://www.dome-project.com/2022/credentials/learcredential/v1&#34;</span>
+</span></span><span style="display:flex;"><span>    ],
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;id&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;urn:did:elsi:25159389-8dd17b796ac0&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;type&#34;</span>: [<span style="color:#0ff;font-weight:bold">&#34;VerifiableCredential&#34;</span>, <span style="color:#0ff;font-weight:bold">&#34;LEARCredential&#34;</span>],
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;issuer&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;id&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;did:elsi:VATES-12345678&#34;</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;issuanceDate&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;2022-03-22T14:00:00Z&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;validFrom&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;2022-03-22T14:00:00Z&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;expirationDate&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;2023-03-22T14:00:00Z&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;credentialSubject&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;id&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;did:key:99ab5bca41bb45b78d242a46f0157b7d&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;title&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;Mr.&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;first_name&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;John&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;last_name&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;Doe&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;gender&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;M&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;postal_address&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;email&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;johndoe@goodair.com&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;telephone&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;fax&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;mobile_phone&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;+34787426623&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;legalRepresentative&#34;</span>: {
+</span></span><span style="display:flex;"><span>            <span style="font-weight:bold">&#34;cn&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;56565656V Jesus Ruiz&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="font-weight:bold">&#34;serialNumber&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;56565656V&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="font-weight:bold">&#34;organizationIdentifier&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;VATES-12345678&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="font-weight:bold">&#34;o&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;GoodAir&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="font-weight:bold">&#34;c&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;ES&#34;</span>
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;rolesAndDuties&#34;</span>: [
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="font-weight:bold">&#34;type&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;LEARCredential&#34;</span>,
+</span></span><span style="display:flex;"><span>                <span style="font-weight:bold">&#34;id&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;https://www.dome-project.com/lear/v1/6484994n4r9e990494&#34;</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        ]
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
     </section>
 
 </section>
@@ -774,8 +777,8 @@ C = DE</code></pre>
         <p>In this profile we assume that the Issuer is composed of two components:
         </p>
         <ul>
-            <li id='list_484.1'>Authorization server: the backend component implementing the existing authentication/authorization functionalities for the Issuer entity.            </li>
-            <li id='list_484.2'>Issuer backend: the main server implementing the business logic as a web application and additional backend APIs required for issuance of credentials.            </li>
+            <li id='list_486.1'>Authorization server: the backend component implementing the existing authentication/authorization functionalities for the Issuer entity.            </li>
+            <li id='list_486.2'>Issuer backend: the main server implementing the business logic as a web application and additional backend APIs required for issuance of credentials.            </li>
         </ul>
 
         <p>The Issuer backend and the Authorization server could be implemented as a single component in a real use case, but we assume here that they are separated to make the profile more general, especially for big entities and also when using Trust Service Providers for cloud signature and credential issuance, for example.
@@ -838,8 +841,8 @@ C = DE</code></pre>
             <p>This profile restricts the options available in section 4.1.1 of [[OIDCVCI]]. The profile defines a Credential Offer object containing the following parameters:
             </p>
             <ul>
-                <li id='list_531.1'><code>credential_issuer</code>: REQUIRED. The URL of the Credential Issuer that will be used by the Wallet to obtain one or more Credentials.                </li>
-                <li id='list_531.2'><code>credentials</code>: REQUIRED. A JSON array, where every entry is a JSON string. To achieve interoperability faster, this profile defines a global Trusted Credential Schemas List where well-known credential schemas are defined, in addition to the individual credentials that each Issuer can define themselves. The string value MUST be one of the id values in one of the objects in the <code>credentials_supported</code> metadata parameter of the Trusted Credential Schemas List (described later), or one of the id values in one of the objects in the <code>credentials_supported</code> Credential Issuer metadata parameter provided by the Credential Issuer. When processing, the Wallet MUST resolve this string value to the respective object. The credentials defined in the global Trusted Credential Schema List have precedence over the ones defined by the Credential Issuer.                <div>
+                <li id='list_533.1'><code>credential_issuer</code>: REQUIRED. The URL of the Credential Issuer that will be used by the Wallet to obtain one or more Credentials.                </li>
+                <li id='list_533.2'><code>credentials</code>: REQUIRED. A JSON array, where every entry is a JSON string. To achieve interoperability faster, this profile defines a global Trusted Credential Schemas List where well-known credential schemas are defined, in addition to the individual credentials that each Issuer can define themselves. The string value MUST be one of the id values in one of the objects in the <code>credentials_supported</code> metadata parameter of the Trusted Credential Schemas List (described later), or one of the id values in one of the objects in the <code>credentials_supported</code> Credential Issuer metadata parameter provided by the Credential Issuer. When processing, the Wallet MUST resolve this string value to the respective object. The credentials defined in the global Trusted Credential Schema List have precedence over the ones defined by the Credential Issuer.                <div>
 
                     <aside class='note' title='LEARCredential'>
                         <p>The only credential being offered in our case is the LEARCredential, so this is the credential schema that should be specified here. The LEARCredential is a credential known globally to the DOME ecosystem, so its schema should be published and be available in the Trusted Credential Schemas List.
@@ -848,7 +851,7 @@ C = DE</code></pre>
 
                 </div>
                 </li>
-                <li id='list_531.3'><code>grants</code>: REQUIRED. A JSON object indicating to the Wallet the Grant Type <code>pre-authorized_code</code>. This grant is represented by a key and an object, where the key is `urn:ietf:params:oauth:grant-type:pre-authorized_code`. In this profile the credential issuance flow requires initial authentication of the End User by the Credential Issuer, so the Pre-Authorized Code Flow achieves a good level of security and we do not need the more general Authorization Code Flow.                <div>
+                <li id='list_533.3'><code>grants</code>: REQUIRED. A JSON object indicating to the Wallet the Grant Type <code>pre-authorized_code</code>. This grant is represented by a key and an object, where the key is `urn:ietf:params:oauth:grant-type:pre-authorized_code`. In this profile the credential issuance flow requires initial authentication of the End User by the Credential Issuer, so the Pre-Authorized Code Flow achieves a good level of security and we do not need the more general Authorization Code Flow.                <div>
                     <p>In other scenarios like when the wallet is a native mobile application and the user interacts with the Issuer exclusively with the mobile (without the laptop), then the Authorization Code Flow has to be used. This can be described in detail in a different profile.
                     </p>
                 </div>
@@ -858,26 +861,26 @@ C = DE</code></pre>
             <p>The grant object contains the following values:
             </p>
             <ul>
-                <li id='list_545.1'><code>pre-authorized_code</code>: REQUIRED. The code representing the Credential Issuer's authorization for the Wallet to obtain Credentials of a certain type. This code MUST be short lived and single-use. This parameter value MUST be included in the subsequent Token Request with the Pre-Authorized Code Flow.                </li>
-                <li id='list_545.2'><code>user_pin_required</code>: REQUIRED. The OIDCVCI standard says it is RECOMMENDED, but this profile specifies the user pin to achieve a greater level of security. This field is a boolean value specifying whether the Credential Issuer expects presentation of a user PIN along with the Token Request in a Pre-Authorized Code Flow. Default is false. This PIN is intended to bind the Pre-Authorized Code to a certain transaction in order to prevent replay of this code by an attacker that, for example, scanned the QR code while standing behind the legit user. It is RECOMMENDED to send a PIN via a separate channel. The PIN value MUST be sent in the <code>user_pin</code> parameter with the respective Token Request.                </li>
+                <li id='list_547.1'><code>pre-authorized_code</code>: REQUIRED. The code representing the Credential Issuer's authorization for the Wallet to obtain Credentials of a certain type. This code MUST be short lived and single-use. This parameter value MUST be included in the subsequent Token Request with the Pre-Authorized Code Flow.                </li>
+                <li id='list_547.2'><code>user_pin_required</code>: REQUIRED. The OIDCVCI standard says it is RECOMMENDED, but this profile specifies the user pin to achieve a greater level of security. This field is a boolean value specifying whether the Credential Issuer expects presentation of a user PIN along with the Token Request in a Pre-Authorized Code Flow. Default is false. This PIN is intended to bind the Pre-Authorized Code to a certain transaction in order to prevent replay of this code by an attacker that, for example, scanned the QR code while standing behind the legit user. It is RECOMMENDED to send a PIN via a separate channel. The PIN value MUST be sent in the <code>user_pin</code> parameter with the respective Token Request.                </li>
             </ul>
 
             <p>The following non-normative example shows a Credential Offer object where the Credential Issuer offers the issuance of one Credential ("LEARCredential"):
             </p>
 
-            <pre class='json'><code>{
-    "credential_issuer": "https://credential-issuer.example.com",
-    "credentials": [
-        "LEARCredential"
-    ],
-    "grants": {
-        "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
-            "pre-authorized_code": "asju68jgtyk9ikkew",
-            "user_pin_required": true
-        }
-    }
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;credential_issuer&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;https://credential-issuer.example.com&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;credentials&#34;</span>: [
+</span></span><span style="display:flex;"><span>        <span style="color:#0ff;font-weight:bold">&#34;LEARCredential&#34;</span>
+</span></span><span style="display:flex;"><span>    ],
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;grants&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">&#34;urn:ietf:params:oauth:grant-type:pre-authorized_code&#34;</span>: {
+</span></span><span style="display:flex;"><span>            <span style="font-weight:bold">&#34;pre-authorized_code&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;asju68jgtyk9ikkew&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="font-weight:bold">&#34;user_pin_required&#34;</span>: <span style="color:#fff;font-weight:bold">true</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
         </section>
 
 
@@ -886,15 +889,15 @@ C = DE</code></pre>
             <p>Below is a non-normative example of the Credential Offer displayed by the Credential Issuer as a QR code when the Credential Offer is passed by reference, as required in this profile:
             </p>
 
-            <pre class='http'><code>https://credential-issuer.example.com/credential-offer?
-credential_offer_uri=https%3A%2F%2Fserver%2Eexample%2Ecom%2Fcredential-offer%2F5j349k3e3n23j</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span><span style="color:#f00">https://credential-issuer.example.com/credential-offer?
+</span></span></span><span style="display:flex;"><span><span style="color:#f00">credential_offer_uri=https%3A%2F%2Fserver%2Eexample%2Ecom%2Fcredential-offer%2F5j349k3e3n23j
+</span></span></span></code></pre>
             <p>Which in plain text would be:
             </p>
 
-            <pre class='http'><code>https://credential-issuer.example.com/credential-offer?
-credential_offer_uri=https://server.example.com/credential-offer/5j349k3e3n23j</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span><span style="color:#f00">https://credential-issuer.example.com/credential-offer?
+</span></span></span><span style="display:flex;"><span><span style="color:#f00">credential_offer_uri=https://server.example.com/credential-offer/5j349k3e3n23j
+</span></span></span></code></pre>
             <p>To increase security, the Issuer MUST make sure that every Credential Offer URI is unique for all credential offers created. This is the purpose of the nonce (<code>5j349k3e3n23j</code>) at the end of the url in the example. Issuers can implement whatever mechanism they wish, as far as it is transparent to the wallet.
             </p>
         </section>
@@ -930,9 +933,9 @@ credential_offer_uri=https://server.example.com/credential-offer/5j349k3e3n23j</
             <p>The object contained in <code>openid-credential-issuer</code> contains the following:
             </p>
             <ul>
-                <li id='list_605.1'><code>credential_issuer</code>: REQUIRED. The Credential Issuer's identifier.                </li>
-                <li id='list_605.2'><code>credential_endpoint</code>: REQUIRED. URL of the Credential Issuer's Credential Endpoint. This URL MUST use the https scheme and MAY contain port, path and query parameter components.                </li>
-                <li id='list_605.3'><code>credentials_supported</code>: REQUIRED. A JSON array containing a list of JSON objects, each of them representing metadata about a separate credential type that the Credential Issuer can issue. The JSON objects in the array MUST conform to the structure of the Section XXXX.                </li>
+                <li id='list_607.1'><code>credential_issuer</code>: REQUIRED. The Credential Issuer's identifier.                </li>
+                <li id='list_607.2'><code>credential_endpoint</code>: REQUIRED. URL of the Credential Issuer's Credential Endpoint. This URL MUST use the https scheme and MAY contain port, path and query parameter components.                </li>
+                <li id='list_607.3'><code>credentials_supported</code>: REQUIRED. A JSON array containing a list of JSON objects, each of them representing metadata about a separate credential type that the Credential Issuer can issue. The JSON objects in the array MUST conform to the structure of the Section XXXX.                </li>
             </ul>
 
             <p>TODO: define a global directory of credentials supported to eliminate requirement for each individual Issuer to publish its own list.
@@ -940,9 +943,9 @@ credential_offer_uri=https://server.example.com/credential-offer/5j349k3e3n23j</
             <p>This profile does not make use of the following parameters:
             </p>
             <ul>
-                <li id='list_616.1'><code>authorization_server</code> parameter, because it uses the <code>pre-authorized_code</code> Grant type.                </li>
-                <li id='list_616.2'><code>batch_credential_endpoint</code> parameter. It indicates that the Credential Issuer does not support the Batch Credential Endpoint.                </li>
-                <li id='list_616.3'><code>display</code> parameter.                </li>
+                <li id='list_618.1'><code>authorization_server</code> parameter, because it uses the <code>pre-authorized_code</code> Grant type.                </li>
+                <li id='list_618.2'><code>batch_credential_endpoint</code> parameter. It indicates that the Credential Issuer does not support the Batch Credential Endpoint.                </li>
+                <li id='list_618.3'><code>display</code> parameter.                </li>
             </ul>
 
         </section>
@@ -955,7 +958,7 @@ credential_offer_uri=https://server.example.com/credential-offer/5j349k3e3n23j</
         <p>This specification also defines a new OAuth 2.0 Authorization Server metadata [[RFC8414]] parameter to publish whether the AS that the Credential Issuer relies on for authorization, supports anonymous Token Requests with the Pre-authorized Grant Type. It is defined as follows:
         </p>
         <ul>
-            <li id='list_628.1'><code>pre-authorized_grant_anonymous_access_supported</code>: OPTIONAL. A JSON Boolean indicating whether the issuer accepts a Token Request with a Pre-Authorized Code but without a client id. The default is false.            </li>
+            <li id='list_630.1'><code>pre-authorized_grant_anonymous_access_supported</code>: OPTIONAL. A JSON Boolean indicating whether the issuer accepts a Token Request with a Pre-Authorized Code but without a client id. The default is false.            </li>
         </ul>
 
     </section>
@@ -983,8 +986,8 @@ credential_offer_uri=https://server.example.com/credential-offer/5j349k3e3n23j</
             <p>The following are the extension parameters to the Token Request used in a Pre-Authorized Code Flow as used in this profile:
             </p>
             <ul>
-                <li id='list_647.1'><code>pre-authorized_code</code>: REQUIRED. The code representing the authorization to obtain Credentials of a certain type.                </li>
-                <li id='list_647.2'><code>user_pin</code>: OPTIONAL. String value containing a user PIN. This value MUST be present if user_pin_required was set to true in the Credential Offer. The string value MUST consist of maximum 8 numeric characters (the numbers 0 - 9).                </li>
+                <li id='list_649.1'><code>pre-authorized_code</code>: REQUIRED. The code representing the authorization to obtain Credentials of a certain type.                </li>
+                <li id='list_649.2'><code>user_pin</code>: OPTIONAL. String value containing a user PIN. This value MUST be present if user_pin_required was set to true in the Credential Offer. The string value MUST consist of maximum 8 numeric characters (the numbers 0 - 9).                </li>
             </ul>
 
             <p>In this profile the Wallet does not have to authenticate when using the Token Endpoint, because we are using the Pre-Authorized Code Grant Type, given the level of trust between the Issuer and the End User and that authentication was already performed at the beginning of the flow.
@@ -992,14 +995,14 @@ credential_offer_uri=https://server.example.com/credential-offer/5j349k3e3n23j</
             <p>Below is a non-normative example of a Token Request:
             </p>
 
-            <pre class='http'><code>POST /token HTTP/1.1
-Host: server.example.com
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Apre-authorized_code
-&pre-authorized_code=SplxlOBeZQQYbYS6WxSbIA
-&user_pin=493536</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span>POST /token <span style="color:#fff;font-weight:bold">HTTP</span>/<span style="color:#ff0;font-weight:bold">1.1</span>
+</span></span><span style="display:flex;"><span>Host: server.example.com
+</span></span><span style="display:flex;"><span>Content-Type: application/x-www-form-urlencoded
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Apre-authorized_code
+</span></span><span style="display:flex;"><span>&amp;pre-authorized_code=SplxlOBeZQQYbYS6WxSbIA
+</span></span><span style="display:flex;"><span>&amp;user_pin=493536
+</span></span></code></pre>
         </section>
 
 
@@ -1010,25 +1013,25 @@ grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Apre-authorized_code
             <p>In addition to the response parameters defined in [[RFC6749]], the Authorization Server returns the following parameters:
             </p>
             <ul>
-                <li id='list_672.1'><code>c_nonce</code>: REQUIRED. JSON string containing a nonce to be used to create a proof of possession of key material when requesting a Credential. The Wallet MUST use this nonce value for its subsequent credential requests until the Credential Issuer provides a fresh nonce.                </li>
-                <li id='list_672.2'><code>c_nonce_expires_in</code>: REQUIRED. JSON integer denoting the lifetime in seconds of the c_nonce.                </li>
+                <li id='list_674.1'><code>c_nonce</code>: REQUIRED. JSON string containing a nonce to be used to create a proof of possession of key material when requesting a Credential. The Wallet MUST use this nonce value for its subsequent credential requests until the Credential Issuer provides a fresh nonce.                </li>
+                <li id='list_674.2'><code>c_nonce_expires_in</code>: REQUIRED. JSON integer denoting the lifetime in seconds of the c_nonce.                </li>
             </ul>
 
             <p>Below is a non-normative example of a Token Response:
             </p>
 
-            <pre class='http'><code>HTTP/1.1 200 OK
-Content-Type: application/json
-Cache-Control: no-store
-
-{
-    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6Ikp..sHQ",
-    "token_type": "bearer",
-    "expires_in": 86400,
-    "c_nonce": "tZignsnFbp",
-    "c_nonce_expires_in": 86400
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">HTTP</span>/<span style="color:#ff0;font-weight:bold">1.1</span> <span style="color:#ff0;font-weight:bold">200</span> OK
+</span></span><span style="display:flex;"><span>Content-Type: application/json
+</span></span><span style="display:flex;"><span>Cache-Control: no-store
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;access_token&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;eyJhbGciOiJSUzI1NiIsInR5cCI6Ikp..sHQ&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;token_type&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;bearer&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;expires_in&#34;</span>: <span style="color:#ff0;font-weight:bold">86400</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;c_nonce&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;tZignsnFbp&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;c_nonce_expires_in&#34;</span>: <span style="color:#ff0;font-weight:bold">86400</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
         </section>
 
 
@@ -1076,8 +1079,8 @@ Cache-Control: no-store
             <p>The Wallet backend makes a Credential Request to the Credential Endpoint by sending the following parameters in the entity-body of an HTTP POST request using the `application/json` media type.
             </p>
             <ul>
-                <li id='list_724.1'><code>format</code>: REQUIRED. This profile uses the Credential format identifier <code>jwt_vc_json</code>.                </li>
-                <li id='list_724.2'><code>proof</code>: OPTIONAL. JSON object containing proof of possession of the key material the issued Credential shall be bound to. The specification envisions use of different types of proofs for different cryptographic schemes. The proof object MUST contain a proof_type claim of type JSON string denoting the concrete proof type. This type determines the further claims in the proof object and its respective processing rules. Proof types are defined in Section 7.2.1.                </li>
+                <li id='list_726.1'><code>format</code>: REQUIRED. This profile uses the Credential format identifier <code>jwt_vc_json</code>.                </li>
+                <li id='list_726.2'><code>proof</code>: OPTIONAL. JSON object containing proof of possession of the key material the issued Credential shall be bound to. The specification envisions use of different types of proofs for different cryptographic schemes. The proof object MUST contain a proof_type claim of type JSON string denoting the concrete proof type. This type determines the further claims in the proof object and its respective processing rules. Proof types are defined in Section 7.2.1.                </li>
             </ul>
 
             <p>The proof element MUST incorporate a c_nonce value generated by the Credential Issuer and the Credential Issuer Identifier (audience) to allow the Credential Issuer to detect replay. The way that data is incorporated depends on the proof type. In a JWT, for example, the c_nonce is conveyd in the nonce claims whereas the audience is conveyed in the aud claim. In a Linked Data proof, for example, the c_nonce is included as the challenge element in the proof object and the Credential Issuer (the intended audience) is included as the domain element.
@@ -1090,20 +1093,20 @@ Cache-Control: no-store
                 <p><code>jwt</code>: objects of this type contain a single jwt element with a JWS [RFC7515] as proof of possession. The JWT MUST contain the following elements:
                 </p>
                     <ul>
-                        <li id='list_737.1'>in the JOSE Header,                        <div>
+                        <li id='list_739.1'>in the JOSE Header,                        <div>
                             <ul>
-                                <li id='list_740.1'><code>typ</code>: REQUIRED. MUST be `openid4vci-proof+jwt`, which explicitly types the proof JWT as recommended in Section 3.11 of [[RFC8725]].                                </li>
-                                <li id='list_740.2'><code>alg</code>: REQUIRED. A digital signature algorithm identifier such as per IANA "JSON Web Signature and Encryption Algorithms" registry. MUST NOT be none or an identifier for a symmetric algorithm (MAC).                                </li>
-                                <li id='list_740.3'><code>kid</code>: REQUIRED. JOSE Header containing the key ID. The Credential will be bound to a DID, so the kid refers to a DID URL which identifies a particular key in the DID Document that the Credential will be bound to.                                </li>
+                                <li id='list_742.1'><code>typ</code>: REQUIRED. MUST be `openid4vci-proof+jwt`, which explicitly types the proof JWT as recommended in Section 3.11 of [[RFC8725]].                                </li>
+                                <li id='list_742.2'><code>alg</code>: REQUIRED. A digital signature algorithm identifier such as per IANA "JSON Web Signature and Encryption Algorithms" registry. MUST NOT be none or an identifier for a symmetric algorithm (MAC).                                </li>
+                                <li id='list_742.3'><code>kid</code>: REQUIRED. JOSE Header containing the key ID. The Credential will be bound to a DID, so the kid refers to a DID URL which identifies a particular key in the DID Document that the Credential will be bound to.                                </li>
                             </ul>
 
                         </div>
                         </li>
-                        <li id='list_737.2'>in the JWT body,                        <div>
+                        <li id='list_739.2'>in the JWT body,                        <div>
                             <ul>
-                                <li id='list_749.1'><code>aud</code>: REQUIRED (string). The value of this claim MUST be the Credential Issuer URL of the Credential Issuer.                                </li>
-                                <li id='list_749.2'><code>iat</code>: REQUIRED (number). The value of this claim MUST be the time at which the proof was issued using the syntax defined in [[RFC7519]].                                </li>
-                                <li id='list_749.3'><code>nonce</code>: REQUIRED (string). The value type of this claim MUST be a string, where the value is the <code>c_nonce</code> provided by the Credential Issuer.                                </li>
+                                <li id='list_751.1'><code>aud</code>: REQUIRED (string). The value of this claim MUST be the Credential Issuer URL of the Credential Issuer.                                </li>
+                                <li id='list_751.2'><code>iat</code>: REQUIRED (number). The value of this claim MUST be the time at which the proof was issued using the syntax defined in [[RFC7519]].                                </li>
+                                <li id='list_751.3'><code>nonce</code>: REQUIRED (string). The value type of this claim MUST be a string, where the value is the <code>c_nonce</code> provided by the Credential Issuer.                                </li>
                             </ul>
 
                         </div>
@@ -1115,27 +1118,27 @@ Cache-Control: no-store
                 <p>Below is a non-normative example of a proof parameter (dots in the middle of jwt for display purposes only):
                 </p>
 
-                <pre class='json'><code>{
-    "proof_type": "jwt",
-    "jwt": "eyJraWQiOiJkaWQ6ZXhhb....aZKPxgihac0aW9EkL1nOzM"
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;proof_type&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;jwt&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;jwt&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;eyJraWQiOiJkaWQ6ZXhhb....aZKPxgihac0aW9EkL1nOzM&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
                 <p>where the JWT looks like this:
                 </p>
 
-                <pre class='json'><code>{
-    "typ": "openid4vci-proof+jwt",
-    "alg": "ES256",
-    "kid":"did:example:ebfeb1f712ebc6f1c276e12ec21/keys/1"
-}
-
-{
-    "iss": "s6BhdRkqt3",
-    "aud": "https://server.example.com",
-    "iat": 1659145924,
-    "nonce": "tZignsnFbp"
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;typ&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;openid4vci-proof+jwt&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;alg&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;ES256&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;kid&#34;</span>:<span style="color:#0ff;font-weight:bold">&#34;did:example:ebfeb1f712ebc6f1c276e12ec21/keys/1&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;iss&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;s6BhdRkqt3&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;aud&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;https://server.example.com&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;iat&#34;</span>: <span style="color:#ff0;font-weight:bold">1659145924</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;nonce&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;tZignsnFbp&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
             </section>
 
         </section>
@@ -1148,26 +1151,26 @@ Cache-Control: no-store
             <p>The following claims are used in the Credential Response:
             </p>
             <ul>
-                <li id='list_788.1'><code>format</code>: REQUIRED. JSON string denoting the format of the issued Credential. This profile uses the format identifier <code>jwt_vc_json</code>.                </li>
-                <li id='list_788.2'><code>credential</code>: REQUIRED. Contains issued Credential. MUST be a JSON string.                </li>
-                <li id='list_788.3'><code>c_nonce</code>: OPTIONAL. JSON string containing a nonce to be used to create a proof of possession of key material when requesting a Credential. When received, the Wallet MUST use this nonce value for its subsequent credential requests until the Credential Issuer provides a fresh nonce.                </li>
-                <li id='list_788.4'><code>c_nonce_expires_in</code>: OPTIONAL. JSON integer denoting the lifetime in seconds of the c_nonce.                </li>
+                <li id='list_790.1'><code>format</code>: REQUIRED. JSON string denoting the format of the issued Credential. This profile uses the format identifier <code>jwt_vc_json</code>.                </li>
+                <li id='list_790.2'><code>credential</code>: REQUIRED. Contains issued Credential. MUST be a JSON string.                </li>
+                <li id='list_790.3'><code>c_nonce</code>: OPTIONAL. JSON string containing a nonce to be used to create a proof of possession of key material when requesting a Credential. When received, the Wallet MUST use this nonce value for its subsequent credential requests until the Credential Issuer provides a fresh nonce.                </li>
+                <li id='list_790.4'><code>c_nonce_expires_in</code>: OPTIONAL. JSON integer denoting the lifetime in seconds of the c_nonce.                </li>
             </ul>
 
             <p>Below is a non-normative example of a Credential Response:
             </p>
 
-            <pre class='http'><code>HTTP/1.1 200 OK
-Content-Type: application/json
-Cache-Control: no-store
-
-{
-    "format": "jwt_vc_json",
-    "credential" : "LUpixVCWJk0eOt4CXQe1NXK....WZwmhmn9OQp6YxX0a2L",
-    "c_nonce": "fGFF7UkhLa",
-    "c_nonce_expires_in": 86400
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">HTTP</span>/<span style="color:#ff0;font-weight:bold">1.1</span> <span style="color:#ff0;font-weight:bold">200</span> OK
+</span></span><span style="display:flex;"><span>Content-Type: application/json
+</span></span><span style="display:flex;"><span>Cache-Control: no-store
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;format&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;jwt_vc_json&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;credential&#34;</span> : <span style="color:#0ff;font-weight:bold">&#34;LUpixVCWJk0eOt4CXQe1NXK....WZwmhmn9OQp6YxX0a2L&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;c_nonce&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;fGFF7UkhLa&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;c_nonce_expires_in&#34;</span>: <span style="color:#ff0;font-weight:bold">86400</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
         </section>
 
 
@@ -1185,18 +1188,18 @@ Cache-Control: no-store
             <p>Below is a non-normative example of a Credential Response with the Credential Issuer requesting a Wallet to provide in a subsequent Credential Request a proof that is bound to a <code>c_nonce</code>:
             </p>
 
-            <pre class='http'><code>HTTP/1.1 400 Bad Request
-Content-Type: application/json
-Cache-Control: no-store
-
-{
-    "error": "invalid_or_missing_proof",
-    "error_description":
-        "Credential Issuer requires proof to be bound to a Credential Issuer provided nonce.",
-    "c_nonce": "8YE9hCnyV2",
-    "c_nonce_expires_in": 86400
-}</code></pre>
-
+<pre class="nohighlight" style="color:#e5e5e5;background-color:#000;"><code><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">HTTP</span>/<span style="color:#ff0;font-weight:bold">1.1</span> <span style="color:#ff0;font-weight:bold">400</span> Bad Request
+</span></span><span style="display:flex;"><span>Content-Type: application/json
+</span></span><span style="display:flex;"><span>Cache-Control: no-store
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;error&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;invalid_or_missing_proof&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;error_description&#34;</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#0ff;font-weight:bold">&#34;Credential Issuer requires proof to be bound to a Credential Issuer provided nonce.&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;c_nonce&#34;</span>: <span style="color:#0ff;font-weight:bold">&#34;8YE9hCnyV2&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">&#34;c_nonce_expires_in&#34;</span>: <span style="color:#ff0;font-weight:bold">86400</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
         </section>
 
     </section>
@@ -1383,13 +1386,15 @@ Cache-Control: no-store
 <rect x="491.000000" y="541.000000" width="109" height="21" fill="black"></rect>
 <rect x="454.000000" y="611.000000" width="183" height="21" fill="black"></rect>
 </mask></svg></svg>
-            <ul style="list-style-type: none">                <li id='1'><b>1</b> The user (GoodAir employee) accesses the DOME portal or to perform the onboarding process.
-                <li id='2'><b>2</b> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
-                <li id='3'><b>3</b> The user clicks the button causing the generation and display of a QR, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component.
-                <li id='4'><b>4</b> The user scans the QR with her mobile and the mobile calls the `/authentication-requests` endpoint.
 
+            <ul style='list-style: none;'>
+                <li style='text-indent: -1em;' id='893.1'><a href='#893.1' class='selfref'><b>1</b></a> The user (GoodAir employee) accesses the DOME portal or to perform the onboarding process.
+                <li style='text-indent: -1em;' id='896.2'><a href='#896.2' class='selfref'><b>2</b></a> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
+                <li style='text-indent: -1em;' id='899.3'><a href='#899.3' class='selfref'><b>3</b></a> The user clicks the button causing the generation and display of a QR, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component.
+                <li style='text-indent: -1em;' id='903.4'><a href='#903.4' class='selfref'><b>4</b></a> The user scans the QR with her mobile and the mobile calls the `/authentication-requests` endpoint.
+            </ul>
             <ul style="list-style-type: none">
-                <li id='list_905.1'><a href='#list_905.1' class='selfref'><b>1</b></a> The user (GoodAir employee) accesses the DOME portal or to perform the onboarding process.                </li>
+                <li id='list_907.1'><a href='#list_907.1' class='selfref'><b>1</b></a> The user (GoodAir employee) accesses the DOME portal or to perform the onboarding process.                </li>
             </ul>
 
         </section>

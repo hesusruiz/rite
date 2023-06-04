@@ -23,6 +23,8 @@ github: "https://github.com/alastria/did-method-elsi"
 og_description: >
     A DID method for legal persons, maximising at the same time regulatory compliance, decentralisation and privacy for W3C Verifiable Credentials in the European Union.
 og_site_name: DID:ELSI Method
+rite:
+    codeStyle: pepe
 
 localBiblio:
     "ETSI-CERTOVERVIEW":

@@ -10,7 +10,6 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"html"
 	"os"
 	"path"
 	"regexp"
@@ -1358,132 +1357,15 @@ func (doc *Document) ProcessList(startLineNum int) int {
 
 }
 
-// processCodeSection renders a '<x-code> section
-func (doc *Document) processCodeSectionOld(sectionLineNum int) int {
-
-	// Get the tag which starts the line
-	tag := doc.StartTagForLine(sectionLineNum)
-	if tag == nil {
-		log.Fatalf("processCodeSection: error processing tag in line %d", sectionLineNum+1)
-	}
-
-	// Get the rendered tag and end tag
-	_, startTag, endTag, _ := tag.Render()
-
-	contentFirstLineNum := sectionLineNum + 1
-	startOfNextBlock := 0
-	contentLastLineNum := 0
-	minimumIndentation := doc.Indentation(contentFirstLineNum)
-
-	// We have to calculate the minimum indentation of all the lines in the section.
-	// The lines with that minimum indentation will be left aligned when we generate the section.
-	// So we have to perform two passes, one to calculate the minimum indentation and th esecond one to
-	// generate the section in the HTML with the proper indentation.
-	// Blank lines are assumed to pertain to the verbatim section.
-	for i := contentFirstLineNum; !doc.AtEOF(i); i++ {
-
-		startOfNextBlock = i
-
-		// This is the indentation of the text in the verbatim section
-		// We do not require that it is left-aligned, but calculate its offset
-		thisLineIndentation := doc.Indentation(i)
-
-		// If the line is non-blank
-		if len(doc.Line(i)) > 0 {
-
-			// Break the loop if indentation of this line is less or equal than the section
-			if thisLineIndentation <= tag.Indentation() {
-				// This line is part of the next block
-				break
-			}
-
-			// Update the number of the last line of the verbatim section
-			contentLastLineNum = i
-
-			// Update the minimum indentation in the whole section
-			if thisLineIndentation < minimumIndentation {
-				minimumIndentation = thisLineIndentation
-			}
-
-		}
-
-	}
-
-	// Do nothing if section is empty
-	if contentLastLineNum == 0 {
-		return startOfNextBlock
-	}
-
-	// Write a newline to visually separate from the preceding content
-	doc.Render('\n')
-
-	for i := contentFirstLineNum; i <= contentLastLineNum; i++ {
-
-		// Calculate and write the indentation for the line
-		thisIndentationStr := ""
-		if doc.Indentation(i)-minimumIndentation > 0 {
-			thisIndentationStr = strings.Repeat(" ", doc.Indentation(i)-minimumIndentation)
-		}
-		doc.Render(thisIndentationStr)
-
-		escapedContentLine := string(doc.Line(i))
-		if bytes.Contains(tag.Class, []byte("html")) {
-			// Escape any HTML in the content line
-			escapedContentLine = html.EscapeString(string(doc.Line(i)))
-		}
-
-		switch {
-		case i == contentFirstLineNum && i == contentLastLineNum:
-			// Special case: the section has only one line
-			// We have to write the start tag for the section, the content line and the end tag for the section in only one line
-
-			// Write the start tag, escaped content line and the end tag
-			// This line is indented according to the indentation of the section tag
-			doc.Render(tag.IndentStr(), startTag, escapedContentLine, endTag, "\n")
-
-		case i == contentFirstLineNum:
-			// We are at the first line of a section with several lines
-			// We have to write the start tag for the section, and the first line of content in the same line
-
-			// Write the start tag and escaped content line
-			// This first line is indented according to the indentation of the section tag
-			doc.Render(tag.IndentStr(), startTag, escapedContentLine)
-
-		case i > contentFirstLineNum && i < contentLastLineNum:
-			// We are in the middle of a section with several lines
-
-			// Write the content line, escaped for HTML tags
-			// All lines are left aligned
-			doc.Render(escapedContentLine)
-
-		case i == contentLastLineNum:
-			// We are at the last line of a section with several lines
-
-			// Write the content line, escaped for HTML tags
-			doc.Render(escapedContentLine)
-
-			// Write the end tag for the section
-			doc.Render(endTag, "\n")
-
-		}
-
-		// Write the endline
-		doc.Render("\n")
-
-	}
-
-	return startOfNextBlock
-
-}
-
 type preWrapper struct {
+	s *chroma.Style
 }
 
 func (p preWrapper) Start(code bool, styleAttr string) string {
 	// <pre tabindex="0" style="background-color:#fff;">
 	if code {
-		//		return `<pre class="nohighlight" style="padding-left:0.5em;background-color: #fafafa;"><code>`
-		return `<pre class="nohighlight" style="padding-left:0.5em;background-color: #282a36;"><code>`
+		//		return fmt.Sprintf(`<pre class="nohighlight"%s><div style="padding:0.5em;"><code>`, styleAttr)
+		return fmt.Sprintf(`<pre class="nohighlight"%s><code>`, styleAttr)
 	}
 	return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
 }
@@ -1495,6 +1377,7 @@ func (p preWrapper) End(code bool) string {
 	return `</pre>`
 }
 
+// processCodeSection renders a '<x-code> section
 func (doc *Document) processCodeSection(sectionLineNum int) int {
 
 	// Get the tag which starts the line
@@ -1577,14 +1460,14 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 		}
 		l = chroma.Coalesce(l)
 
-		// Get the HTML formatter
-		f := hlhtml.New(hlhtml.Standalone(false), hlhtml.WithPreWrapper(preWrapper{}))
+		// Determine style from the config data, with "dracula" as default
+		styleName := doc.config.String("rite.codeStyle", "swapoff")
+		s := styles.Get(styleName)
 
-		// Determine style.
-		s := styles.Get("dracula")
-		if s == nil {
-			s = styles.Fallback
-		}
+		pr := preWrapper{s}
+
+		// Get the HTML formatter
+		f := hlhtml.New(hlhtml.Standalone(false), hlhtml.WithPreWrapper(pr))
 
 		it, err := l.Tokenise(nil, contentLines)
 		if err != nil {

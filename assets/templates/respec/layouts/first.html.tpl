@@ -74,6 +74,18 @@
         code {
             color: red;
         }
+        pre.nohighlight {
+            padding: 0.5em
+        }
+        ul.plain {
+            list-style: none;
+        }
+        ul.plain li {
+            text-indent: -1em;
+        }
+        ul.plain li>div {
+            text-indent:0;
+        }
     </style>
 </head>
 
