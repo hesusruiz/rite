@@ -1482,7 +1482,8 @@ type preWrapper struct {
 func (p preWrapper) Start(code bool, styleAttr string) string {
 	// <pre tabindex="0" style="background-color:#fff;">
 	if code {
-		return `<pre class="nohighlight" style="padding-left:0.5em;background-color: #fafafa;"><code>`
+		//		return `<pre class="nohighlight" style="padding-left:0.5em;background-color: #fafafa;"><code>`
+		return `<pre class="nohighlight" style="padding-left:0.5em;background-color: #282a36;"><code>`
 	}
 	return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
 }
@@ -1580,7 +1581,7 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 		f := hlhtml.New(hlhtml.Standalone(false), hlhtml.WithPreWrapper(preWrapper{}))
 
 		// Determine style.
-		s := styles.Get("xcode")
+		s := styles.Get("dracula")
 		if s == nil {
 			s = styles.Fallback
 		}
