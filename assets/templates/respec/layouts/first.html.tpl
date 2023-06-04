@@ -30,6 +30,12 @@
             {{- with .Config.latestVersion }}
             latestVersion: "{{.}}",
             {{- end}}
+            {{- with .Config.specStatus }}
+            specStatus: "{{.}}",
+            {{- end}}
+            {{- with .Config.edDraftURI }}
+            edDraftURI: "{{.}}",
+            {{- end}}
             {{- with .Config.github }}
             github: "{{.}}",
             {{- end}}
