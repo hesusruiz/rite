@@ -37,6 +37,17 @@ const (
 // ErrBufferExceeded means that the buffering limit was exceeded.
 var ErrBufferExceeded = errors.New("max buffer exceeded")
 
+const startHTMLTag = '<'
+const endHTMLTag = '>'
+
+var voidElements = []string{
+	"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr",
+}
+var noSectionElements = []string{
+	"code", "b", "i", "hr", "em", "strong", "small", "s",
+}
+var headingElements = []string{"h1", "h2", "h3", "h4", "h5", "h6"}
+
 // String returns a string representation of the TokenType.
 func (t TokenType) String() string {
 	switch t {
@@ -74,10 +85,20 @@ type Attribute struct {
 // rather than "a&lt;b"). For tag Tokens, DataAtom is the atom for Data, or
 // zero if Data is not a known tag name.
 type Token struct {
-	Type     TokenType
-	DataAtom atom.Atom
-	Data     string
-	Attr     []Attribute
+	Type        TokenType
+	DataAtom    atom.Atom
+	Data        string
+	Attr        []Attribute
+	number      int
+	indentation int
+	Id          []byte
+	Class       []byte
+	Src         []byte
+	Href        []byte
+	Bucket      []byte
+	Number      []byte
+	StdFields   []byte
+	RestLine    []byte
 }
 
 // tagString returns a string representation of a tag Token's Data and Attr.
@@ -233,49 +254,9 @@ func (z *Tokenizer) Err() error {
 // Pre-condition: z.err == nil.
 func (z *Tokenizer) readByte() byte {
 	if z.raw.end >= len(z.buf) {
-		// Our buffer is exhausted and we have to read from z.r. Check if the
-		// previous read resulted in an error.
-		if z.readErr != nil {
-			z.err = z.readErr
-			return 0
-		}
-		// We copy z.buf[z.raw.start:z.raw.end] to the beginning of z.buf. If the length
-		// z.raw.end - z.raw.start is more than half the capacity of z.buf, then we
-		// allocate a new buffer before the copy.
-		c := cap(z.buf)
-		d := z.raw.end - z.raw.start
-		var buf1 []byte
-		if 2*d > c {
-			buf1 = make([]byte, d, 2*c)
-		} else {
-			buf1 = z.buf[:d]
-		}
-		copy(buf1, z.buf[z.raw.start:z.raw.end])
-		if x := z.raw.start; x != 0 {
-			// Adjust the data/attr spans to refer to the same contents after the copy.
-			z.data.start -= x
-			z.data.end -= x
-			z.pendingAttr[0].start -= x
-			z.pendingAttr[0].end -= x
-			z.pendingAttr[1].start -= x
-			z.pendingAttr[1].end -= x
-			for i := range z.attr {
-				z.attr[i][0].start -= x
-				z.attr[i][0].end -= x
-				z.attr[i][1].start -= x
-				z.attr[i][1].end -= x
-			}
-		}
-		z.raw.start, z.raw.end, z.buf = 0, d, buf1[:d]
-		// Now that we have copied the live bytes to the start of the buffer,
-		// we read from z.r into the remainder.
-		var n int
-		n, z.readErr = readAtLeastOneByte(z.r, buf1[d:cap(buf1)])
-		if n == 0 {
-			z.err = z.readErr
-			return 0
-		}
-		z.buf = buf1[:d+n]
+		// Our buffer is exhausted
+		z.err = io.ErrNoProgress
+		return 0
 	}
 	x := z.buf[z.raw.end]
 	z.raw.end++
@@ -1250,6 +1231,19 @@ func NewTokenizerFragment(r io.Reader, contextTag string) *Tokenizer {
 	z := &Tokenizer{
 		r:   r,
 		buf: make([]byte, 0, 4096),
+	}
+	if contextTag != "" {
+		switch s := strings.ToLower(contextTag); s {
+		case "iframe", "noembed", "noframes", "noscript", "plaintext", "script", "style", "title", "textarea", "xmp":
+			z.rawTag = s
+		}
+	}
+	return z
+}
+
+func NewTokenizerLine(line []byte, contextTag string) *Tokenizer {
+	z := &Tokenizer{
+		buf: line,
 	}
 	if contextTag != "" {
 		switch s := strings.ToLower(contextTag); s {
