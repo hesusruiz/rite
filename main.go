@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"regexp"
 	"strconv"
@@ -1720,10 +1721,18 @@ func (doc *Document) processDiagram(sectionLineNum int) int {
 	// The file will be in the 'builtassets' directory
 	fileName := "builtassets/diagram_" + string(hhString) + "." + imageType
 
+	skinParams := []byte(`
+skinparam shadowing true
+skinparam ParticipantBorderColor black
+skinparam arrowcolor black
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceLifeLineBackgroundColor PapayaWhip
+	`)
+
 	var body []byte
 
 	// Check if the file already exists
-	if _, err := os.Stat(fileName); err != nil {
+	if _, err := os.Stat(fileName); err != nil || diagType == "plantuml" {
 		// File does not exist, generate the image
 
 		if diagType == "d2" {
@@ -1752,6 +1761,60 @@ func (doc *Document) processDiagram(sectionLineNum int) int {
 			})
 			if err != nil {
 				log.Fatalw("processD2", "line", sectionLineNum+1)
+			}
+
+		} else if diagType == "plantuml" {
+			fmt.Println("Calling PlantUML locally:", fileName)
+			fileName = "builtassets/plantuml_" + string(hhString) + "." + imageType
+
+			input := bytes.NewBuffer(skinParams)
+			input.Write(diagContent)
+			entrada := input.Bytes()
+
+			fmt.Println(string(entrada))
+
+			cmd := exec.Command("java", "-jar", "/home/jesus/.plantuml/plantuml.jar", "-pipe")
+
+			cmd.Stdin = bytes.NewReader(entrada)
+			var out bytes.Buffer
+			var cmderr bytes.Buffer
+			cmd.Stdout = &out
+			cmd.Stderr = &cmderr
+			err := cmd.Run()
+			if err != nil {
+				fmt.Println(cmderr.String())
+				log.Fatal("error calling Plantuml", err)
+			}
+			body = out.Bytes()
+
+		} else if diagType == "plantuml_server" {
+			fmt.Println("Calling the PlantUML server:", fileName)
+
+			// Encode the diagram content
+			diagEncoded := fmt.Sprintf("~h%x", diagContent)
+
+			// Build the url
+			plantumlServer := "http://www.plantuml.com/plantuml/png/" + diagEncoded
+			fmt.Println(diagEncoded)
+
+			resp, err := http.Get(plantumlServer)
+			if err != nil {
+				fmt.Println("Error received from PlantUML:", err)
+				panic(err)
+			}
+
+			// Read the whole body in the reply
+			defer resp.Body.Close()
+			body, err = io.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Println("Error reading response body from PlantUML:", err)
+				panic(err)
+			}
+
+			// Check the HTTP Status code in the reply
+			if resp.StatusCode != http.StatusOK {
+				fmt.Println("PlantUML server responded:", resp.StatusCode, string(body))
+				panic("Error from PlantUML server")
 			}
 
 		} else {

@@ -178,7 +178,32 @@ localBiblio:
         - Includes claims stating the delegation of specific powers to perform onboarding on behalf of the organisation
         - Includes a public key where the corresponding private key is controlled by the employee, enabling him to prove that he is the holder of the credential when it is being used in an authentication process like the onboarding process described in this document.
 
+
+    <x-diagram .plantuml>
+        participant browser
+        participant webserver
+        participant database
+
+        browser  -> webserver++: **(1)** GET /indexito.html
+        return
+
+        browser  -> webserver++: **(2)** POST /blog/comment
+            webserver  -> database++: **(3)** INSERT comment
+            return
+        browser <-- webserver--
+
+
     The LEARCredential uses the `did:elsi` method for the identifiers of legal persons involved in the process, to facilitate the DID resolution and linkage with the eIDAS certificates. The `did:elsi` method is specified in [[[DID-ELSI]]].    
+
+    <x-diagram .seqdiag>Testing the diagram
+        seqdiag {
+        browser  -> webserver [label = "GET /index.html"];
+        browser <-- webserver;
+        browser  -> webserver [label = "POST /blog/comment"];
+                    webserver  -> database [label = "INSERT comment"];
+                    webserver <-- database;
+        browser <-- webserver;
+        }
     
     The high-level view of the process is described in the following diagram, when a COO (Chief Operating Officer) appoints an employee to perform the onboarding process:
 
