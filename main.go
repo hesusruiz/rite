@@ -8,8 +8,11 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/md5"
 	"embed"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path"
 	"regexp"
@@ -485,6 +488,15 @@ func lineStartsWithCode(line []byte) bool {
 // lineStartsWithD2 returns true if the line starts with '<x-diagram .d2>'
 func lineStartsWithD2(line []byte) bool {
 	return bytes.HasPrefix(line, []byte("<x-diagram .d2>"))
+}
+
+// lineStartsWithKroki returns true if the line starts with '<x-diagram .d2>'
+func lineStartsWithKroki(line []byte) bool {
+	return bytes.HasPrefix(line, []byte("<x-diagram .kroki"))
+}
+
+func lineStartsWithDiagram(line []byte) bool {
+	return bytes.HasPrefix(line, []byte("<x-diagram"))
 }
 
 // lineStartsWithHeaderTag returns true if the line starts with <h1>, <h2>, ...
@@ -1621,6 +1633,22 @@ func (doc *Document) processD2Explanation(lineNum int) ([]byte, error) {
 
 }
 
+func (doc *Document) processDiagram(startLineNum int) int {
+
+	line := doc.Line(startLineNum)
+
+	if lineStartsWithKroki(line) {
+		return doc.processKroki(startLineNum)
+	}
+
+	if lineStartsWithD2(line) {
+		return doc.processD2(startLineNum)
+	}
+
+	return startLineNum
+
+}
+
 func (doc *Document) processD2(startLineNum int) int {
 	log.Debugw("ProcessD2 enter", "line", startLineNum+1)
 
@@ -1729,6 +1757,142 @@ func (doc *Document) processD2(startLineNum int) int {
 
 }
 
+func (doc *Document) processKroki(sectionLineNum int) int {
+	log.Debugw("ProcessKroki enter", "line", sectionLineNum+1)
+
+	line := doc.Line(sectionLineNum)
+	// Sanity check
+	if !lineStartsWithKroki(line) {
+		return sectionLineNum
+	}
+
+	// Get the tag of the section
+	tag := doc.StartTagForLine(sectionLineNum)
+
+	// The first work of the first line is the type of diagram
+	firstLine := doc.Line(sectionLineNum + 1)
+	diagType, _, found := bytes.Cut(firstLine, []byte(" "))
+	if !found {
+		log.Fatalw("diagram type not found", "line", sectionLineNum+1+1)
+	}
+
+	// This is the indentation of the line specifying the section
+	// The content should have higher indentation
+	verbatimSectionIndentation := doc.Indentation(sectionLineNum)
+	sectionIndentStr := bytes.Repeat([]byte(" "), verbatimSectionIndentation)
+
+	// Will hold the line number for the next block
+	startOfNextBlock := 0
+
+	// This will hold the string with the text lines for diagram
+	var diagContent []byte
+
+	var explanations [][]byte
+
+	// Loop until the end of the document or until we find a line with less or equal indentation
+	// Blank lines are assumed to pertain to the verbatim section
+	for i := sectionLineNum + 1; !doc.AtEOF(i); i++ {
+
+		startOfNextBlock = i
+
+		// This is the indentation of the text in the verbatim section
+		// We do not require that it is left-alligned, but calculate its offset
+		thisLineIndentation := doc.Indentation(i)
+
+		// If the line is blank, continue with the loop
+		if len(doc.Line(i)) == 0 {
+			continue
+		}
+
+		// Break the loop if indentation of this line is less or equal than the one of the section
+		if thisLineIndentation <= verbatimSectionIndentation {
+			// This line is part of the next block
+			break
+		}
+
+		// String with as many blanks as indentation
+		ind := bytes.Repeat([]byte(" "), doc.Indentation(i)-verbatimSectionIndentation)
+		diagContent = append(diagContent, ind...)
+
+		// Append the line with a newline at the end
+		diagContent = append(diagContent, doc.Line(i)...)
+		diagContent = append(diagContent, '\n')
+
+		// Add the line to the explanations list if it is a comment formatted in the proper way
+		if bytes.HasPrefix(doc.Line(i), []byte("# -")) {
+			exp, err := doc.processD2Explanation(i)
+			if err != nil {
+				continue
+			}
+			explanations = append(explanations, exp)
+		}
+
+	}
+
+	// Create the request to Kroki server
+	fmt.Println("Processing diagram:")
+	fmt.Println(string(diagContent))
+
+	in := bytes.NewReader(diagContent)
+
+	resp, err := http.Post("https://kroki.io/"+string(diagType)+"/png", "text/plain", in)
+	if err != nil {
+		fmt.Println("Error received from Kroki:", err)
+		panic(err)
+	}
+	fmt.Println("Request sent successfully")
+
+	if resp.StatusCode != 200 {
+		fmt.Println("Kroki server responded:", resp.StatusCode)
+		panic("Error from Kroki server")
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body from Kroki:", err)
+		panic(err)
+	}
+
+	hh := md5.Sum(diagContent)
+	hhString := fmt.Sprintf("%x", hh)
+	fileName := "builtassets/diagram_" + string(hhString) + ".png"
+
+	err = os.Mkdir("builtassets", 0750)
+	if err != nil && !os.IsExist(err) {
+		log.Fatal(err)
+	}
+
+	err = os.WriteFile(fileName, body, 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("File written successfuly:", fileName)
+
+	// Write the diagram as an HTML comment to enhance readability
+	doc.Render("<!-- Original Kroki diagram definition\n", diagContent, " -->\n\n")
+
+	doc.Render(sectionIndentStr, "<figure><img src='"+fileName+"' alt=''>\n")
+
+	doc.Render(sectionIndentStr, "<figcaption>", tag.RestLine, "</figcaption></figure>\n\n")
+
+	// Write the explanations if there were any
+	if len(explanations) > 0 {
+		// Write the
+		doc.Render("\n", bytes.Repeat([]byte(" "), verbatimSectionIndentation), "<ul style='list-style: none;'>\n")
+
+		for _, s := range explanations {
+			doc.Render(bytes.Repeat([]byte(" "), verbatimSectionIndentation+4), s, '\n')
+		}
+		doc.Render(bytes.Repeat([]byte(" "), verbatimSectionIndentation), "</ul>\n")
+	}
+
+	log.Debugw("ProcessKroki exit", "startOfNextBlock", startOfNextBlock+1)
+	return startOfNextBlock
+
+}
+
 func (doc *Document) ProcessSectionTag(sectionLineNum int) int {
 	// Section starts with a tag spec. Process the tag and
 	// advance the line pointer appropriately
@@ -1809,9 +1973,9 @@ func (doc *Document) ProcessBlock(blockLineNum int) int {
 			break
 		}
 
-		// A D2 drawing
-		if lineStartsWithD2(currentLine) {
-			currentLineNum = doc.processD2(currentLineNum)
+		// A diagram drawing
+		if lineStartsWithDiagram(currentLine) {
+			currentLineNum = doc.processDiagram(currentLineNum)
 			continue
 		}
 

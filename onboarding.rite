@@ -85,7 +85,27 @@ localBiblio:
     
 <section>Participants
 
+    <x-diagram .kroki>This is a sequence diagram
+        seqdiag {
+            browser  -> webserver [label = "GET /index.html"];
+            browser <-- webserver;
+            browser  -> webserver [label = "POST /blog/comment"];
+            webserver  -> database [label = "INSERT comment"];
+            webserver <-- database;
+            browser <-- webserver;
+        }
+
     Here we introduce the actors of the reference use case we are going to have. The main actors are marked in yellow in the following diagram.
+
+    <x-diagram .kroki>And this is an activity diagram
+        blockdiag {
+        Kroki -> generates -> "Block diagrams";
+        Kroki -> is -> "very easy!";
+
+        Kroki [color = "greenyellow"];
+        "Block diagrams" [color = "pink"];
+        "very easy!" [color = "orange"];
+        }
     
     RealTruth is a Trust Service Provider operating under the eIDAS Trust Framework, which issues a certificate for seals to the company GoodAir. GoodAir is a business that provides some services using an Air Quality application operated by GoodAir.
 
