@@ -686,6 +686,13 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 
 		}
 
+		// We ignore any line starting with a comment marker: '//'
+		if bytes.HasPrefix(line, []byte("//")) {
+			doc.theLines[lineNum].startTag = nil
+			doc.theLines[lineNum].line = nil
+			continue
+		}
+
 		// We ignore any line starting with an end tag
 		if bytes.HasPrefix(line, []byte("</")) {
 			doc.theLines[lineNum].startTag = nil
