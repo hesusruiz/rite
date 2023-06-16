@@ -13,6 +13,8 @@ import (
 	"golang.org/x/net/html"
 )
 
+const blank byte = ' '
+
 func tryHtml() {
 
 	s := `<p>Links:</p><ul><li><a href="foo">Foo</a><li><a href="/bar/baz">BarBaz</a></ul>`
@@ -98,7 +100,8 @@ func (p *Parser) Parse(s *bufio.Scanner) (*Node, error) {
 
 		// Strip blanks at the beginning of the line and calculate indentation based on the difference in length
 		// We do not support other whitespace like tabs
-		p.line = bytes.TrimLeft(rawLine, " ")
+		// p.line = bytes.TrimLeft(rawLine, " ")
+		p.line = trimLeft(rawLine, blank)
 		p.indentation = len(rawLine) - len(p.line)
 
 		// If the line is empty we are done
@@ -121,22 +124,22 @@ func skipWhiteSpace(line []byte) []byte {
 	return nil
 }
 
-func readWord(tagSpec []byte) (word []byte, rest []byte) {
+func readWord(line []byte) (word []byte, rest []byte) {
 
-	// If no blank spece found, return the whole tagSpec
-	indexSpace := bytes.IndexByte(tagSpec, ' ')
+	// If no blank space found, return the whole tagSpec
+	indexSpace := bytes.IndexByte(line, ' ')
 	if indexSpace == -1 {
-		return tagSpec, nil
+		return line, nil
 	}
 
 	// Otherwise, return the tag name and the rest of the tag
-	word = tagSpec[:indexSpace]
+	word = line[:indexSpace]
 
 	// And the remaining text in the line
-	tagSpec = tagSpec[indexSpace+1:]
+	line = line[indexSpace+1:]
 
-	tagSpec = skipWhiteSpace(tagSpec)
-	return word, tagSpec
+	line = skipWhiteSpace(line)
+	return word, line
 
 }
 
@@ -169,7 +172,7 @@ func readRiteAttribute(tagSpec []byte) (Attribute, []byte) {
 func readTagAttrKey(tagSpec []byte) (Attribute, []byte) {
 	attr := Attribute{}
 
-	// Select the first word, ending on whitespace, '=' or '>'
+	// Select the first word, ending on whitespace, '=' or endtag chars '/', '>')
 	for i, c := range tagSpec {
 		switch c {
 		case ' ', '\t', '/', '=', '>':
@@ -198,31 +201,13 @@ func readTagAttrKey(tagSpec []byte) (Attribute, []byte) {
 		for i, c := range tagSpec[1:] {
 			if c == quote {
 				attr.Val = string(tagSpec)[1:i]
-				return attr, tagSpec[]
-			}
-		}
-
-
-
-		z.pendingAttr[1].start = z.raw.end
-		for {
-			c := z.readByte()
-			if z.err != nil {
-				z.pendingAttr[1].end = z.raw.end
-				return
-			}
-			if c == quote {
-				z.pendingAttr[1].end = z.raw.end - 1
-				return
+				return attr, tagSpec[i+1:]
 			}
 		}
 
 	}
-
-
-
+	return attr, tagSpec
 }
-
 
 // parseLine returns a structure with the tag fields of the tag at the beginning of the line.
 // It returns nil and an error if the line does not start with a tag.
