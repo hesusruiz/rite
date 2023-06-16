@@ -3,6 +3,7 @@ module github.com/hesusruiz/rite
 go 1.20
 
 require (
+	github.com/alecthomas/chroma v0.10.0
 	github.com/hesusruiz/vcutils v0.0.0-20221011172906-f573373bbe40
 	github.com/urfave/cli/v2 v2.23.7
 	go.uber.org/zap v1.23.0
@@ -13,7 +14,6 @@ require (
 require (
 	cdr.dev/slog v1.4.2-0.20221206192828-e4803b10ae17 // indirect
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
-	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.5.0 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect

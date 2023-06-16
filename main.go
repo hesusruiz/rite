@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -55,6 +56,17 @@ var noSectionElements = []string{
 	"code", "b", "i", "hr", "em", "strong", "small", "s",
 }
 var headingElements = []string{"h1", "h2", "h3", "h4", "h5", "h6"}
+
+var indentBytes = bytes.Repeat([]byte(" "), 100)
+
+func Indent(indentation int) []byte {
+	if indentation > len(indentBytes) {
+		fmt.Printf("indentation too big: %d\n", indentation)
+		panic("indentation too big")
+	}
+	return indentBytes[:indentation]
+
+}
 
 // Heading maintains the hierarchical structure of the headins to be able to number them automatically
 type Heading struct {
@@ -442,7 +454,14 @@ func (doc *Document) StartTagForLine(lineNum int) *TagStruct {
 	if !doc.ValidLineNum(lineNum) {
 		log.Fatalw("invalid line number", "line", lineNum)
 	}
-	return doc.theLines[lineNum].startTag
+
+	if doc.theLines[lineNum].startTag != nil {
+		return doc.theLines[lineNum].startTag
+	} else {
+		tagFields, _ := doc.preprocessTagSpec(lineNum)
+		return tagFields
+	}
+
 }
 
 func (doc *Document) StartTagType(lineNum int) tagType {
@@ -516,7 +535,11 @@ func (doc *Document) lineStartsWithHeaderTag(lineNum int) bool {
 func (doc *Document) lineStartsWithSectionTag(lineNum int) bool {
 
 	// Decompose the tag into its elements
-	tagFields, _ := doc.preprocessTagSpec(lineNum)
+	tagFields, err := doc.preprocessTagSpec(lineNum)
+	if err == nil {
+		// Update the line if needed
+		doc.theLines[lineNum].startTag = tagFields
+	}
 
 	// Return false if there is no tag or it is in the sets that we know should not start a section
 	// For example, void elements
@@ -1062,6 +1085,8 @@ func (doc *Document) Render(inputs ...any) {
 			doc.renderer.WriteString(v)
 		case []byte:
 			doc.renderer.Write(v)
+		case int:
+			doc.renderer.WriteString(strconv.FormatInt(int64(v), 10))
 		case byte:
 			doc.renderer.WriteByte(v)
 		case rune:
@@ -1074,6 +1099,10 @@ func (doc *Document) Render(inputs ...any) {
 
 func (doc *Document) Write(p []byte) (n int, err error) {
 	return doc.renderer.Write(p)
+}
+
+func (doc *Document) String() string {
+	return doc.renderer.String()
 }
 
 type ByteRenderer struct {
@@ -1185,7 +1214,7 @@ func (doc *Document) postProcess() string {
 func (doc *Document) processParagraph(startLineNum int) (nextLineNum int) {
 
 	// Process all contiguous lines in the block, writing them without any processing,
-	// except for addint the <p> tag at the beginning and at the end.
+	// except for adding the <p> tag at the beginning and at the end.
 	// The indentation of all lines will be the same as the first line.
 	for nextLineNum = startLineNum; nextLineNum < doc.Len(); nextLineNum++ {
 
@@ -1567,16 +1596,23 @@ func (doc *Document) processCodeSection(sectionLineNum int) int {
 
 }
 
-func (doc *Document) processDiagramExplanation(lineNum int) ([]byte, error) {
+func (doc *Document) processDiagramExplanation(diagramLineNum int) (string, int) {
 	const bulletPrefix = "# -("
 	const simplePrefix = "# - "
 	const additionalPrefix = "# -+"
-	var r ByteRenderer
+	// var r ByteRenderer
 
-	line := doc.Line(lineNum)
+	r := &Document{}
+	r.theLines = doc.theLines
+	r.config = doc.config
 
+	lineNum := diagramLineNum
+	line := r.Line(lineNum)
+
+	// Sanity check
 	if !bytes.HasPrefix(line, []byte("# -")) {
-		return nil, fmt.Errorf("processDiagramExplanation, line %d: invalid prefix", lineNum+1)
+		fmt.Printf("processDiagramExplanation, line %d: invalid prefix\n", lineNum+1)
+		return "", lineNum
 	}
 
 	// Preprocess Markdown list markers
@@ -1591,32 +1627,34 @@ func (doc *Document) processDiagramExplanation(lineNum int) ([]byte, error) {
 		r.Render("<a href='#", lineNum, "' class='selfref'>")
 		r.Render("<b>-</b></a> ", restLine)
 
-		l := r.Bytes()
+		l := r.String()
 
-		return l, nil
+		return l, lineNum + 1
 
 	} else if bytes.HasPrefix(line, []byte(additionalPrefix)) {
 
 		restLine := line[len(simplePrefix):]
 
 		// Build the line
-		r.Render("<p style='text-indent:0'>", restLine, "</p>")
+		r.Render("<p>", restLine, "</p>")
 
-		l := r.Bytes()
+		l := r.String()
 
-		return l, nil
+		return l, lineNum + 1
 
 	} else if bytes.HasPrefix(line, []byte(bulletPrefix)) {
 
 		// Get the end ')'
 		indexRightBracket := bytes.IndexByte(line, ')')
 		if indexRightBracket == -1 {
-			return nil, fmt.Errorf("processDiagramExplanation, line %d: no closing ')' in list bullet", lineNum+1)
+			fmt.Printf("processDiagramExplanation, line %d: no closing ')' in list bullet\n", lineNum+1)
+			return "", lineNum
 		}
 
 		// Check that there is at least one character inside the '()'
 		if indexRightBracket == len(bulletPrefix) {
-			return nil, fmt.Errorf("processDiagramExplanation, line %d: no content inside '()' in list bullet", lineNum+1)
+			fmt.Printf("processDiagramExplanation, line %d: no content inside '()' in list bullet\n", lineNum+1)
+			return "", lineNum
 		}
 
 		// Extract the whole tag spec, eliminating embedded blanks
@@ -1627,17 +1665,43 @@ func (doc *Document) processDiagramExplanation(lineNum int) ([]byte, error) {
 		restLine := line[indexRightBracket+1:]
 
 		// Build the line
-		r.Render("<li style='text-indent: -1em;' id='", lineNum, ".", bulletTextEncoded, "'>")
+		r.Render("<li id='", lineNum, ".", bulletTextEncoded, "'>")
 		r.Render("<a href='#", lineNum, ".", bulletTextEncoded, "' class='selfref'>")
-		r.Render("<b>", bulletText, "</b></a>", restLine)
+		r.Render("<b>", bulletText, "</b></a>", restLine, '\n')
 
-		l := r.Bytes()
+		// Skip all the blank lines following the section tag
+		lineNum := r.skipBlankLines(lineNum + 1)
+		if r.AtEOF(lineNum) {
+			log.Debugf("EOF reached at line %v", lineNum+1)
+			return "", lineNum
+		}
 
-		return l, nil
+		// Start and process an indented block if the next line is more indented than the tag
+		nextIndentation := r.Indentation(lineNum)
+		if nextIndentation > r.Indentation(diagramLineNum) {
+
+			r.Render(Indent(nextIndentation), "<div class='caca'>\n")
+			lineNum = r.ProcessBlock(lineNum)
+			r.Render(Indent(nextIndentation), "</div>\n")
+		}
+
+		// // Process the following lines if it is a section
+		// if r.lineStartsWithSectionTag(lineNum + 1) {
+		// 	lineNum = r.ProcessSectionTag(lineNum + 1)
+		// 	r.Render("</li>")
+		// 	l := r.String()
+		// 	return l, lineNum
+		// }
+
+		r.Render(Indent(r.Indentation(diagramLineNum)), "</li>")
+		l := r.String()
+
+		return l, lineNum + 1
 
 	}
 
-	return nil, fmt.Errorf("processDiagramExplanation, line %v: invalid explanation ')' in list bullet", lineNum+1)
+	fmt.Printf("processDiagramExplanation, line %v: invalid explanation ')' in list bullet\n", lineNum+1)
+	return "", lineNum
 
 }
 
@@ -1678,20 +1742,22 @@ func (doc *Document) processDiagram(sectionLineNum int) int {
 	var diagContent []byte
 
 	// This will hold the set of lines with explanations inside the diagram
-	var explanations [][]byte
+	var explanations []string
 
 	// Loop until the end of the document or until we find a line with less or equal indentation
 	// Blank lines are assumed to pertain to the verbatim section
-	for i := sectionLineNum + 1; !doc.AtEOF(i); i++ {
+	for thisLineNum := sectionLineNum + 1; !doc.AtEOF(thisLineNum); {
 
-		startOfNextBlock = i
+		startOfNextBlock = thisLineNum
 
 		// This is the indentation of the text in the verbatim section
 		// We do not require that it is left-alligned, but calculate its offset
-		thisLineIndentation := doc.Indentation(i)
+		thisLineIndentation := doc.Indentation(thisLineNum)
 
 		// If the line is blank, continue with the loop
-		if len(doc.Line(i)) == 0 {
+		if len(doc.Line(thisLineNum)) == 0 {
+			// Ignore the line and process next one
+			thisLineNum++
 			continue
 		}
 
@@ -1702,21 +1768,37 @@ func (doc *Document) processDiagram(sectionLineNum int) int {
 		}
 
 		// String with as many blanks as indentation
-		ind := bytes.Repeat([]byte(" "), doc.Indentation(i)-sectionIndent)
+		ind := bytes.Repeat([]byte(" "), doc.Indentation(thisLineNum)-sectionIndent)
 		diagContent = append(diagContent, ind...)
 
-		// Append the line with a newline at the end
-		diagContent = append(diagContent, doc.Line(i)...)
-		diagContent = append(diagContent, '\n')
+		// Lines starting with a '#' are special and are not included in the diagram
+		if doc.Line(thisLineNum)[0] == '#' {
 
-		// Add the line to the explanations list if it is a comment formatted in the proper way
-		if bytes.HasPrefix(doc.Line(i), []byte("# -")) {
-			exp, err := doc.processDiagramExplanation(i)
-			if err != nil {
+			// Add the line to the explanations list if it is a comment formatted in the proper way
+			if bytes.HasPrefix(doc.Line(thisLineNum), []byte("# -")) {
+				exp, nextLineNum := doc.processDiagramExplanation(thisLineNum)
+				if len(exp) == 0 {
+					// Ignore the line and process next one
+					thisLineNum++
+					continue
+				}
+				explanations = append(explanations, exp)
+				thisLineNum = nextLineNum
 				continue
 			}
-			explanations = append(explanations, exp)
+
+			// Ignore the line and process next one
+			thisLineNum++
+			continue
+
 		}
+
+		// Append the line with a newline at the end
+		diagContent = append(diagContent, doc.Line(thisLineNum)...)
+		diagContent = append(diagContent, '\n')
+
+		// Prepare to process next line
+		thisLineNum++
 
 	}
 
@@ -1780,17 +1862,27 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 
 			fmt.Println(string(entrada))
 
-			cmd := exec.Command("java", "-jar", "/home/jesus/.plantuml/plantuml.jar", "-pipe")
+			// Get the user home directory
+			homeDir, err := os.UserHomeDir()
+			if err != nil {
+				fmt.Printf("error calling UserHomeDir, line: %d, error: %v\n", sectionLineNum+1, err)
+				panic(err)
+			}
+
+			plantumlPath := filepath.Join(homeDir, ".plantuml", "plantuml.jar")
+
+			cmd := exec.Command("java", "-jar", plantumlPath, "-pipe")
 
 			cmd.Stdin = bytes.NewReader(entrada)
 			var out bytes.Buffer
 			var cmderr bytes.Buffer
 			cmd.Stdout = &out
 			cmd.Stderr = &cmderr
-			err := cmd.Run()
+			err = cmd.Run()
 			if err != nil {
+				fmt.Printf("error calling Plantuml, line: %d, error: %v\n", sectionLineNum+1, err)
 				fmt.Println(cmderr.String())
-				log.Fatal("error calling Plantuml", err)
+				panic(err)
 			}
 			body = out.Bytes()
 
@@ -1806,7 +1898,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 
 			resp, err := http.Get(plantumlServer)
 			if err != nil {
-				fmt.Println("Error received from PlantUML:", err)
+				fmt.Printf("error received from PlantUML, line: %d, error: %v\n", sectionLineNum+1, err)
 				panic(err)
 			}
 
@@ -1814,19 +1906,19 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 			defer resp.Body.Close()
 			body, err = io.ReadAll(resp.Body)
 			if err != nil {
-				fmt.Println("Error reading response body from PlantUML:", err)
+				fmt.Printf("error reading response body from PlantUML, line: %d, error: %v\n", sectionLineNum+1, err)
 				panic(err)
 			}
 
 			// Check the HTTP Status code in the reply
 			if resp.StatusCode != http.StatusOK {
-				fmt.Println("PlantUML server responded:", resp.StatusCode, string(body))
+				fmt.Printf("PlantUML server responded (line: %d) with status: %v: %s\n", sectionLineNum+1, resp.StatusCode, string(body))
 				panic("Error from PlantUML server")
 			}
 
 		} else {
 
-			fmt.Println("Calling the Kroki server:", fileName)
+			fmt.Printf("calling the Kroki server, line: %d, file name: %s\n", sectionLineNum+1, fileName)
 
 			// Build the url
 			krokiURL := "https://kroki.io/" + string(diagType) + "/" + imageType
@@ -1838,7 +1930,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 			// Send the request
 			resp, err := http.Post(krokiURL, "text/plain", in)
 			if err != nil {
-				fmt.Println("Error received from Kroki:", err)
+				fmt.Printf("error received from Kroki, line: %d, error: %v\n", sectionLineNum+1, err)
 				panic(err)
 			}
 
@@ -1886,7 +1978,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 	// Write the explanations if there were any
 	if len(explanations) > 0 {
 		// Write the
-		doc.Render("\n", bytes.Repeat([]byte(" "), sectionIndent), "<ul style='list-style: none;'>\n")
+		doc.Render("\n", bytes.Repeat([]byte(" "), sectionIndent), "<ul class='plain'>\n")
 
 		for _, s := range explanations {
 			doc.Render(bytes.Repeat([]byte(" "), sectionIndent+4), s, '\n')

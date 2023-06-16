@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Authentication and Authorization with Verifiable Credentials using using did:elsi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Opengraph Facebook Meta Tags -->
+    <meta property="og:title" content="Authentication and Authorization with Verifiable Credentials using using did:elsi">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Authentication and Authorization with Verifiable Credentials using using did:elsi">
+    <meta property="og:site_name" content="Authn with Verifiable Credentials">
+    <meta property="og:url" content="https://alastria.github.io/did-method-elsi/authzn.html">
+
+    <script src="https://www.w3.org/Tools/respec/respec-w3c" async="" class="remove"></script>
+    <script class="remove">
+        var respecConfig = {
+            latestVersion: "https://alastria.github.io/did-method-elsi/authzn.html",
+            edDraftURI: "https://alastria.github.io/did-method-elsi/authzn.html",
+            github: "https://github.com/alastria/did-method-elsi/blob/main/authzn.html",
+            editors: [
+                {
+                    company: "JesusRuiz",
+                    companyURL: "https://hesusruiz.github.io/hesusruiz",
+                    email: "hesusruiz@gmail.com",
+                    name: "Jesus Ruiz",
+                },
+            ],
+            authors: [
+                {
+                    company: "JesusRuiz",
+                    companyURL: "https://hesusruiz.github.io/hesusruiz",
+                    email: "hesusruiz@gmail.com",
+                    name: "Jesus Ruiz",
+                },
+                {
+                    company: "nicos AG",
+                    companyURL: "https://www.nicos-ag.com/",
+                    email: "jlangkau@nicos-ag.com",
+                    name: "Jörg Langkau ",
+                },
+            ],
+            localBiblio: {
+                "DEP-DSS": {
+                        date: "2019-10",
+                        href: "https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/Qualified+electronic+signature+-+QES+validation+algorithm",
+                        publisher: "European Commission",
+                        title: "Algorithm for Validation of qualified and advanced signatures and seals",
+                },
+                "DID-DNS": {
+                        href: "https://tools.ietf.org/html/draft-mayrhofer-did-dns-01",
+                        publisher: "IETF",
+                        status: "Internet Draft",
+                        title: "The Decentralized Identifier (DID) in the DNS",
+                },
+                "DID-ELSI": {
+                        date: "04 June 2023",
+                        href: "https://alastria.github.io/did-method-elsi/",
+                        title: "DID ETSI Legal person Semantic Identifier Method Specification (did:elsi)",
+                },
+                "DID-ONBOARDING": {
+                        date: "04 June 2023",
+                        href: "https://alastria.github.io/did-method-elsi/onboarding.html",
+                        title: "Onboarding example with LEARCredential using did:elsi",
+                },
+                "DID-PRIMER": {
+                        href: "https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md",
+                        publisher: "Rebooting the Web of Trust 2017",
+                        title: "DID Primer",
+                },
+                "DIF.PresentationExchange": {
+                        href: "https://identity.foundation/presentation-exchange/spec/v2.0.0/",
+                        title: "Presentation Exchange 2.0.0",
+                },
+                "ETSI-CERTOVERVIEW": {
+                        date: "2020-07",
+                        href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.04.02_20/en_31941201v010402a.pdf",
+                        publisher: "ETSI",
+                        title: "ETSI EN 319 412-1 V1.4.2 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 1: Overview and common data structures",
+                },
+                "ETSI-JADES": {
+                        date: "2021-03",
+                        href: "https://www.etsi.org/deliver/etsi_ts/119100_119199/11918201/01.01.01_60/ts_11918201v010101p.pdf",
+                        publisher: "ETSI",
+                        title: "ETSI TS 119 182-1 V1.1.1 (2021-03) - Electronic Signatures and Infrastructures (ESI); JAdES digital signatures; Part 1: Building blocks and JAdES baseline signatures",
+                },
+                "ETSI-LEGALPERSON": {
+                        date: "2020-07",
+                        href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941203/01.02.01_60/en_31941203v010201p.pdf",
+                        publisher: "ETSI",
+                        title: "ETSI EN 319 412-3 V1.2.1 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 3: Certificate profile for certificates issued to legal persons",
+                },
+                "NIST-AUTH": {
+                        date: "October 2016",
+                        href: "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-178.pdf",
+                        title: "NIST Special Publication 800-178: A Comparison of Attribute Based Access Control (ABAC) Standards for Data Service Applications",
+                },
+                "OWASP-TRANSPORT": {
+                        href: "https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet",
+                        title: "Transport Layer Protection Cheatsheet",
+                },
+                "OpenID.Core": {
+                        date: "8 November 2014",
+                        href: "http://openid.net/specs/openid-connect-core-1_0.html",
+                        title: "OpenID Connect Core 1.0 incorporating errata set 1",
+                },
+                "OpenID.SIOP2": {
+                        date: "28 January 2022",
+                        href: "https://openid.bitbucket.io/connect/openid-connect-self-issued-v2-1_0.html",
+                        title: "Self-Issued OpenID Provider v2",
+                },
+                "OpenID.VCI": {
+                        date: "3 February 2023",
+                        href: "https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html",
+                        title: "OpenID for Verifiable Credential Issuance",
+                },
+                "OpenID.VP": {
+                        date: "21 April 2023",
+                        href: "https://openid.net/specs/openid-4-verifiable-presentations-1_0.html",
+                        title: "OpenID for Verifiable Presentations",
+                },
+                "RFC6749": {
+                        href: "https://www.rfc-editor.org/rfc/rfc6749.html",
+                        title: "The OAuth 2.0 Authorization Framework",
+                },
+                "RFC7515": {
+                        href: "https://www.rfc-editor.org/rfc/rfc7515",
+                        title: "JSON Web Signature (JWS)",
+                },
+                "RFC7519": {
+                        href: "https://www.rfc-editor.org/rfc/rfc7519",
+                        title: "JSON Web Token (JWT)",
+                },
+                "RFC8414": {
+                        href: "https://www.rfc-editor.org/rfc/rfc8414",
+                        title: "OAuth 2.0 Authorization Server Metadata",
+                },
+                "RFC8725": {
+                        href: "https://www.rfc-editor.org/rfc/rfc8725",
+                        title: "JSON Web Token Best Current Practices",
+                },
+            },
+        };
+    </script>
+    <style>
+        code {
+            color: red;
+        }
+        pre.nohighlight {
+            padding: 0.5em
+        }
+        ul.plain {
+            list-style: none;
+        }
+        ul.plain li {
+            text-indent: -1em;
+        }
+        ul.plain li>div {
+            text-indent:0;
+        }
+    </style>
+</head>
+
+<body>
+    <p class="copyright">
+        Copyright © 2023 the document editors/authors. Text is available under the <a rel="license" href="https://creativecommons.org/licenses/by/4.0/legalcode"> Creative Commons Attribution 4.0 International Public License</a>
+    </p>
+
+
+
+<section id='abstract'>
+    <p>Once an organisation has onboarded an ecosystem like a Data Space, some of its employees have to be appointed to enable them to perform a concrete set of activities in the ecosystem. These activities are performed in the web portals of different organisations which are already participants in the ecosystem, like the onboarding service, the marketplace portals and also in the web portals of other participants.
+    </p>
+    <p>This document describes how:
+    </p>
+    <ul>
+        <li id='list_125.1'>An organisation can issue Verifiable Credentials to its employees enabling them to perform some specific processes in other organisations "on-behalf-of" the employer        </li>
+        <li id='list_125.2'>Other organisations can accept those Verifiable Credentials to perform authentication and access control.        </li>
+    </ul>
+
+    <p>We assume that all organisations have onboarded in the ecosystem using the mechanisms described in [[[DID-ELSI]]] and [[[DID-ONBOARDING]]].
+    </p>
+</section>
+
+
+<section id="conformance">
+</section>
+
+
+<section><h2>Introduction</h2>
+
+    <p>Once an organisation has onboarded an ecosystem like a Data Space, some of its employees have to be appointed to enable them to perform a concrete set of activities in the ecosystem. These activities are performed in the web portals of different organisations which are already participants in the ecosystem, like the onboarding service, the marketplace portals and also in the web portals of other participants.
+    </p>
+    <p>This document describes how:
+    </p>
+    <ul>
+        <li id='list_140.1'>An organisation can issue Verifiable Credentials to its employees enabling them to perform some specific processes in other organisations "on-behalf-of" the employer        </li>
+        <li id='list_140.2'>Other organisations can accept those Verifiable Credentials to perform authentication and access control.        </li>
+    </ul>
+
+    <p>We assume that all organisations have onboarded in the ecosystem using the mechanisms described in [[[DID-ELSI]]] and [[[DID-ONBOARDING]]].
+    </p>
+    <p>The appointed employee will perform the process by using a special type of Verifiable Credential called <code>LEARCredential</code> (from <b>L</b>egal <b>E</b>ntity <b>A</b>ppointed <b>R</b>epresentative).
+    </p>
+    <p>To achieve a high level of legal certainty under eIDAS, the LEARCredential is:
+    </p>
+    <ul>
+        <li id='list_150.1'>signed or sealed with an eIDAS certificate which is either:        <div>
+            <ul>
+                <li id='list_153.1'>a <b>certificate for electronic seals</b> issued to a legal person by a Qualified Trust Service Provider, or                </li>
+                <li id='list_153.2'>a <b>certificate for electronic signatures</b>, issued to a <b>legal representative of the legal person</b> by a Qualified Trust Service Provider.                </li>
+            </ul>
+
+        </div>
+        </li>
+        <li id='list_150.2'>signed using the <b>JSON Advanced Electronic Signature</b> format described in [[[ETSI-JADES]]]        </li>
+    </ul>
+
+    <p>The LEARCredential includes claims identifying the employee and a description of the concrete powers that have been delegated by the legal representative of the organisation.
+    </p>
+    <p>By signing/sealing the credential with an eIDAS certificate, the legal representative attests that the powers described in the credential have been delegated to the employee (maybe under some conditions, also described in the credential).
+    </p>
+    <p>In this way, the LEARCredential has the same legal status as any other document in other formats (e.g., PDF) signed in an eIDAS-compliant way, but with all the advantages provided by the Verifiable Credential format.
+    </p>
+    <p>In addition, the LEARCredential includes cryptographic material that allows the appointed employee to <b>use the credential as an online authentication mechanism</b> in a portal, by proving that the holder of the credential is the same person identified in the credential.
+    </p>
+    <p>Any Verifier that trusts the eIDAS Trust Framework will be able to verify that:
+    </p>
+    <ul>
+        <li id='list_168.1'><b>The person presenting the LEARCredential is the same as the one identified in the credential</b>        </li>
+        <li id='list_168.2'><b>A legal representative of the organisation has attested that the person has the powers described in the credential</b>        </li>
+    </ul>
+
+    <p>This enables the person presenting the LEARCredential to start the process and to provide any additional required documentation, preferably as additional Verifiable Credentials to enable automatic verification of compliance with the process requirements (including Gaia-X credentials issued by the Compliance Service of Gaia-X). 
+    </p>
+    <p>Both types of eIDAS certificates mentioned above are an electronic attestation <b>that links electronic seal/signature validation data to a legal person and confirms the name of that person</b>. This way, the certificate, usually linked to the sealed/signed document, can be used to verify the identity of the creator of the seal/signature and whether the document has been sealed/signed using the corresponding private key.
+    </p>
+    <p>Before issuing a certificate like the above, the Qualified Trust Service Provider (QTSP) performs validations against `Authentic Sources` to authenticate the identity of the organisation:
+    </p>
+    <ul>
+        <li id='list_178.1'>The data concerning the business name or corporate name of the organisation.        </li>
+        <li id='list_178.2'>The data relating to the constitution and legal status of the subscriber.        </li>
+        <li id='list_178.3'>The data concerning the extent and validity of the powers of representation of the applicant.        </li>
+        <li id='list_178.4'>The data concerning the tax identification code of the organisation or equivalent code used in the country to whose legislation the subscriber is subject.        </li>
+    </ul>
+
+    <p>The person controlling the above certificates will appoint a legal entity representative (LEAR) by generating and signing a Verifiable Credential which:
+    </p>
+    <ul>
+        <li id='list_186.1'>Includes identification data of an employee of the organisation        </li>
+        <li id='list_186.2'>Includes claims stating the delegation of specific powers to perform a set of specific processes on behalf of the organisation        </li>
+        <li id='list_186.3'>Includes a public key where the corresponding private key is controlled by the employee, enabling him to prove that he is the holder of the credential when it is being used in an authentication process like the ones used as examples in this document.        </li>
+    </ul>
+
+    <p>The LEARCredential uses the `did:elsi` method for the identifiers of legal persons involved in the process, to facilitate the DID resolution and linkage with the eIDAS certificates. The `did:elsi` method is specified in [[[DID-ELSI]]].    
+    </p>
+    <p>The high-level view of the process is described in the following diagram, when a COO (Chief Operating Officer) appoints an employee to perform some processes:
+    </p>
+    <figure><img src='builtassets/plantuml_dac3464b348d39a8abedf130c45a8203.png' alt=''>
+    <figcaption>High level view of issuance of LEARCredential</figcaption></figure>
+
+</section>
+
+
+<section><h2>Participants</h2>
+
+    <p>Here we introduce the actors of the reference use case we are going to use. The main actors are marked in yellow in the following diagram.
+    </p>
+    <p>RealTruth is a Trust Service Provider operating under the eIDAS Trust Framework, which issues a certificate for seals to the company GoodAir. GoodAir is a business that provides some services using an Air Quality application operated by GoodAir.
+    </p>
+    <p>RealTruth also provides a certificate for signatures to the COO of the GoodAir company, so the COO can use the certificate to sign documents on behalf of GoodAir (like contracts, invoices, financial reports, ...) in a way that is compliant with eIDAS.
+    </p>
+    <p>The COO of GoodAir will issue a verifiable credential of type LEARCredential to an employee of GoodAir, signing the credential with his certificate for signatures.
+    </p>
+    <figure><img src='builtassets/diagram_a1bfb9aef5ca983a165a6a2c8c1839fb.svg' alt=''>
+    <figcaption></figcaption></figure>
+
+
+    <section id='participant'><h2>GoodAir: the company that wants to perform the process</h2>
+
+        <p>The new participant is a business providing an Air Quality Monitoring application as a service. The business is called GoodAir and it operates the application, which receives data from a set of sensors that may or may not be the property of GoodAir. The sensors must have received a certification to be able to operate and send data to the GoodAir application.
+        </p>
+        <p>The company is registered in the tax agency and business registry of Spain with VAT number <b>VATES-12345678</b>.
+        </p>
+    </section>
+
+
+    <section><h2>COO (Chief Operating Officer) of GoodAir</h2>
+
+        <p>The GoodAir company is small and the only person that can sign contracts on behalf of the company is the COO (Chief Operating Officer). The COO is a legal representative of the company and she is registered as so in the business registry of Spain.
+        </p>
+        <p>The COO has a certificate for electronic signatures issued by one of the TSPs in Spain enabling the COO to perform electronic qualified signatures as legal representative of GoodAir, instead of doing them manually.
+        </p>
+        <p>The X.509 certificate of the COO has the following contents in the <code>Subject</code> field (the example below is derived from a real certificate but with the identifiers modified to be an example):
+        </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">cn</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">56565656V Jesus Ruiz</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">serialNumber</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">56565656V</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">givenName</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">Jesus</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">sn</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">Ruiz</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">2.5.4.97</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">VATES-12345678</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">o</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">GoodAir</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">c</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">ES</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">2.5.4.13</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">Notary:Juan Lopez/Protocol Num:7172/Date:07-06-2021</span>
+</span></span></code></pre>
+        <p>The above set of fields bind the legal identity of the COO with the identity of the business:
+        </p>
+        <ul>
+            <li id='list_338.1'><code>serialNumber</code> is the unique number recognized by the Spanish Government for spanish citizens (called NIF).            </li>
+            <li id='list_338.2'><code>2.5.4.97</code> is the <a href="https://oidref.com/2.5.4.97">official OID for <code>organizationIdentifier</code></a>. The contents of this field in the example certificate is the unique identifier for the legal person GoodAir.            </li>
+        </ul>
+
+        <p>Before issuing a certificate like the above, the TSP has to perform some validations to ensure that in the official source of truth (the business registry of Spain in this case) there is already registered information that states that the COO has indeed powers to act on behalf of GoodAir as a legal representative.
+        </p>
+    </section>
+
+
+    <section><h2>RealTruth: a Trust Service Provider</h2>
+
+        <p>RealTruth is an EU TSP, which appears in the TL (Trusted List) maintained by the <a href="https://tl.bundesnetzagentur.de/TL-DE.XML">German Government</a>.
+        </p>
+        <p>RealTruth is a TSP based in Germany but operates in most of the countries of the EU and so being able to provide Trust Services across many countries, including Spain.
+        </p>
+        <p>As all TSPs in the TLs of the Member States, its entry in the TL includes one or more "Services" entries which describe the Trust Services provided by the TSP.
+        </p>
+        <p>A TSP can have one Service issuing certificates for signatures, another service issuing certificates for seals, another service for timestamping, etc.
+        </p>
+        <p>The regulator approves or suspends each service from a TSP individually, and the services are the root anchor for a given trust environment.
+        </p>
+        <p>In our case, the entry for RealTruth in the TL includes a `&ltTSPService&gt` entry, and inside it the `&ltServiceDigitalIdentity&gt` entry includes a DER-encoded certificate specifying the digital identity of the root anchor for that trust domain. The certificate for the Service has in the Subject field:
+        </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">2.5.4.97</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">VATDE-170173453</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">CN</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">DRV QC 11 MA CA 2017ca</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">OU</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">QC 11 Mitarbeiter CA</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">O</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">Deutsche Rentenversicherung Westfalen</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">C</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">DE</span>
+</span></span></code></pre>
+        <p>Which in the <code>organizationIdentifier</code> field (OID 2.5.4.97) specifies the unique organisation identifier assigned by the German regulatory authority to the TSP: VATDE-170173453.
+        </p>
+        <p>RealTruth provides `Legal Person Representative Certificates` which are qualified in accordance with Regulation (EU) No. 910/2014 of the European Parliament and of the Council of 23 July 2014 on electronic identification and trust services for electronic transactions in the internal market.
+        </p>
+        <p>The certification policies of RealTruth includes the following sentences:
+        </p>
+
+        <blockquote>
+            <p>The Registration Authority must verify the following information in order to authenticate the identity of the organisation:
+            </p>
+            <ul>
+                <li id='list_374.1'>The data concerning the business name or corporate name of the organisation.                </li>
+                <li id='list_374.2'>The data relating to the constitution and legal status of the subscriber.                </li>
+                <li id='list_374.3'><b>The data concerning the extent and validity of the powers of representation of the applicant.</b>                </li>
+                <li id='list_374.4'>The data concerning the tax identification code of the organisation or equivalent code used in the country to whose legislation the subscriber is subject.                </li>
+            </ul>
+
+        </blockquote>
+
+        <p>The TSP (RealTruth in this case) performs the verifications against `Authentic Sources`.
+        </p>
+
+        <blockquote>
+            <p>Authentic Sources are the public or private repositories or systems recognised or required by law containing attributes about a natural or legal persons.
+            </p>
+            <p>The Authentic Sources in scope of Annex VI of the [eIDAS2] legislative proposal are sources for attributes on address, age, gender, civil status, family composition, nationality, education and training qualifications titles and licences, professional qualifications titles and licences, public permits and licences, financial and company data.
+            </p>
+            <p>Authentic Sources in scope of Annex VI are required to provide interfaces to Qualified Electronic Attestation of Attributes  (QEAA) Providers to verify the authenticity of the above attributes, either directly or via designated intermediaries recognised at national level.
+            </p>
+            <p>Authentic Sources may also issue (Q)EAA-s themselves if they meet the requirements of the eIDAS Regulation. It is up to the Member States to define terms and conditions for the provisioning of these services, but according to the minimum technical specifications, standards, and procedures applicable to the verification procedures for qualified electronic attestations of attributes.
+            </p>
+        </blockquote>
+
+        <figure><img src='builtassets/diagram_a3a59e3a4df1e651d5d42fee8deccced.svg' alt=''>
+        <figcaption></figcaption></figure>
+
+        <p>In accordance to the policies, RealTruth made those validations when issuing the certificate to the COO, in such a way that the Relying Parties verifying the certificate can have a high level of trust in the assertion that the natural person identified in the certificate (with Spanish ID of 56565656V) is a legal representative of he GoodAir company (organizationIdentifier VATES-12345678).
+        </p>
+    </section>
+
+
+    <section><h2>John Doe: an administrative employee of GoodAir</h2>
+
+        <p>This is an employee of the central administration department of GoodAir, who is going to be formally nominated to manage a specific set of processes on behalf of GoodAir in the Data Space. In particular, this employee is going to be nominated as a LEAR (Legal Entity Appointed Representative).
+        </p>
+        <p>As its name implies, the LEAR has to be nominated by a <b>legal representative</b> of the GoodAir organisation with the necessary legal authority to commit the organisation for this type of decision. In our case, the COO of GoodAir will nominate John Doe as the LEAR of GoodAir, delegating to him the capabilities to perform some processes in the DOME portal and some other tasks in other organisations. That means that John Doe will not be empowered to perform cation snot explicitly specified in the credential.
+        </p>
+        <p>To perform the nomination, the COO of GoodAir (a legal representative of GoodAir) will issue a special credential to John Doe and will sign the credential with his certificate for signatures as legal representative of GoodAir. The details are described later in this document.
+        </p>
+    </section>
+
+
+    <section><h2>DOME: an instance of a Data Space for Smart Cities</h2>
+
+        <p>DOME is a Data Space where local governments can procure data and services from other entities that act as service providers. At the same time, the local governments can also act as data and service providers for other entities in the Data Space.
+        </p>
+        <p>The DOME Data Space has an portal service that allows external entities to perform some processes in an automated fashion by using Verifiable Credentials that have been issued by trusted entities. The complete Trust Framework used by DOME is composed from a series of Trust Frameworks, some managed internally using a governance model of DOME and some others managed externally but by trusted entities. At the root of the Trust Framework of DOME is the eIDAS Trust Framework and the pan-european recognized list of Trust Service Providers issuing the eIDAS compliant digital identities, in the form of certificates for signatures/seals.
+        </p>
+        <p>In order to participate in DOME, every legal person requires a certificate for seals or that one of its legal representatives has a certificate for signatures (or both). The DOME entity is registered in France with VAT number <b>VATFR-99999999</b>.
+        </p>
+    </section>
+
+</section>
+
+
+<section><h2>The LEARCredential</h2>
+
+    <p>We use here a LEARCredential, described in detail in [[DID-ONBOARDING]], with different roles and duties embedded into the credential. The credential enables the employee (or subcontractor) to perform a specific sets of processes in the ecosystem, including interacting with other organisations in the ecosystem.
+    </p>
+    <p>We describe here the differences with respect to the example presented in [[DID-ONBOARDING]], to show how organisations can use LEARCredentials to enable secure, efficient, scalable and decentralised IAM (Identity and Access Management) to enable access to protected resources.
+    </p>
+    <p>The process of generation of the credential is the same, where the legal representative of the organisation will use his eIDAS certificate to sign the credential.
+    </p>
+    <p>The credential will be generated with an application that the COO will use as VC Issuer and that allows the employee to receive the credential using his credential wallet, using [[OpenID.VCI]] to achieve compliance with the EUDI Wallet ARF.
+    </p>
+    <p>The application enables the COO to specify the information required to create the LEARCredential, specifying the employee information and the specific type of LEARCredential. In general, there may be different instances of LEARCredentials for different purposes. One employee can have more than one LEARCredential, each having a different delegation of powers for different environments.
+    </p>
+
+    <section><h2>Claims identifying the employee</h2>
+
+        <p>These are claims identifying the subject of the credential, the person who will act as LEAR. Each Data Space can define their own depending on their specific requirements.
+        </p>
+        <p>In addition, each organisation can specify their own for enabling access to its products/services. However, it is advisable to do this only when it is strictly required, and it is recommended to use a set of claims that are agreed upon by all participants in the ecosystem. This includes not only the amount of claims but also their syntax and semantics.
+        </p>
+        <p>An example set of claims is the following:
+        </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;title&#34;</span>: <span style="color:#f1fa8c">&#34;Mr.&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;first_name&#34;</span>: <span style="color:#f1fa8c">&#34;John&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;last_name&#34;</span>: <span style="color:#f1fa8c">&#34;Doe&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;gender&#34;</span>: <span style="color:#f1fa8c">&#34;M&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;postal_address&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;email&#34;</span>: <span style="color:#f1fa8c">&#34;johndoe@goodair.com&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;telephone&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;fax&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;mobile_phone&#34;</span>: <span style="color:#f1fa8c">&#34;+34787426623&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+    </section>
+
+
+    <section><h2>DID of the employee</h2>
+
+        <p>The identifier of the employee is generated in exactly the same way as described in [[DID-ONBOARDING]], so we will not repeat it here.
+        </p>
+        <p>An example could be:
+        </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+        <p>With the DID for the employee, the set of claims identifying him would be then:
+        </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;title&#34;</span>: <span style="color:#f1fa8c">&#34;Mr.&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;first_name&#34;</span>: <span style="color:#f1fa8c">&#34;John&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;last_name&#34;</span>: <span style="color:#f1fa8c">&#34;Doe&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;gender&#34;</span>: <span style="color:#f1fa8c">&#34;M&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;postal_address&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;email&#34;</span>: <span style="color:#f1fa8c">&#34;johndoe@goodair.com&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;telephone&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;fax&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;mobile_phone&#34;</span>: <span style="color:#f1fa8c">&#34;+34787426623&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+    </section>
+
+
+    <section><h2><code>legalRepresentative</code></h2>
+
+        <p>The legal representative is the same natural person as in [[DID-ONBOARDING]], that is the COO of GoodAir, represented in the credential as:
+        </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;legalRepresentative&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;cn&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V Jesus Ruiz&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;serialNumber&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;organizationIdentifier&#34;</span>: <span style="color:#f1fa8c">&#34;VATES-12345678&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;o&#34;</span>: <span style="color:#f1fa8c">&#34;GoodAir&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;c&#34;</span>: <span style="color:#f1fa8c">&#34;ES&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+    </section>
+
+
+    <section><h2><code>rolesAndDuties</code> of the LEAR</h2>
+
+        <p>The <code>rolesAndDuties</code> are specified in the same way as in [[DID-ONBOARDING]], but the contents are different depending on the specific roles that the employee will have.
+        </p>
+        <p>A simplistic implementation of the object inside the credential could be:
+        </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;rolesAndDuties&#34;</span>: [
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;type&#34;</span>: <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>]
+</span></span></code></pre>
+        <p>Where the last part of the url can correspond to the hash of the external linked document to ensure that any modification or tampering can be detected. The contents of that object ata that url could be:
+        </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>[
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;target:&#34;</span>https:<span style="color:#6272a4">//bae.dome-marketplace.eu/&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>        <span style="color:#f1fa8c">&#34;roleNames&#34;</span>: [<span style="color:#f1fa8c">&#34;seller&#34;</span>, <span style="color:#f1fa8c">&#34;customer&#34;</span>]
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>]
+</span></span></code></pre>
+        <p>In the above example, we have specified that the roles object referenced in the credential with `id: https://dome-marketplace.eu//lear/v1/6484994n4r9e990494` is granting the employee of GoodAir (in our example) to access services in the DOME marketplace (specified with the field <code>target</code>) with the roles <code>seller</code> and <code>customer</code> (which are the roles of the <a href="https://business-api-ecosystem.readthedocs.io/en/latest/index.html">FIWARE BAE component</a>).
+        </p>
+        <p>If <code>target</code> is omitted, the roles would apply to any target organisation. If we need to specify more than one target organisation, the array should include as many objects as required.
+        </p>
+
+        <aside class='note'>
+            <p>The way we have specified the roles is just an example. There is work ongoing to define the detailed mechanism formally (e.g. with ODRL), and it is expected to change. This example is intended only to describe the concepts in detail.
+            </p>
+        </aside>
+
+    </section>
+
+
+    <section><h2>Assembling the pieces together</h2>
+
+        <p>With the above values for the example, the complete LEARCredential would become something like this:
+        </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;@context&#34;</span>: [
+</span></span><span style="display:flex;"><span>        <span style="color:#f1fa8c">&#34;https://www.w3.org/2018/credentials/v1&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//2022/credentials/learcredential/v1&#34;</span>
+</span></span><span style="display:flex;"><span>    ],
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;urn:did:elsi:25159389-8dd17b796ac0&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;type&#34;</span>: [<span style="color:#f1fa8c">&#34;VerifiableCredential&#34;</span>, <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>],
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;issuer&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATES-12345678&#34;</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;issuanceDate&#34;</span>: <span style="color:#f1fa8c">&#34;2022-03-22T14:00:00Z&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;validFrom&#34;</span>: <span style="color:#f1fa8c">&#34;2022-03-22T14:00:00Z&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;expirationDate&#34;</span>: <span style="color:#f1fa8c">&#34;2023-03-22T14:00:00Z&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;credentialSubject&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;title&#34;</span>: <span style="color:#f1fa8c">&#34;Mr.&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;first_name&#34;</span>: <span style="color:#f1fa8c">&#34;John&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;last_name&#34;</span>: <span style="color:#f1fa8c">&#34;Doe&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;gender&#34;</span>: <span style="color:#f1fa8c">&#34;M&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;postal_address&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;email&#34;</span>: <span style="color:#f1fa8c">&#34;johndoe@goodair.com&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;telephone&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;fax&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;mobile_phone&#34;</span>: <span style="color:#f1fa8c">&#34;+34787426623&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;legalRepresentative&#34;</span>: {
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;cn&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V Jesus Ruiz&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;serialNumber&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;organizationIdentifier&#34;</span>: <span style="color:#f1fa8c">&#34;VATES-12345678&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;o&#34;</span>: <span style="color:#f1fa8c">&#34;GoodAir&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;c&#34;</span>: <span style="color:#f1fa8c">&#34;ES&#34;</span>
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;rolesAndDuties&#34;</span>: [
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&#34;type&#34;</span>: <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        ]
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+        <p>Which is virtually identical to the one described in [[DID-ONBOARDING]].
+        </p>
+    </section>
+
+</section>
+
+
+<section><h2>Issuing the LEARCredential</h2>
+
+
+    <section><h2>Overview</h2>
+
+        <p>The issuance process of the LEARCredential used here is exactly the same as the one described in [[DID-ONBOARDING]] so we will focus on the differences.
+        </p>
+    </section>
+
+
+    <section><h2>Authentication</h2>
+
+        <p>This is exactly as in [[DID-ONBOARDING]].
+        </p>
+    </section>
+
+
+    <section><h2>Credential Offer</h2>
+
+        <p>This is exactly as in [[DID-ONBOARDING]].
+        </p>
+    </section>
+
+
+    <section><h2>Credential Issuer Metadata</h2>
+
+        <p>This is exactly as in [[DID-ONBOARDING]].
+        </p>
+    </section>
+
+
+    <section><h2>OAuth 2.0 Authorization Server Metadata</h2>
+
+        <p>This is exactly as in [[DID-ONBOARDING]].
+        </p>
+    </section>
+
+
+    <section><h2>Access Token</h2>
+
+        <p>This is exactly as in [[DID-ONBOARDING]].
+        </p>
+    </section>
+
+
+    <section><h2>Request and receive Credential</h2>
+
+        <p>This is exactly as in [[DID-ONBOARDING]].
+        </p>
+    </section>
+
+</section>
+
+
+<section><h2>Authenticating with the LEARCredential</h2>
+
+
+    <section><h2>Overview</h2>
+
+        <p>The diagram below is describes the high level logical architecture that we will be use as a reference for the detailed explanations in the next sections.
+        </p>
+        <p>The diagram uses the logical concepts also used in the XACML reference architecture, but the description is agnostic to the actual policy language used in a concrete implementation.
+        </p>
+        <p>In this description we assume that the user is a natural person who wants to access a protected resource. However, the architecture support machine-to-machine (M2M) interactions. The differences will be described in the description when they are relevant.
+        </p>
+
+        <figure><img src='images/login_in_DOME/authn_architecture_numbered.drawio.png'/>
+        <figcaption>Architecture overview </figcaption></figure>
+
+        <p>We assume here that the user sends a request to perform a protected operation, which we define as any operation that requires authorisation.
+        </p>
+        <p>An example is an operation on resources controlled by Company A, where Company A allows a subset of employees of Company B to perform the operation. Another similar example is when Company A allows a subset of machines/devices of Company B to perform the operation.
+        </p>
+        <p>There are several high level scenarios which are possible:
+        </p>
+        <ul>
+            <li id='list_737.1'>The user navigates first to a general Login page in the portal of the Relying Party and authenticates. After authentication the portal presents a collection of services that the user can access. The user selects one of the services/operations and the Relying Party executes the operation if the user is authorised to do so.            </li>
+            <li id='list_737.2'>The user tries to access the protected resource directly (maybe using a specific URL, or invoking and endpoint with input data identifying the resource).            <div>
+                <p>If the user is not authenticated, the system will reject the request. If the user is a natural person accessing the portal via an Internet browser, the typical approach is to redirect the browser to the Login page using an HTTP Status of 302. The redirection includes enough information so the authentication component can send back the user to the original request if the user completes authentication successfully.
+                </p>
+                <p>If the user is a machine using an API, the system can simply reject the request or reject it including information in the response that the caller can interpret to perform the login and retry.
+                </p>
+            </div>
+            </li>
+        </ul>
+
+    </section>
+
+
+    <section><h2>Starting the OpenID for Verifiable Presentations flow</h2>
+
+        <p>In this section we assume that the user tries to access a protected resource and that the user is not authenticated. The flow when the user is already authenticated is the same, just skipping the authentication phase (steps 1 to 6).
+        </p>
+        <p>The authentication process starts an OpenID for Verifiable Presentations flow combined with the Self-Issued OP v2 specification [[OpenID.SIOP2]], where the VC Verifier component of the portal plays the role of a Relying Party (RP in Open ID Connect terminology) and the wallet of the user is a Self-Issued IdP.
+        </p>
+        <p>In this step, the Verifier has to send an Authorization Request to the wallet. But as a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
+        </p>
+        <p>We use a QR code to start the process and allow the wallet to receive the Authorization Request from the Verifier, and respond with an Authorization Response, sent to the Verifier in the body of an HTTP <code>POST</code> request.
+        </p>
+        <figure><img src='builtassets/plantuml_c553011d4f516d86ef73532d2d9ea63e.png' alt=''>
+        <figcaption>Starting the authentication phase</figcaption></figure>
+
+
+        <ul class='plain'>
+            <li id='767.1'><a href='#767.1' class='selfref'><b>1</b></a> The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
+                <div class='caca'>
+                <p>A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
+                </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">https://verifier.dome-marketplace.eu/authentication-requests?state</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">af0ifjsldkj</span>
+</span></span></code></pre>
+                </div>
+            </li>
+            <li id='775.2'><a href='#775.2' class='selfref'><b>2</b></a> The browser sends a request to the Packet Delivery portal server.
+            </li>
+        </ul>
+        <ul class='plain'>
+            <li id='list_797.1'><a href='#list_797.1' class='selfref'><b>1</b></a> The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.            <div>
+                <p>We assume in this scenario a cross-device interaction, that is, the user accesses the portal services with a PC browser, but authentication is performed with a mobile using Verifiable Credentials, as in typical 2-factor authentication.
+                </p>
+            </div>
+            </li>
+            <li id='list_797.2'><a href='#list_797.2' class='selfref'><b>2</b></a> The browser sends a request to the Packet Delivery portal server.            </li>
+            <li id='list_797.3'><a href='#list_797.3' class='selfref'><b>3</b></a> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.            </li>
+            <li id='list_797.4'><a href='#list_797.4' class='selfref'><b>4</b></a> The Verifier generates and displays a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.            <div>
+                <p>A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
+                </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">https://verifier.dome-marketplace.eu/authentication-requests?state</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">af0ifjsldkj</span>
+</span></span></code></pre>
+            </div>
+            </li>
+            <li id='list_797.5'><a href='#list_797.5' class='selfref'><b>5</b></a> The QR code is displayed in the user browser with instructions to scan it and go to the URL inside it.            </li>
+            <li id='list_797.6'><a href='#list_797.6' class='selfref'><b>6</b></a> The user scans the QR with his wallet and tells the wallet to go to the URL in the QR.            </li>
+            <li id='list_797.7'><a href='#list_797.7' class='selfref'><b>7</b></a> The mobile performs a GET request to the url inside the QR. The reply to the GET request is an Authorization Request            </li>
+            <li id='list_797.8'><a href='#list_797.8' class='selfref'><b>8</b></a> The Verifier creates an Authorization Request. The process is described in detail in the next section            </li>
+            <li id='list_797.9'><a href='#list_797.9' class='selfref'><b>9</b></a> The Verifier replies to the wallet with the Authorization Request            </li>
+        </ul>
+
+    </section>
+
+
+    <section><h2>Generating the Authorization Request</h2>
+
+        <p>The Authorization Request travels in the response to the HTTP GET request performed in the previous point, as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service.
+        </p>
+        <p>The parameters comprising a request for verifiable presentations are given in section 5 of [[OpenID.VP]] and in section 10.1 of [[OpenID.SIOP2]] and are reproduced here with the particularities of this use case, in particular that this is a cross-device interaction:
+        </p>
+            <ul>
+                <li id='list_832.response_type'><a href='#list_832.response_type' class='selfref'><b>response_type</b></a> REQUIRED. Must be <code>vp_token</code>. This parameter is defined in [[RFC6749]]> The possible values are determined by the response type registry established by [[RFC6749]]. The [[OpenID.VP]] specification introduces the response type <code>vp_token</code>. This response type asks the SIOP to return only a VP Token in the Authorization Response, which is what we want in our case.                </li>
+                <li id='list_832.scope'><a href='#list_832.scope' class='selfref'><b>scope</b></a> REQUIRED. This parameter is defined in [[RFC6749]] which allows it to be used by verifiers to request presentation of credentials by utilizing a pre-defined scope value designating the type of credential. See section <a href="#request_scope" class="xref">Request Scope</a> for more details. We use in this instance the value <code>dome.credentials.presentation.LEARCredential</code> which means that the RP (DOME onboarding service) is asking the SIOP (user wallet) to send a credential of type <code>LEARCredential</code>.                </li>
+                <li id='list_832.response_mode'><a href='#list_832.response_mode' class='selfref'><b>response_mode</b></a> REQUIRED. MUST be <code>direct_post</code>. As this is a cross-device scenario, this response mode is used to instruct the Self-Issued OP to deliver the result of the authentication process to a certain endpoint using the HTTP POST method. This endpoint to which the SIOP shall deliver the authentication result is conveyed in the parameter <code>redirect_uri</code> described below.                </li>
+                <li id='list_832.redirect_uri'><a href='#list_832.redirect_uri' class='selfref'><b>redirect_uri</b></a> (REQUIRED). MUST be a valid RP endpoint. The Authentication Response is sent to this endpoint using <code>POST</code> and encoding `application/json`).                </li>
+                <li id='list_832.client_id'><a href='#list_832.client_id' class='selfref'><b>client_id</b></a> REQUIRED. MUST be the DID of the RP (DOM onboarding entity) so it can be resolved by the SIOP and checked against a Trusted List, or rejected if it does not pass validation. This provides a high level of assurance to the SIOP that the RP is really who it claims.                </li>
+                <li id='list_832.client_id_scheme'><a href='#list_832.client_id_scheme' class='selfref'><b>client_id_scheme</b></a> REQUIRED. MUST have the value <code>did</code>. This value indicates that the Client Identifier is a DID defined in [[DID-Core]]. The request MUST be signed with a private key associated with the DID. To obtain the corresponding private key, the Wallet MUST use DID Resolution defined by the DID method used by the Verifier. For most DID methods and since the associated DID Document may include multiple public keys, a particular public key used to sign the request in question MUST be identified by the kid in the JOSE Header. However, in our case the Verifier uses `did:elsi` and so the request MUST be signed with the eIDAS certificate according to the [[ETSI-JADES]] format, which defines the mechanism to identify the public key.                <div>
+                    <p>All Verifier metadata other than the public key MUST be obtained from the client_metadata or the `client_metadata_uri parameter` as defined in Section 5 of [[OpenID.VP]].
+                    </p>
+                </div>
+                </li>
+                <li id='list_832.nonce'><a href='#list_832.nonce' class='selfref'><b>nonce</b></a> REQUIRED. This parameter follows the definition given in [[OpenID.Core]]. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.                </li>
+                <li id='list_832.state'><a href='#list_832.state' class='selfref'><b>state</b></a> REQUIRED. Used by the portal component of DOM onboarding to associate the start of an authentication session with the end of that session when the RP Verifier component notifies to the portal.                </li>
+                <li id='list_832.presentation_definition'><a href='#list_832.presentation_definition' class='selfref'><b>presentation_definition</b></a> CONDITIONAL. A string containing a <code>presentation_definition</code> JSON object as defined in Section 4 of [[DIF.PresentationExchange]]. We do not use this parameter because <code>scope</code> already specifies the credential type.                </li>
+                <li id='list_832.presentation_definition_uri'><a href='#list_832.presentation_definition_uri' class='selfref'><b>presentation_definition_uri</b></a> CONDITIONAL. A string containing a URL pointing to a resource where a <code>presentation_definition</code> JSON object as defined in Section 4 of [[DIF.PresentationExchange]] can be retrieved. We do not use this parameter because <code>scope</code> already specifies the credential type.                </li>
+            </ul>
+
+            <p>Note: A request MUST contain either a <code>presentation_definition</code> or a <code>presentation_definition_uri</code> or a single <code>scope</code> value representing a presentation definition, those three ways to request credential presentation are mutually exclusive. We use here the <code>scope</code> mechanism, which is simpler and fits our use case.
+            </p>
+            <p>This is an example request:
+            </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">openid://?</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">scope</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">dome.credentials.presentation.LEARCredential&amp;</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">response_type</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">vp_token&amp;</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">response_mode</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">direct_post&amp;</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">client_id</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">did:elsi:VATFR-99999999&amp;</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">redirect_uri</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">https://verifier.dome-marketplace.eu/api/authentication_response&amp;</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">state</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">af0ifjsldkj&amp;</span>
+</span></span><span style="display:flex;"><span><span style="color:#50fa7b">nonce</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">n-0S6_WzA2Mj</span>
+</span></span></code></pre>
+            <p>(URL encoding removed, line breaks and leading spaces added for readability).
+            </p>
+        <p>As mentioned above, the Authentication Request is returned to the wallet in the reply body of the GET request, as a JWT in JWS form [[RFC7515]]), signed with eIDAS certificate of the DOM onboarding legal person.
+        </p>
+        <p>This is an example of the unencoded contents of the payload of the JWT:
+        </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;iss&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATFR-99999999&#34;</span>,   <span style="color:#6272a4">// Should correspond with the client_id in the AR
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">&#34;sub&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATFR-99999999&#34;</span>,   <span style="color:#6272a4">// Should correspond with the client_id in the AR
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">&#34;aud&#34;</span>: <span style="color:#f1fa8c">&#34;https://self-issued.me/v2&#34;</span>, <span style="color:#6272a4">// As specified in section 5.5 of OIDC4VP
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">&#34;iat&#34;</span>: <span style="color:#bd93f9">1667194901</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;exp&#34;</span>: <span style="color:#bd93f9">1667194961</span>,                  <span style="color:#6272a4">// To avoid replays, here it expires in 60 secs
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">&#34;auth_request&#34;</span>: <span style="color:#f1fa8c">&#34;openid://?scope=...&amp;amp;response_type=vp_token&amp;amp;...&#34;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+        <p>Where the claims <code>iss</code> and <code>sub</code> MUST be the DID of the RP (in this case DOME onboarding) and MUST correspond exactly with the <code>client_id</code> parameter in the Authentication Request. The claim <code>auth_request</code> contains the Authentication Request as a string. The expiration time in claim <code>exp</code> avoids replays and can be very short because it is used by the SIOP just on reception of the Authentication Request.
+        </p>
+        <p>The following diagram describes the process of generating the Authorization Request.
+        </p>
+        <figure><img src='builtassets/diagram_6090e072fb63e94b90d0984490705195.svg' alt=''>
+        <figcaption></figcaption></figure>
+
+        <ul>
+            <li id='list_917.8'><a href='#list_917.8' class='selfref'><b>8</b></a> Packet Delivery company RP creates a SIOP Authentication Request. The parameters comprising a request for verifiable presentations are given in section 5 of [[OpenID.VP]] and in section 10.1 of [[OpenID.SIOP2]] and are reproduced here with the particularities of this use case, in particular that this is a cross-device interaction:            </li>
+            <li id='list_917.9'><a href='#list_917.9' class='selfref'><b>9</b></a> The SIOP Authentication Request is returned to the mobile in the reply body of the GET request, as a JWT in JWS form ([[RFC7515]]), signed with the public key associated with the DID in the client_id field of the Authorization Request. The JWT MUST be generated according to the best practices described in [[RFC8725]].             </li>
+        </ul>
+
+    </section>
+
+
+    <section><h2>Verification of the Authorization Request</h2>
+
+        <p>Before sending the Authentication Response, the wallet should verify that the Authorization Request is correct. The most important verifications are described here:
+        </p>
+        <figure><img src='builtassets/diagram_cd247bef8d0d1b9695077620dfe77208.svg' alt=''>
+        <figcaption></figcaption></figure>
+
+        <ul>
+            <li id='list_957.10'><a href='#list_957.10' class='selfref'><b>10</b></a> Verification of the signature. As mentioned in the previous section, the Authorization Request is received as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service. This allows the wallet to verify that the signature corresponds to a real-world entity.            </li>
+            <li id='list_957.11'><a href='#list_957.11' class='selfref'><b>11</b></a> Verification that the DID in the <code>client_id</code> field of the Authorization Request corresponds to the entity that signed the Authorization Request. This is easy in our case because we use the `did:elsi` method.            </li>
+            <li id='list_957.12'><a href='#list_957.12' class='selfref'><b>12</b></a> Verification that the entity identified in the <code>client_id</code> field of the Authorization Request is a trusted entity belonging to the ecosystem, by resolving the DID of in the <code>client_id</code> field.            <div>
+                <p>The actual mechanism may vary depending on the DID method used and the ecosystem where the client wants to onboard. In the case of DOME, the DOME onboarding service is a well-known entity and it is easy to verify that the DID corresponds to the DOME onboarding service.
+                </p>
+                <p>In the case that the Relying Party is a participant in the ecosystem, we assume that the ecosystem provides a Trusted Participants Registry with an API compatible with the EBSI Trusted Issuers Registry, and that the participants registry is managed in a trusted way by the DOME onboarding service.
+                </p>
+                <p>In this case, to check if the DID is a participant on the DOME ecosystem, the wallet sends a `GET /api/did/v1/identifiers/did:elsi:VATFR-9999999` request to the endpoint of one of several trusted servers implementing the query Trusted Participant Registry functionality. The API returns a JSON document as a DID Document DID Document. The DID Document (as per W3C) contains relevant information about the entity owner of the DID. It contains its Public Key, used to verify the digital signature of the entity. It also contains the status of the entity in the DOME ecosystem. It is extensible and can contain any public information which may be relevant for the use case. The API must be operated by a trusted entity for the user. There may be as many servers implementing the API as needed and operated by different entities. At least one of those trusted entities has to be configured in the wallet of the user.
+                </p>
+            </div>
+            </li>
+        </ul>
+
+    </section>
+
+
+    <section><h2>Creating and sending the Authentication Response </h2>
+
+        <p>Once the Authorization Request has been validated, the wallet creates an Authentication Response to be posted in the <code>redirect_uri</code> specified by GoodAir in the Authorization Request. The complete process from reception of Authorization Request until sending the Authorization Response is described in the diagram below.
+        </p>
+        <figure><img src='builtassets/diagram_b93090c8c4ee452a7305fedfd478e8f8.svg' alt=''>
+        <figcaption></figcaption></figure>
+
+        <ul>
+            <li id='list_1010.13'><a href='#list_1010.13' class='selfref'><b>13</b></a> The wallet creates an Authentication Response to be posted in the <code>redirect_uri</code> specified by GoodAir in the Authorization Request that was sent to the wallet. The contents of the Authentication Response are described below.            <div>
+                <p>The response is constructed as defined in section 6.1 of [[OpenID.VP]]. In particular, because the Authorization Request included only <code>vp_token</code> as the <code>response_type</code>, the VP Token is provided directly in the Authorization Response and a separate <code>id_token</code> is not needed.
+                </p>
+                <p>The contents of the Authentication Response in our specific use case are (shown here with the POST parameters needed to send it):
+                </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">POST</span> /api/siop/authentication_response <span style="color:#ff79c6">HTTP</span><span style="color:#ff79c6">/</span><span style="color:#bd93f9">1.1</span>
+</span></span><span style="display:flex;"><span>Host<span style="color:#ff79c6">:</span> verifier.dome-onboarding.org
+</span></span><span style="display:flex;"><span>Content-Type<span style="color:#ff79c6">:</span> application/x-www-form-urlencoded
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>presentation_submission=[see definition below]
+</span></span><span style="display:flex;"><span>&amp;vp_token=[see definition below]
+</span></span></code></pre>
+                <p>The content of the <code>presentation_submission</code> parameter in the above Authentication Request is:
+                </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;definition_id&#34;</span>: <span style="color:#f1fa8c">&#34;OnboardingPresentationDefinition&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;OnboardingPresentationSubmission&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;descriptor_map&#34;</span>: [
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;id_credential&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;path&#34;</span>: <span style="color:#f1fa8c">&#34;$&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;format&#34;</span>: <span style="color:#f1fa8c">&#34;ldp_vp&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;path_nested&#34;</span>: {
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;format&#34;</span>: <span style="color:#f1fa8c">&#34;ldp_vc&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;path&#34;</span>: <span style="color:#f1fa8c">&#34;$.verifiableCredential[0]&#34;</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    ]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+                <p>Which complies with [[DIF.PresentationExchange]] and refers to the Verifiable Presentation in the <code>vp_token</code> parameter provided in the same response. In our example, the Verifiable Presentation includes the LEARCredential that was described in the previous sections.
+                </p>
+            </div>
+            </li>
+            <li id='list_1010.14'><a href='#list_1010.14' class='selfref'><b>14</b></a> The wallet sends the Authentication Response to the endpoint received in the <code>redirect_uri</code> parameter of the Authentication Request, sending an HTTP <code>POST</code> request using the encoding `application/x-www-form-urlencoded`.            </li>
+        </ul>
+
+    </section>
+
+
+    <section><h2>Authenticating the user with the LEARCredential</h2>
+
+        <p>We should remember that inside the LEARCredential the <code>credentialSubject</code> object has an <code>id</code> field with value `did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK` which is the DID of the user. It was generated during the creation of the LEARCredential, and the Relying Party should trust that the credential was generated in the proper way binding cryptographically the DID with the LEARCredential, as described in a previous section. It is the same trust that should be put in the generation of any other signed document, like a contract or invoice.
+        </p>
+        <p>The process of verifying the Authorization Response and authenticating the user with the LEARCredential is the following:
+        </p>
+        <figure><img src='builtassets/diagram_ee51b56847b12e7035ab84cfc7de2965.svg' alt=''>
+        <figcaption></figcaption></figure>
+
+        <ul>
+            <li id='list_1092.15_and_16'><a href='#list_1092.15_and_16' class='selfref'><b>15 and 16</b></a> The Verifier receives the Authorization Request and has to perform verifications, the standard ones being defined in [[DIF.PresentationExchange]]. In order to verify that the Verifiable Credential has been issued by a trusted entity, the Relying Party has to verify:            <div>
+                <ol>
+                    <li id='list_1095.1'>That the DID of the entity which is the issuer of the VC is a trusted entity.                    </li>
+                    <li id='list_1095.2'>That the VC was signed by that participant.                    </li>
+                </ol>
+
+                <p>Both verifications can be done by performing DID resolution, checking that the resulting DID Document contains the public key corresponding to the one specified in the Verifiable Credential, and by verifying the digital signature of the credential against that public key.
+                </p>
+                <p>In our case the LEARCredential was issued using the `did:elsi` method, so resolution is very simple and is specified in [[DID-ELSI]].
+                </p>
+            </div>
+            </li>
+            <li id='list_1092.17'><a href='#list_1092.17' class='selfref'><b>17</b></a> After verifying the credential, the Relying Party can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the user and not by a malicious agent. To do so, it uses the public key associated to the `did:key` identifier <code>id</code> field inside the <code>credentialSubject</code> structure. That public key is cryptographically bound to the customer DID during the onboarding process that GoodAir performed with its employee.            </li>
+            <li id='list_1092.18'><a href='#list_1092.18' class='selfref'><b>18</b></a> The Verifier creates an Access Token for the user so he can use it to access services in the DOME onboarding portal. The Access Token is generated in JWT format and signed by the RP component. The access token is intended for use as bearer token over HTTP [[RFC2616]] using Transport Layer Security (TLS) [[RFC5246]] to access protected resources, and it should use the JWT Profile profile described in [[RFC9068]].            <div>
+                <p>For our use case, the payload of the JWT access token looks like:
+                </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;iss&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATFR-99999999&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;sub&#34;</span>: <span style="color:#f1fa8c">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;aud&#34;</span>:   <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu/onboarding&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;exp&#34;</span>: <span style="color:#bd93f9">1639528912</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;iat&#34;</span>: <span style="color:#bd93f9">1618354090</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;jti&#34;</span> : <span style="color:#f1fa8c">&#34;dbe39bf3a3ba4238a513f51d6e1691c4&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;client_id&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATFR-99999999&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;scope&#34;</span>: <span style="color:#f1fa8c">&#34;vp_token&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;verifiableCredential&#34;</span>: [the VC that was received inside the Verifiable Presentation]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+                <p>Where, according to [[RFC9068]]:
+                </p>
+                <ul>
+                    <li id='list_1124.1'><code>iss</code> and <code>client_id</code> have the same value because the access token has been generated by the Verifier component of the DOME onboarding service, acting as the DOME legal person.                    </li>
+                    <li id='list_1124.2'><code>sub</code> identifies the user (employee of GoodAir acting as LEAR of the company) using the DID inside the Verifiable Credential received                    </li>
+                    <li id='list_1124.3'><code>aud</code> identifies the RS (Resource Server) component in Packet Delivery. In this case we assume that it is internal and does not have a DID assigned, so we use the URI of the component.                    </li>
+                    <li id='list_1124.4'><code>kid</code> in the header identifies the key that is used to sign the JWT and which must be configured up-front and known by the RS (Resource Server.                    </li>
+                    <li id='list_1124.5'><code>scope</code> has the same value as the equivalent <code>scope</code> parameter in the initial Authorization Request.                    </li>
+                    <li id='list_1124.6'><code>verifiableCredential</code> contains the Verifiable Credential that was received, specifically the value of the first element of the field <code>verifiableCredential</code> of the Verifiable Presentation.                    </li>
+                </ul>
+
+            </div>
+            </li>
+            <li id='list_1092.19'><a href='#list_1092.19' class='selfref'><b>19</b></a> The Verifier sends a successful response to the POST request from the wallet. The wallet receives the response to the POST indicating the success or failure of the process. The Verifier continues processing because the web portal of Packet Delivery has to be refreshed with the services that this specific user can access, based on the information received in the Verifiable Credential and the access control policies implemented by the DOME portal.            </li>
+            <li id='list_1092.20'><a href='#list_1092.20' class='selfref'><b>20</b></a> The Verifier notifies the DOME portal to refresh the login page so it can present the services to the user. The notification includes the following:            <div>
+                <ul>
+                    <li id='list_1141.1'>The <code>state</code> nonce that was generated by the portal when it generated the QR code. The portal uses the <code>state</code> nonce to know what login session is notified.                    </li>
+                    <li id='list_1141.2'>The access token generated before.                    </li>
+                </ul>
+
+                <p>The notification is a simple POST request with both parameters in the body:
+                </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">POST</span> /api/notify <span style="color:#ff79c6">HTTP</span><span style="color:#ff79c6">/</span><span style="color:#bd93f9">1.1</span>
+</span></span><span style="display:flex;"><span>Host<span style="color:#ff79c6">:</span> dome-marketplace.eu
+</span></span><span style="display:flex;"><span>Content-Type<span style="color:#ff79c6">:</span> application/x-www-form-urlencoded
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>access_token=[the access token]
+</span></span><span style="display:flex;"><span>&amp;state=af0ifjsldkj
+</span></span></code></pre>
+                <p>The portal component replies immediately and continues processing.
+                </p>
+            </div>
+            </li>
+            <li id='list_1092.21'><a href='#list_1092.21' class='selfref'><b>21</b></a> The DOM portal refreshes the screen and displays the services available to users, sending the Access Token to the browser of the user. The Access Token will be sent by the browser to the DOME portal whenever the user tries to access a protected resource of the portal, and so access control can be performed using the data inside the token, in the same way as with any other access token in other authentication mechanisms.            </li>
+        </ul>
+
+    </section>
+
+</section>
+
+
+<section id='request_scope' class='appendix'><h2>Request Scope</h2>
+
+    <p>According to section 5.3 of [[OpenID.VP]], wallets MAY support requesting presentation of credentials using OAuth 2.0 <code>scope</code> values. Such a scope value MUST be an alias for a well-defined presentation definition as it will be refered to in the <code>presentation_submission</code> response parameter.
+    </p>
+    <p>In this specification we define concrete scope values and the mapping between a certain scope value and the respective presentation definition, in particular the mapping between scope values and specific types of Verifiable Credentials used for access control in the use case described in this document. In a production implementation of a Data Space ecosystem, the Trust Framework has to define the mappings used in the ecosysyem and the mechanisms and governance model used to update those mappings.
+    </p>
+    <p>In this example we only need the mapping for the LEARCredential, where the scope <code>dome.credentials.presentation.LEARCredential</code> represents the following presentation definition:
+    </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;dome.credentials.presentation.LEARCredential&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;input_descriptors&#34;</span>: [
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;LEARCredentialDefinitionv1.01&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;format&#34;</span>: {
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;ldp_vc&#34;</span>: {
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&#34;proof_type&#34;</span>: [
+</span></span><span style="display:flex;"><span>                    <span style="color:#f1fa8c">&#34;RsaSignature2018&#34;</span>
+</span></span><span style="display:flex;"><span>                ]
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;constraints&#34;</span>: {
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;fields&#34;</span>: [
+</span></span><span style="display:flex;"><span>                {
+</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">&#34;path&#34;</span>: [
+</span></span><span style="display:flex;"><span>                        <span style="color:#f1fa8c">&#34;$.type&#34;</span>
+</span></span><span style="display:flex;"><span>                    ],
+</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">&#34;filter&#34;</span>: {
+</span></span><span style="display:flex;"><span>                        <span style="color:#ff79c6">&#34;type&#34;</span>: <span style="color:#f1fa8c">&#34;string&#34;</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#ff79c6">&#34;pattern&#34;</span>: <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            ]
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    ]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+</section>
+
+
+<section><h2>Access control with the LEARCredential</h2>
+
+    <p>Once the user has performed authentication and the portal displays the services that he has available, the user clicks on a specific service that he wants to access.
+    </p>
+    <p>If the Relying Party (the portal) is the DOME Onboarding service, this could be the onboarding service itself, or a service to upload additional information for a partially completed onboarding process.
+    </p>
+    <p>If the RP is the Marketplace and the organisation wants to offer products in it, these services could be to register the organisation as a <i>Seller</i>, or to create a Product specification and offering.
+    </p>
+    <p>If the RP is the Marketplace and the organisation wants to contract products in it, these services could be to register the organisation as a <i>Customer</i>, or to launch a procurement order of a product.
+    </p>
+    <p>The same mechanism can be used by any participant in the ecosystem, if they want to use an advanced IAM mechanism which is aligned with the EU strategy on digital identity based on Verifiable Credential and eIDAS2.
+    </p>
+    <p>For the explanation we will use the following figure from [[[NIST-AUTH]]] which describes a reference architecture with necessary functional components to achieve enforcement the authorization policies. The authorization process depends on four layers of functionality: <b>Enforcement</b>, <b>Decision</b>, <b>Access Control Data</b>, and <b>Administration</b>.
+    </p>
+
+    <figure id='authn-reference'>
+        <p><img src="images/login_in_DOME/authn_reference.jpeg" alt="" />
+        </p>
+    </figure>
+
+
+    <figcaption>Authentication reference architecture (NIST)
+    </figcaption>
+
+    <p>For our use case we convert the reference architecture into a sequence diagram.        
+    </p>
+    <figure><img src='builtassets/diagram_331aeda451dd157197bb4cd78a99e96c.svg' alt=''>
+    <figcaption></figcaption></figure>
+
+    <ul>
+        <li id='list_1275.1'><a href='#list_1275.1' class='selfref'><b>1</b></a> The user interacts with the browser to access a protected resource.        </li>
+        <li id='list_1275.2'><a href='#list_1275.2' class='selfref'><b>2</b></a> The PEP intercepts the call. The PEP is normally implemented as a reverse proxy or API gateway, so all calls to protected resources entering the organisation are intercepted and forwarded if they are accepted.        </li>
+        <li id='list_1275.3'><a href='#list_1275.3' class='selfref'><b>3</b></a> The PEP requests a decision from the PEP. The request from the PEP to the PDP consists of subject attributes (typically for the user who issued the request), resource attributes (the resource for which access is sought), action attributes (the operations to be performed on the resource), and environment attributes.        </li>
+    </ul>
+
+    <p>Some of the above attributes are obtained by the PEP from the original request received from the browser. For example, the HTTP verb (GET, POST, PUT, PATCH, DELETE) and the URL and possibly the body of the request provide action attributes.
+    </p>
+    <p>The access token generated during authentication provides some subject attributes (identification data and roles assigned by the issuer of the credential).
+    </p>
+    <p>An example access token would be:
+    </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;token_type&#34;</span>: <span style="color:#f1fa8c">&#34;Bearer&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;expires_in&#34;</span>: <span style="color:#bd93f9">3600</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;access_token&#34;</span>: <span style="color:#f1fa8c">&#34;ewogICJhbGciOiAiRVMyNTYiLAogICJraWQiOiAiV09IRnU0SFo1OVNNODUzQzdlTjBPdmxLR3JNZWVyRENwSE9VUm9UUXdIdyIsCiAgInR5cCI6ICJKV1QiCn0.ewogICJAY29udGV4dCI6IFsKICAgICJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIKICBdLAogICJ0eXBlIjogWwogICAgIlZlcmlmaWFibGVQcmVzZW50YXRpb24iCiAgXSwKICAidmVyaWZpYWJsZUNyZWRlbnRpYWwiOiBbCiAgICB7CiAgICAgICJ0eXBlcyI6IFsKICAgICAgICAiUGFja2V0RGVsaXZlcnlTZXJ2aWNlIiwKICAgICAgICAiVmVyaWZpYWJsZUNyZWRlbnRpYWwiCiAgICAgIF0sCiAgICAgICJAY29udGV4dCI6IFsKICAgICAgICAiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLAogICAgICAgICJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L3N1aXRlcy9qd3MtMjAyMC92MSIKICAgICAgXSwKICAgICAgImNyZWRlbnRpYWxzU3ViamVjdCI6IHt9LAogICAgICAiYWRkaXRpb25hbFByb3AxIjoge30KICAgIH0KICBdLAogICJpZCI6ICJlYmM2ZjFjMiIsCiAgImhvbGRlciI6IHsKICAgICJpZCI6ICJkaWQ6a2V5Ono2TWtzOW05aWZMd3kzSldxSDRjNTdFYkJRVlMyU3BSQ2pmYTc5d0hiNXZXTTZ2aCIKICB9LAogICJwcm9vZiI6IHsKICAgICJ0eXBlIjogIkpzb25XZWJTaWduYXR1cmUyMDIwIiwKICAgICJjcmVhdG9yIjogImRpZDprZXk6ejZNa3M5bTlpZkx3eTNKV3FINGM1N0ViQlFWUzJTcFJDamZhNzl3SGI1dldNNnZoIiwKICAgICJjcmVhdGVkIjogIjIwMjMtMDEtMDZUMDc6NTE6MzZaIiwKICAgICJ2ZXJpZmljYXRpb25NZXRob2QiOiAiZGlkOmtleTp6Nk1rczltOWlmTHd5M0pXcUg0YzU3RWJCUVZTMlNwUkNqZmE3OXdIYjV2V002dmgjejZNa3M5bTlpZkx3eTNKV3FINGM1N0ViQlFWUzJTcFJDamZhNzl3SGI1dldNNnZoIiwKICAgICJqd3MiOiAiZXlKaU5qUWlPbVpoYkhObExDSmpjbWwwSWpwYkltSTJOQ0pkTENKaGJHY2lPaUpGWkVSVFFTSjkuLjZ4U3FvWmphME53akYwYWY5WmtucXgzQ2JoOUdFTnVuQmY5Qzh1TDJ1bEdmd3VzM1VGTV9abmhQald0SFBsLTcyRTlwM0JUNWYycHRab1lrdE1LcERBIgogIH0KfQ&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+    <p>Decoding the <code>access_token</code> field we could see a Verifiable Presentation including the LEARCredential that the user presented when authenticating:
+    </p>
+
+<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;@context&#34;</span>: [
+</span></span><span style="display:flex;"><span>        <span style="color:#f1fa8c">&#34;https://www.w3.org/2018/credentials/v1&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//2022/credentials/learcredential/v1&#34;</span>
+</span></span><span style="display:flex;"><span>    ],
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;urn:did:elsi:25159389-8dd17b796ac0&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;type&#34;</span>: [<span style="color:#f1fa8c">&#34;VerifiableCredential&#34;</span>, <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>],
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;issuer&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATES-12345678&#34;</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;issuanceDate&#34;</span>: <span style="color:#f1fa8c">&#34;2022-03-22T14:00:00Z&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;validFrom&#34;</span>: <span style="color:#f1fa8c">&#34;2022-03-22T14:00:00Z&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;expirationDate&#34;</span>: <span style="color:#f1fa8c">&#34;2023-03-22T14:00:00Z&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;credentialSubject&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;title&#34;</span>: <span style="color:#f1fa8c">&#34;Mr.&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;first_name&#34;</span>: <span style="color:#f1fa8c">&#34;John&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;last_name&#34;</span>: <span style="color:#f1fa8c">&#34;Doe&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;gender&#34;</span>: <span style="color:#f1fa8c">&#34;M&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;postal_address&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;email&#34;</span>: <span style="color:#f1fa8c">&#34;johndoe@goodair.com&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;telephone&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;fax&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;mobile_phone&#34;</span>: <span style="color:#f1fa8c">&#34;+34787426623&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;legalRepresentative&#34;</span>: {
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;cn&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V Jesus Ruiz&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;serialNumber&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;organizationIdentifier&#34;</span>: <span style="color:#f1fa8c">&#34;VATES-12345678&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;o&#34;</span>: <span style="color:#f1fa8c">&#34;GoodAir&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;c&#34;</span>: <span style="color:#f1fa8c">&#34;ES&#34;</span>
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;rolesAndDuties&#34;</span>: [
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&#34;type&#34;</span>: <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        ]
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre>
+    <p>Environmental attributes, which depend on the availability of system sensors that can detect and report values, are somewhat different from subject and resource attributes, which are administratively created. Environmental attributes are not properties of the subject or resources, but are measurable characteristics that pertain to the operational or situational context in which access requests occur. These environmental characteristics are subject and resource independent, and may include the current time, day of the week, or threat level.
+    </p>
+    <p>The PDP computes decisions to permit or deny subject requests to perform actions on resources. In computing a decision, the PDP queries policies stored in a PRP.
+    </p>
+    <p>If the attributes of the request are not sufficient for rule and policy evaluation, the PDP may need to search the PIP for additional attributes. The PIP is shown as one logical store, but in fact may comprise multiple physical stores of different types. In our case, the logical PIP includes one or more Trusted Issuers Lists (to check if the issuer of the credential is included in them as a trusted issuer of that type of credential), and also the Authorization Registry (AR), which can check for finer granularity authorisation records which may be very dynamic in nature (e.g. if some resource usage by employees and machines owned by the issuer have exceeded some quota this month).
+    </p>
+    <p>The actual Trusted Issuers Lists that the PDP needs to check is determined by the policy rules retrieved from the PRP. Those policy rules also determine the additional queries performed to the PIP data stores.
+    </p>
+    <p>The set of information and data stored in the PIP and PRP comprise the access control data and collectively define the current authorization state, which the PDP will use to compute its decision.
+    </p>
+    <ul>
+        <li id='list_1351.4'><a href='#list_1351.4' class='selfref'><b>4</b></a> Query policy rules applicable to this request.        </li>
+        <li id='list_1351.5'><a href='#list_1351.5' class='selfref'><b>5</b></a> Reply with policy rules        </li>
+        <li id='list_1351.6'><a href='#list_1351.6' class='selfref'><b>6</b></a> The PDP performs an initial evaluation of the policy rules and if the attributes of the request are not sufficient for rule and policy evaluation, it determines the PIP stores to query, including the set of Trusted Issuers Lists to query.        </li>
+        <li id='list_1351.7'><a href='#list_1351.7' class='selfref'><b>7</b></a> Query additional attributes        </li>
+        <li id='list_1351.8'><a href='#list_1351.8' class='selfref'><b>8</b></a> Reply with attributes        </li>
+        <li id='list_1351.9'><a href='#list_1351.9' class='selfref'><b>9</b></a> The PDP performs a final evaluation of the policy rules, taking into consideration the attributes received from the PEP and also the attributes received from the PIP, and computes a decision.        </li>
+        <li id='list_1351.10'><a href='#list_1351.10' class='selfref'><b>10</b></a> The PDP returns the decision to the PEP, which will enforce it.        </li>
+        <li id='list_1351.11'><a href='#list_1351.11' class='selfref'><b>11</b></a> If the decision from the PDP is Reject, the PEP returns an error to the browser in the laptop of the user. Otherwise, it forwards the original request to the Resource.        </li>
+        <li id='list_1351.12'><a href='#list_1351.12' class='selfref'><b>12</b></a> The resource executes the request and returns the result        </li>
+        <li id='list_1351.13'><a href='#list_1351.13' class='selfref'><b>13</b></a> The PEP returns the result to the laptop of the user.        </li>
+        <li id='list_1351.14'><a href='#list_1351.14' class='selfref'><b>14</b></a> The laptop displays the result to the user.        </li>
+    </ul>
+
+</section>
+
+
+<section id="references">
+
+
+</body>
+</html>
