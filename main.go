@@ -18,6 +18,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/hesusruiz/rite/rite"
 	"github.com/hesusruiz/rite/sliceedit"
 	"github.com/hesusruiz/vcutils/yaml"
 	"github.com/urfave/cli/v2"
@@ -176,6 +177,11 @@ func process(c *cli.Context) error {
 	if c.Bool("watch") {
 		err = processWatch(inputFileName, outputFileName, log)
 		return err
+	}
+
+	_, err = rite.ParseFromFile(inputFileName)
+	if err != nil {
+		os.Exit(1)
 	}
 
 	// Preprocess the input file

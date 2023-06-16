@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/hesusruiz/vcutils/yaml"
@@ -40,18 +41,45 @@ func tryHtml() {
 
 }
 
+type ByteRenderer struct {
+	bytes.Buffer
+}
+
+func (r *ByteRenderer) Render(inputs ...any) {
+	for _, s := range inputs {
+		switch v := s.(type) {
+		case string:
+			r.WriteString(v)
+		case []byte:
+			r.Write(v)
+		case int:
+			r.WriteString(strconv.FormatInt(int64(v), 10))
+		case byte:
+			r.WriteByte(v)
+		case rune:
+			r.WriteRune(v)
+		default:
+			log.Fatalf("attemping to write something not a string, int, rune, []byte or byte: %T", s)
+		}
+	}
+}
+
+func (r *ByteRenderer) Renderln(inputs ...any) {
+	r.Render(inputs, '\n')
+}
+
 type Parser struct {
 	// doc is the document root element.
 	doc *Node
 
-	// line is the current raw line
-	line []byte
+	// currentLine is the current raw currentLine
+	currentLine []byte
 
-	// lineNum is the current line number
-	lineNum int
+	// currentLineNum is the current line number
+	currentLineNum int
 
-	// indentation is the current indentation
-	indentation int
+	// currentIndentation is the current currentIndentation
+	currentIndentation int
 
 	// tok is the most recently read token.
 	tok Token
@@ -69,7 +97,50 @@ type Parser struct {
 	log *zap.SugaredLogger
 }
 
-func (p *Parser) Parse(s *bufio.Scanner) (*Node, error) {
+// ReadParagraph reads all contiguous lines from the input with the same indentation.
+// A line with greater indentation is considered content of an inner block of a section started by the paragraph.
+// A line with less indentation is considered content of the parent section.
+func (p *Parser) ReadParagraph(s *bufio.Scanner) []byte {
+
+	// Get a rawLine from the file
+	rawLine := bytes.Clone(s.Bytes())
+
+	// Strip blanks at the beginning of the line and calculate indentation based on the difference in length
+	// We do not support other whitespace like tabs
+	// p.line = bytes.TrimLeft(rawLine, " ")
+	p.currentLine = trimLeft(rawLine, blank)
+	p.currentIndentation = len(rawLine) - len(p.currentLine)
+
+	// If the line is empty we are done
+	if len(p.currentLine) == 0 {
+		p.currentLineNum++
+		p.currentLine = nil
+		return nil
+	}
+
+	for s.Scan() {
+
+		// Get a rawLine from the file
+		rawLine := bytes.Clone(s.Bytes())
+
+		// Strip blanks at the beginning of the line and calculate indentation based on the difference in length
+		// We do not support other whitespace like tabs
+		// p.line = bytes.TrimLeft(rawLine, " ")
+		p.currentLine = trimLeft(rawLine, blank)
+		p.currentIndentation = len(rawLine) - len(p.currentLine)
+
+		// If the line is empty we are done
+		if len(p.currentLine) == 0 {
+			p.currentLineNum++
+			p.currentLine = nil
+			return nil
+		}
+
+	}
+	return nil
+}
+
+func (p *Parser) Parse(s *bufio.Scanner) error {
 
 	// // This regex detects the <x-ref REFERENCE> tags that need special processing
 	// reXRef := regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
@@ -88,12 +159,17 @@ func (p *Parser) Parse(s *bufio.Scanner) (*Node, error) {
 	// Process the YAML header if there is one. It should be at the beginning of the file
 	err := p.preprocessYAMLHeader(s)
 	if err != nil {
-		return nil, err
+		return err
 	}
+
+	var br ByteRenderer
 
 	// We build in memory the parsed document, pre-processing all lines as we read them.
 	// This means that in this stage we can not use information that resides later in the file.
 	for s.Scan() {
+
+		// Start with an empty buffer
+		br.Reset()
 
 		// Get a rawLine from the file
 		rawLine := bytes.Clone(s.Bytes())
@@ -101,17 +177,37 @@ func (p *Parser) Parse(s *bufio.Scanner) (*Node, error) {
 		// Strip blanks at the beginning of the line and calculate indentation based on the difference in length
 		// We do not support other whitespace like tabs
 		// p.line = bytes.TrimLeft(rawLine, " ")
-		p.line = trimLeft(rawLine, blank)
-		p.indentation = len(rawLine) - len(p.line)
+		p.currentLine = trimLeft(rawLine, blank)
+		p.currentIndentation = len(rawLine) - len(p.currentLine)
+
+		// Read all lines with same indentation
 
 		// If the line is empty we are done
-		if len(p.line) == 0 {
+		if len(p.currentLine) == 0 {
+			p.currentLineNum++
 			continue
 		}
 
+		br.Renderln(p.currentLine)
+
+		// Create and append a new node
+		n := &Node{}
+		p.doc.AppendChild(n)
+
+		t, err := p.parseLine(p.currentLine)
+		if err != nil {
+			log.Fatalf("error in parseLine (%d): %v\n", p.currentLineNum, err)
+		}
+
+		if t != nil {
+			fmt.Printf("line %d: %v\n", p.currentLineNum+1, t.Data)
+		}
+
+		p.currentLineNum++
+
 	}
 
-	return nil, nil
+	return nil
 
 }
 
@@ -144,7 +240,7 @@ func readWord(line []byte) (word []byte, rest []byte) {
 }
 
 func readTagName(tagSpec []byte) (tagName []byte, rest []byte) {
-	return readWord(tagName)
+	return readWord(tagSpec)
 }
 
 func readRiteAttribute(tagSpec []byte) (Attribute, []byte) {
@@ -172,47 +268,61 @@ func readRiteAttribute(tagSpec []byte) (Attribute, []byte) {
 func readTagAttrKey(tagSpec []byte) (Attribute, []byte) {
 	attr := Attribute{}
 
-	// Select the first word, ending on whitespace, '=' or endtag chars '/', '>')
-	for i, c := range tagSpec {
-		switch c {
-		case ' ', '\t', '/', '=', '>':
-			attr.Key = string(tagSpec[:i])
+	if len(tagSpec) == 0 {
+		return attr, nil
+	}
+
+	workingTagSpec := tagSpec
+
+	// Select the first word, ending on whitespace, '=' or endtag char '/'
+	for i, c := range workingTagSpec {
+		if c == ' ' || c == '\t' || c == '/' || c == '=' {
+			attr.Key = string(workingTagSpec[:i])
+			workingTagSpec = workingTagSpec[i:]
 			break
+		}
+		if i == len(workingTagSpec)-1 {
+			attr.Key = string(workingTagSpec)
+			return attr, nil
 		}
 	}
 
 	// Return if next character is not the '=' sign
-	tagSpec = skipWhiteSpace(tagSpec)
-	if len(tagSpec) == 0 || tagSpec[0] != '=' {
-		return attr, tagSpec
+	workingTagSpec = skipWhiteSpace(workingTagSpec)
+	if len(workingTagSpec) == 0 || workingTagSpec[0] != '=' {
+		return attr, workingTagSpec
 	}
 
 	// Skip whitespace after the '=' sign
-	tagSpec = skipWhiteSpace(tagSpec[1:])
+	workingTagSpec = skipWhiteSpace(workingTagSpec[1:])
 
 	// This must be the quotation mark, or the end
-	quote := tagSpec[0]
+	quote := workingTagSpec[0]
 
 	switch quote {
 	case '>':
 		return attr, nil
 
 	case '\'', '"':
-		for i, c := range tagSpec[1:] {
+		workingTagSpec = workingTagSpec[1:]
+		for i, c := range workingTagSpec {
 			if c == quote {
-				attr.Val = string(tagSpec)[1:i]
-				return attr, tagSpec[i+1:]
+				attr.Val = string(workingTagSpec)[:i]
+				return attr, workingTagSpec[i+1:]
 			}
 		}
+	default:
+		fmt.Printf("malformed tag: %s\n", workingTagSpec)
+		panic("malformed tag")
 
 	}
-	return attr, tagSpec
+	return attr, workingTagSpec
 }
 
 // parseLine returns a structure with the tag fields of the tag at the beginning of the line.
 // It returns nil and an error if the line does not start with a tag.
 func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
-	var tagSpec, restLine []byte
+	var tagSpec []byte
 
 	// A token needs at least 3 chars
 	if len(rawLine) < 3 || rawLine[0] != startHTMLTag {
@@ -221,8 +331,8 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 
 	t := &Token{}
 
-	t.number = p.lineNum
-	t.indentation = p.indentation
+	t.number = p.currentLineNum
+	t.indentation = p.currentIndentation
 
 	// Extract the whole tag string between the start and end tags
 	// The end bracket is optional if there is no more text in the line after the tag attributes
@@ -235,23 +345,28 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 		tagSpec = rawLine[1:indexRightBracket]
 
 		// And the remaining text in the line
-		restLine = rawLine[indexRightBracket+1:]
+		t.RestLine = rawLine[indexRightBracket+1:]
 
 	}
 
 	name, tagSpec := readTagName(tagSpec)
 	t.Data = string(name)
 
-	offset := 0
+	// offset := 0
 
 	for {
 
+		// We have finished the loop if there is no more data
+		if len(tagSpec) == 0 {
+			break
+		}
+
 		var attrVal []byte
 
-		switch tagSpec[offset] {
+		switch tagSpec[0] {
 		case '#':
-			if len(tagSpec[offset:]) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineNum)
+			if len(tagSpec) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
 			}
 			// Shortcut for id="xxxx"
 			// Only the first id attribute is used, others are ignored
@@ -261,8 +376,8 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 			}
 
 		case '.':
-			if len(tagSpec[offset:]) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineNum)
+			if len(tagSpec) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
 			}
 			// Shortcut for class="xxxx"
 			// The tag may specify more than one class and all are accumulated
@@ -272,8 +387,8 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 			}
 			t.Class = append(t.Class, attrVal...)
 		case '@':
-			if len(tagSpec[offset:]) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineNum)
+			if len(tagSpec) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
 			}
 			// Shortcut for src="xxxx"
 			// Only the first attribute is used
@@ -283,8 +398,8 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 			}
 
 		case '-':
-			if len(tagSpec[offset:]) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineNum)
+			if len(tagSpec) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
 			}
 			// Shortcut for href="xxxx"
 			// Only the first attribute is used
@@ -293,8 +408,8 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 				t.Href = attrVal
 			}
 		case ':':
-			if len(tagSpec[offset:]) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineNum)
+			if len(tagSpec) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
 			}
 			// Special attribute "type" for item classification and counters
 			// Only the first attribute is used
@@ -303,8 +418,8 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 				t.Bucket = attrVal
 			}
 		case '=':
-			if len(tagSpec[offset:]) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineNum)
+			if len(tagSpec) < 2 {
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
 			}
 			// Special attribute "number" for list items
 			// Only the first attribute is used
@@ -315,108 +430,16 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 		default:
 			// This should be a standard attribute
 			var attr Attribute
-			attr, tagSpec = readRiteAttribute(tagSpec[1:])
-			t.Attr = append(t.Attr, attr)
-		}
-
-		// We have finished the loop if there is no more data
-		if len(tagSpec) == 0 {
-			break
-		}
-
-	}
-
-	// Decompose in fields separated by white space.
-	// The first field is compulsory and is the tag name.
-	// There may be other optional attributes: class name and tag id.
-	fields := bytes.Fields(tagSpec)
-
-	if len(fields) == 0 {
-		return nil, fmt.Errorf("preprocessTagSpec, line %d: error processing Tag, no tag name found in %s", doc.lastLine, rawLine)
-	}
-
-	// Store the unprocessed tag
-	t.OriginalTag = tagSpec
-
-	// This is the tag name
-	t.Tag = fields[0]
-
-	// This will hold the standard attributes
-	var standardAttributes [][]byte
-
-	// Process the special shortcut syntax we provide
-	for i := 1; i < len(fields); i++ {
-		f := fields[i]
-
-		switch f[0] {
-		case '#':
-			if len(f) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
-			}
-			// Shortcut for id="xxxx"
-			// Only the first id attribute is used, others are ignored
-			if len(t.Id) == 0 {
-				t.Id = f[1:]
-			}
-		case '.':
-			if len(f) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
-			}
-			// Shortcut for class="xxxx"
-			// The tag may specify more than one class and all are accumulated
-			if len(t.Class) > 0 {
-				f[0] = ' '
-				t.Class = append(t.Class, f...)
+			attr, tagSpec = readTagAttrKey(tagSpec)
+			if len(attr.Key) == 0 {
+				tagSpec = nil
 			} else {
-				t.Class = f[1:]
+				t.Attr = append(t.Attr, attr)
 			}
-			// t.Class = f[1:]
-		case '@':
-			if len(f) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
-			}
-			// Shortcut for src="xxxx"
-			// Only the first attribute is used
-			if len(t.Src) == 0 {
-				t.Src = f[1:]
-			}
-		case '-':
-			if len(f) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
-			}
-			// Shortcut for href="xxxx"
-			// Only the first attribute is used
-			if len(t.Href) == 0 {
-				t.Href = f[1:]
-			}
-		case ':':
-			if len(f) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
-			}
-			// Special attribute "type" for item classification and counters
-			// Only the first attribute is used
-			if len(t.Bucket) == 0 {
-				t.Bucket = f[1:]
-			}
-		case '=':
-			if len(f) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", doc.lastLine)
-			}
-			// Special attribute "number" for list items
-			// Only the first attribute is used
-			if len(t.Number) == 0 {
-				t.Number = f[1:]
-			}
-		default:
-			// This should be a standard attribute
-			standardAttributes = append(standardAttributes, f)
+
 		}
+
 	}
-
-	t.StdFields = bytes.Join(standardAttributes, []byte(" "))
-
-	// The rest of the input line after the tag is available in the "restLine" element
-	t.RestLine = restLine
 
 	return t, nil
 }
@@ -472,15 +495,14 @@ func (p *Parser) preprocessYAMLHeader(s *bufio.Scanner) error {
 	}
 
 	// Get a line from the file
-	p.line = bytes.Clone(s.Bytes())
-
-	// Calculate the line number
-	p.lineNum = p.lineNum + 1
+	p.currentLine = bytes.Clone(s.Bytes())
 
 	// We accept YAML data only at the beginning of the file
-	if !bytes.HasPrefix(p.line, []byte("---")) {
+	if !bytes.HasPrefix(p.currentLine, []byte("---")) {
 		return fmt.Errorf("no YAML metadata found")
 	}
+
+	p.currentLineNum++
 
 	// Build a string with all subsequent lines up to the next "---"
 	var yamlString strings.Builder
@@ -489,17 +511,17 @@ func (p *Parser) preprocessYAMLHeader(s *bufio.Scanner) error {
 	for s.Scan() {
 
 		// Get a line from the file
-		p.line = bytes.Clone(s.Bytes())
+		p.currentLine = bytes.Clone(s.Bytes())
 
 		// Calculate the line number
-		p.lineNum = p.lineNum + 1
+		p.currentLineNum++
 
-		if bytes.HasPrefix(p.line, []byte("---")) {
+		if bytes.HasPrefix(p.currentLine, []byte("---")) {
 			endYamlFound = true
 			break
 		}
 
-		yamlString.Write(p.line)
+		yamlString.Write(p.currentLine)
 		yamlString.WriteString("\n")
 
 	}
