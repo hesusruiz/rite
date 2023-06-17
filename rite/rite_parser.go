@@ -11,35 +11,9 @@ import (
 
 	"github.com/hesusruiz/vcutils/yaml"
 	"go.uber.org/zap"
-	"golang.org/x/net/html"
 )
 
 const blank byte = ' '
-
-func tryHtml() {
-
-	s := `<p>Links:</p><ul><li><a href="foo">Foo</a><li><a href="/bar/baz">BarBaz</a></ul>`
-	doc, err := html.Parse(strings.NewReader(s))
-	if err != nil {
-		log.Fatal(err)
-	}
-	var f func(*html.Node)
-	f = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "a" {
-			for _, a := range n.Attr {
-				if a.Key == "href" {
-					fmt.Println(a.Val)
-					break
-				}
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			f(c)
-		}
-	}
-	f(doc)
-
-}
 
 type ByteRenderer struct {
 	bytes.Buffer
@@ -65,21 +39,58 @@ func (r *ByteRenderer) Render(inputs ...any) {
 }
 
 func (r *ByteRenderer) Renderln(inputs ...any) {
-	r.Render(inputs, '\n')
+	r.Render(inputs...)
+	r.Render('\n')
+}
+
+type Paragraph struct {
+	Indentation int
+	Line        int
+	Content     []byte
+}
+
+func (para *Paragraph) String() string {
+	if para == nil {
+		return "<nil><nil><nil>"
+	}
+
+	numChars := 10
+	if len(para.Content) < numChars {
+		numChars = len(para.Content)
+	}
+
+	return strings.Repeat(" ", para.Indentation) + string(para.Content[:numChars])
+}
+
+type Line struct {
+	Indentation int
+	Line        int
+	Content     []byte
 }
 
 type Parser struct {
+	// The source of the document for scanning
+	s *bufio.Scanner
+
 	// doc is the document root element.
 	doc *Node
+
+	bufferedPara *Paragraph
+	bufferedLine *Line
 
 	// currentLine is the current raw currentLine
 	currentLine []byte
 
-	// currentLineNum is the current line number
-	currentLineNum int
+	// lineCounter is the number of lines processed
+	lineCounter int
 
 	// currentIndentation is the current currentIndentation
 	currentIndentation int
+
+	// This is true when we have read the whole file
+	atEOF bool
+
+	lastError error
 
 	// tok is the most recently read token.
 	tok Token
@@ -97,28 +108,47 @@ type Parser struct {
 	log *zap.SugaredLogger
 }
 
-// ReadParagraph reads all contiguous lines from the input with the same indentation.
-// A line with greater indentation is considered content of an inner block of a section started by the paragraph.
-// A line with less indentation is considered content of the parent section.
-func (p *Parser) ReadParagraph(s *bufio.Scanner) []byte {
+func (p *Parser) currentLineNum() int {
+	return p.lineCounter - 1
+}
 
-	// Get a rawLine from the file
-	rawLine := bytes.Clone(s.Bytes())
+var errorEOF = fmt.Errorf("end of file")
 
-	// Strip blanks at the beginning of the line and calculate indentation based on the difference in length
-	// We do not support other whitespace like tabs
-	// p.line = bytes.TrimLeft(rawLine, " ")
-	p.currentLine = trimLeft(rawLine, blank)
-	p.currentIndentation = len(rawLine) - len(p.currentLine)
+// SkipBlankLines returns the line number of the first non-blank line,
+// starting from the provided line number, or EOF if there are no more blank lines.
+// If the start line is non-blank, we return that line.
+func (p *Parser) SkipBlankLines() bool {
 
-	// If the line is empty we are done
-	if len(p.currentLine) == 0 {
-		p.currentLineNum++
-		p.currentLine = nil
+	for !p.atEOF {
+
+		line := p.ReadLine()
+
+		// If the line is not empty, we are done
+		if line != nil {
+			p.UnreadLine(line)
+			return true
+		}
+	}
+
+	// All lines of the file were processed without finding a balnk line
+	return false
+}
+
+func (p *Parser) ReadLine() *Line {
+	if p.lastError != nil {
 		return nil
 	}
 
-	for s.Scan() {
+	// If there is a line alredy buffered, return it
+	if p.bufferedLine != nil {
+		line := p.bufferedLine
+		p.bufferedLine = nil
+		return line
+	}
+
+	s := p.s
+
+	if s.Scan() {
 
 		// Get a rawLine from the file
 		rawLine := bytes.Clone(s.Bytes())
@@ -127,20 +157,174 @@ func (p *Parser) ReadParagraph(s *bufio.Scanner) []byte {
 		// We do not support other whitespace like tabs
 		// p.line = bytes.TrimLeft(rawLine, " ")
 		p.currentLine = trimLeft(rawLine, blank)
-		p.currentIndentation = len(rawLine) - len(p.currentLine)
-
-		// If the line is empty we are done
 		if len(p.currentLine) == 0 {
-			p.currentLineNum++
-			p.currentLine = nil
 			return nil
 		}
 
+		p.currentIndentation = len(rawLine) - len(p.currentLine)
+
+		p.lineCounter++
+		line := &Line{}
+		line.Line = p.currentLineNum()
+		line.Content = p.currentLine
+		line.Indentation = p.currentIndentation
+		return line
+
 	}
+
+	// Check if there were other errors apart from EOF
+	if err := s.Err(); err != nil {
+		p.lastError = err
+		log.Fatalf("error scanning: %v", err)
+	}
+
+	// We have processed all lines of the file
+	p.lastError = nil
+	p.atEOF = true
 	return nil
 }
 
-func (p *Parser) Parse(s *bufio.Scanner) error {
+func (p *Parser) UnreadLine(line *Line) {
+	p.bufferedLine = line
+}
+
+func (p *Parser) ReadParagraph() *Paragraph {
+	if p.lastError != nil {
+		return nil
+	}
+
+	// If there is a paragraph alredy buffered, return it
+	if p.bufferedPara != nil {
+		para := p.bufferedPara
+		p.bufferedPara = nil
+		return para
+	}
+
+	// Skip all blank lines until EOF or another error
+	if !p.SkipBlankLines() {
+		return nil
+	}
+
+	// Read all lines accumulating them until a blank line, EOF or another error
+	var br ByteRenderer
+	var para *Paragraph
+
+	for {
+
+		line := p.ReadLine()
+
+		if line == nil {
+			// Sanity check
+			if para == nil {
+				log.Fatalf("no paragraph read, line: %d\n", p.currentLineNum())
+			}
+
+			break
+		}
+
+		// Initialize the Paragraph if this is the first line read
+		if para == nil {
+			para = &Paragraph{}
+			para.Line = p.currentLineNum()
+			para.Indentation = line.Indentation
+		}
+
+		if line.Indentation != para.Indentation {
+			p.UnreadLine(line)
+			break
+		}
+
+		// Add the contents of the line to the paragraph
+		br.Write(p.currentLine)
+
+	}
+
+	// Return the accumulated contents of all lines
+	para.Content = br.Bytes()
+	return para
+
+}
+
+func (p *Parser) UnreadParagraph(para *Paragraph) {
+	p.bufferedPara = para
+}
+
+func (p *Parser) parseInteriorBlock(parent *Node) bool {
+
+	// Skip all the blank lines at the beginning of the block
+	if !p.SkipBlankLines() {
+		log.Printf("EOF reached at line %d", p.lineCounter)
+		return false
+	}
+
+	// The first line will determine the indentation of the block
+	blockIndentation := -1
+
+	for {
+
+		para := p.ReadParagraph()
+		if para == nil {
+			return false
+		}
+
+		if blockIndentation == -1 {
+			blockIndentation = para.Indentation
+		}
+
+		// This line belongs to this block
+		if para.Indentation == blockIndentation {
+			// Create a node for the paragraph
+			sibling := &Node{}
+			parent.AppendChild(sibling)
+
+			// Add the paragraph to the node's paragraph
+			sibling.Para = para
+			// TODO: this is redundant, will eliminate it later
+			sibling.Indentation = blockIndentation
+
+			// Parse the line
+			token, err := p.parseLine(para.Content)
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			// DEBUG
+			if token != nil {
+				fmt.Printf("%s%s\n", strings.Repeat(" ", blockIndentation), token)
+				sibling.Token = token
+			}
+
+			// Go to next paragraph
+			continue
+
+		}
+
+		// The paragraph is finished if the line has less indentation
+		if para.Indentation < blockIndentation {
+			p.UnreadParagraph(para)
+			return false
+		}
+
+		// Parse an interior block
+		if para.Indentation > blockIndentation {
+			p.UnreadParagraph(para)
+
+			// Get the last sibling processed
+			// Sanity check
+			if parent.LastChild == nil {
+				log.Fatalf("more indented paragraph without sibling node, line: %d\n", p.currentLineNum())
+			}
+
+			// Parse the block using the child node
+			p.parseInteriorBlock(parent.LastChild)
+			continue
+		}
+
+	}
+
+}
+
+func (p *Parser) Parse() error {
 
 	// // This regex detects the <x-ref REFERENCE> tags that need special processing
 	// reXRef := regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
@@ -157,56 +341,12 @@ func (p *Parser) Parse(s *bufio.Scanner) error {
 	}
 
 	// Process the YAML header if there is one. It should be at the beginning of the file
-	err := p.preprocessYAMLHeader(s)
+	err := p.preprocessYAMLHeader()
 	if err != nil {
 		return err
 	}
 
-	var br ByteRenderer
-
-	// We build in memory the parsed document, pre-processing all lines as we read them.
-	// This means that in this stage we can not use information that resides later in the file.
-	for s.Scan() {
-
-		// Start with an empty buffer
-		br.Reset()
-
-		// Get a rawLine from the file
-		rawLine := bytes.Clone(s.Bytes())
-
-		// Strip blanks at the beginning of the line and calculate indentation based on the difference in length
-		// We do not support other whitespace like tabs
-		// p.line = bytes.TrimLeft(rawLine, " ")
-		p.currentLine = trimLeft(rawLine, blank)
-		p.currentIndentation = len(rawLine) - len(p.currentLine)
-
-		// Read all lines with same indentation
-
-		// If the line is empty we are done
-		if len(p.currentLine) == 0 {
-			p.currentLineNum++
-			continue
-		}
-
-		br.Renderln(p.currentLine)
-
-		// Create and append a new node
-		n := &Node{}
-		p.doc.AppendChild(n)
-
-		t, err := p.parseLine(p.currentLine)
-		if err != nil {
-			log.Fatalf("error in parseLine (%d): %v\n", p.currentLineNum, err)
-		}
-
-		if t != nil {
-			fmt.Printf("line %d: %v\n", p.currentLineNum+1, t.Data)
-		}
-
-		p.currentLineNum++
-
-	}
-
+	p.parseInteriorBlock(p.doc)
 	return nil
 
 }
@@ -331,7 +471,7 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 
 	t := &Token{}
 
-	t.number = p.currentLineNum
+	t.number = p.lineCounter
 	t.indentation = p.currentIndentation
 
 	// Extract the whole tag string between the start and end tags
@@ -350,7 +490,22 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 	}
 
 	name, tagSpec := readTagName(tagSpec)
-	t.Data = string(name)
+	sname := string(name)
+	t.Data = sname
+
+	if sname == "section" {
+		t.Type = SectionToken
+	} else if sname == "diagram" {
+		t.Type = DiagramToken
+	} else if sname == "x-code" {
+		t.Type = CodeToken
+	} else if sname == "pre" {
+		t.Type = PreToken
+	} else if sname == "ol" || sname == "ul" {
+		t.Type = ListToken
+	} else {
+		t.Type = ParagraphToken
+	}
 
 	// offset := 0
 
@@ -366,7 +521,7 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 		switch tagSpec[0] {
 		case '#':
 			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
 			}
 			// Shortcut for id="xxxx"
 			// Only the first id attribute is used, others are ignored
@@ -377,7 +532,7 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 
 		case '.':
 			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
 			}
 			// Shortcut for class="xxxx"
 			// The tag may specify more than one class and all are accumulated
@@ -388,7 +543,7 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 			t.Class = append(t.Class, attrVal...)
 		case '@':
 			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
 			}
 			// Shortcut for src="xxxx"
 			// Only the first attribute is used
@@ -399,7 +554,7 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 
 		case '-':
 			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
 			}
 			// Shortcut for href="xxxx"
 			// Only the first attribute is used
@@ -409,7 +564,7 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 			}
 		case ':':
 			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
 			}
 			// Special attribute "type" for item classification and counters
 			// Only the first attribute is used
@@ -419,7 +574,7 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 			}
 		case '=':
 			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.currentLineNum)
+				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
 			}
 			// Special attribute "number" for list items
 			// Only the first attribute is used
@@ -445,7 +600,7 @@ func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
 }
 
 // NewDocumentFromFile reads a file and preprocesses it in memory
-func ParseFromFile(fileName string) (*Node, error) {
+func ParseFromFile(fileName string) (*Parser, error) {
 
 	// Read the whole file into memory
 	file, err := os.Open(fileName)
@@ -458,6 +613,7 @@ func ParseFromFile(fileName string) (*Node, error) {
 	linescanner := bufio.NewScanner(file)
 
 	p := &Parser{
+		s: linescanner,
 		doc: &Node{
 			Type: DocumentNode,
 		},
@@ -483,11 +639,19 @@ func ParseFromFile(fileName string) (*Node, error) {
 	p.log = z.Sugar()
 	defer p.log.Sync()
 
-	return p.Parse(linescanner)
+	err = p.Parse()
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+
 }
 
-func (p *Parser) preprocessYAMLHeader(s *bufio.Scanner) error {
+func (p *Parser) preprocessYAMLHeader() error {
 	var err error
+
+	s := p.s
 
 	// We need at least one line
 	if !s.Scan() {
@@ -502,7 +666,7 @@ func (p *Parser) preprocessYAMLHeader(s *bufio.Scanner) error {
 		return fmt.Errorf("no YAML metadata found")
 	}
 
-	p.currentLineNum++
+	p.lineCounter++
 
 	// Build a string with all subsequent lines up to the next "---"
 	var yamlString strings.Builder
@@ -514,7 +678,7 @@ func (p *Parser) preprocessYAMLHeader(s *bufio.Scanner) error {
 		p.currentLine = bytes.Clone(s.Bytes())
 
 		// Calculate the line number
-		p.currentLineNum++
+		p.lineCounter++
 
 		if bytes.HasPrefix(p.currentLine, []byte("---")) {
 			endYamlFound = true
