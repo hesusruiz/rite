@@ -6,10 +6,7 @@ package rite
 
 import (
 	"bytes"
-	"errors"
 	"strconv"
-
-	"golang.org/x/net/html/atom"
 )
 
 // A TokenType is the type of a Token.
@@ -41,20 +38,6 @@ const (
 	ParagraphToken
 )
 
-// ErrBufferExceeded means that the buffering limit was exceeded.
-var ErrBufferExceeded = errors.New("max buffer exceeded")
-
-const startHTMLTag = '<'
-const endHTMLTag = '>'
-
-var voidElements = []string{
-	"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr",
-}
-var noSectionElements = []string{
-	"code", "b", "i", "hr", "em", "strong", "small", "s",
-}
-var headingElements = []string{"h1", "h2", "h3", "h4", "h5", "h6"}
-
 // String returns a string representation of the TokenType.
 func (t TokenType) String() string {
 	switch t {
@@ -82,16 +65,6 @@ func (t TokenType) String() string {
 	return "Invalid(" + strconv.Itoa(int(t)) + ")"
 }
 
-// An Attribute is an attribute namespace-key-value triple. Namespace is
-// non-empty for foreign attributes like xlink, Key is alphabetic (and hence
-// does not contain escapable characters like '&', '<' or '>'), and Val is
-// unescaped (it looks like "a<b" rather than "a&lt;b").
-//
-// Namespace is only used by the parser, not the tokenizer.
-type Attribute struct {
-	Namespace, Key, Val string
-}
-
 // A Token consists of a TokenType and some Data (tag name for start and end
 // tags, content for text, comments and doctypes). A tag Token may also contain
 // a slice of Attributes. Data is unescaped for all Tokens (it looks like "a<b"
@@ -99,7 +72,6 @@ type Attribute struct {
 // zero if Data is not a known tag name.
 type Token struct {
 	Type        TokenType
-	DataAtom    atom.Atom
 	Data        string
 	Attr        []Attribute
 	number      int
@@ -172,40 +144,3 @@ func (t Token) String() string {
 	}
 	return "Invalid(" + strconv.Itoa(int(t.Type)) + ")"
 }
-
-// convertNewlines converts "\r" and "\r\n" in s to "\n".
-// The conversion happens in place, but the resulting slice may be shorter.
-func convertNewlines(s []byte) []byte {
-	for i, c := range s {
-		if c != '\r' {
-			continue
-		}
-
-		src := i + 1
-		if src >= len(s) || s[src] != '\n' {
-			s[i] = '\n'
-			continue
-		}
-
-		dst := i
-		for src < len(s) {
-			if s[src] == '\r' {
-				if src+1 < len(s) && s[src+1] == '\n' {
-					src++
-				}
-				s[dst] = '\n'
-			} else {
-				s[dst] = s[src]
-			}
-			src++
-			dst++
-		}
-		return s[:dst]
-	}
-	return s
-}
-
-var (
-	nul         = []byte("\x00")
-	replacement = []byte("\ufffd")
-)

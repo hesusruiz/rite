@@ -43,13 +43,13 @@ func (r *ByteRenderer) Renderln(inputs ...any) {
 	r.Render('\n')
 }
 
-type Paragraph struct {
+type Text struct {
 	Indentation int
-	Line        int
+	LineNumber  int
 	Content     []byte
 }
 
-func (para *Paragraph) String() string {
+func (para *Text) String() string {
 	if para == nil {
 		return "<nil><nil><nil>"
 	}
@@ -62,12 +62,6 @@ func (para *Paragraph) String() string {
 	return strings.Repeat(" ", para.Indentation) + string(para.Content[:numChars])
 }
 
-type Line struct {
-	Indentation int
-	Line        int
-	Content     []byte
-}
-
 type Parser struct {
 	// The source of the document for scanning
 	s *bufio.Scanner
@@ -75,8 +69,8 @@ type Parser struct {
 	// doc is the document root element.
 	doc *Node
 
-	bufferedPara *Paragraph
-	bufferedLine *Line
+	bufferedPara *Text
+	bufferedLine *Text
 
 	// currentLine is the current raw currentLine
 	currentLine []byte
@@ -92,15 +86,6 @@ type Parser struct {
 
 	lastError error
 
-	// tok is the most recently read token.
-	tok Token
-
-	// fragment is whether the parser is parsing a Rite fragment.
-	fragment bool
-
-	// context is the context element when parsing a Rite fragment
-	context *Node
-
 	ids    map[string]int // To provide numbering of different entity classes
 	figs   map[string]int // To provide numbering of figs of different types in the document
 	config *yaml.YAML
@@ -109,7 +94,7 @@ type Parser struct {
 }
 
 func (p *Parser) currentLineNum() int {
-	return p.lineCounter - 1
+	return p.lineCounter
 }
 
 var errorEOF = fmt.Errorf("end of file")
@@ -134,7 +119,7 @@ func (p *Parser) SkipBlankLines() bool {
 	return false
 }
 
-func (p *Parser) ReadLine() *Line {
+func (p *Parser) ReadLine() *Text {
 	if p.lastError != nil {
 		return nil
 	}
@@ -143,6 +128,7 @@ func (p *Parser) ReadLine() *Line {
 	if p.bufferedLine != nil {
 		line := p.bufferedLine
 		p.bufferedLine = nil
+		p.lineCounter++
 		return line
 	}
 
@@ -152,6 +138,7 @@ func (p *Parser) ReadLine() *Line {
 
 		// Get a rawLine from the file
 		rawLine := bytes.Clone(s.Bytes())
+		p.lineCounter++
 
 		// Strip blanks at the beginning of the line and calculate indentation based on the difference in length
 		// We do not support other whitespace like tabs
@@ -163,9 +150,8 @@ func (p *Parser) ReadLine() *Line {
 
 		p.currentIndentation = len(rawLine) - len(p.currentLine)
 
-		p.lineCounter++
-		line := &Line{}
-		line.Line = p.currentLineNum()
+		line := &Text{}
+		line.LineNumber = p.currentLineNum()
 		line.Content = p.currentLine
 		line.Indentation = p.currentIndentation
 		return line
@@ -184,11 +170,12 @@ func (p *Parser) ReadLine() *Line {
 	return nil
 }
 
-func (p *Parser) UnreadLine(line *Line) {
+func (p *Parser) UnreadLine(line *Text) {
 	p.bufferedLine = line
+	p.lineCounter--
 }
 
-func (p *Parser) ReadParagraph() *Paragraph {
+func (p *Parser) ReadParagraph() *Text {
 	if p.lastError != nil {
 		return nil
 	}
@@ -207,7 +194,7 @@ func (p *Parser) ReadParagraph() *Paragraph {
 
 	// Read all lines accumulating them until a blank line, EOF or another error
 	var br ByteRenderer
-	var para *Paragraph
+	var para *Text
 
 	for {
 
@@ -224,8 +211,8 @@ func (p *Parser) ReadParagraph() *Paragraph {
 
 		// Initialize the Paragraph if this is the first line read
 		if para == nil {
-			para = &Paragraph{}
-			para.Line = p.currentLineNum()
+			para = &Text{}
+			para.LineNumber = p.currentLineNum()
 			para.Indentation = line.Indentation
 		}
 
@@ -245,11 +232,11 @@ func (p *Parser) ReadParagraph() *Paragraph {
 
 }
 
-func (p *Parser) UnreadParagraph(para *Paragraph) {
+func (p *Parser) UnreadParagraph(para *Text) {
 	p.bufferedPara = para
 }
 
-func (p *Parser) parseInteriorBlock(parent *Node) bool {
+func (p *Parser) ParseInteriorBlock(parent *Node) bool {
 
 	// Skip all the blank lines at the beginning of the block
 	if !p.SkipBlankLines() {
@@ -277,22 +264,14 @@ func (p *Parser) parseInteriorBlock(parent *Node) bool {
 			sibling := &Node{}
 			parent.AppendChild(sibling)
 
-			// Add the paragraph to the node's paragraph
-			sibling.Para = para
-			// TODO: this is redundant, will eliminate it later
-			sibling.Indentation = blockIndentation
-
 			// Parse the line
-			token, err := p.parseLine(para.Content)
+			err := sibling.parseParagraph(para)
 			if err != nil {
 				log.Fatalln(err)
 			}
 
 			// DEBUG
-			if token != nil {
-				fmt.Printf("%s%s\n", strings.Repeat(" ", blockIndentation), token)
-				sibling.Token = token
-			}
+			fmt.Printf("%d: %s%s\n", sibling.Para.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
 
 			// Go to next paragraph
 			continue
@@ -316,12 +295,200 @@ func (p *Parser) parseInteriorBlock(parent *Node) bool {
 			}
 
 			// Parse the block using the child node
-			p.parseInteriorBlock(parent.LastChild)
+			p.ParseInteriorBlock(parent.LastChild)
 			continue
 		}
 
 	}
 
+}
+
+func (p *Parser) processDiagramExplanation(node *Node) string {
+	const bulletPrefix = "# -("
+	const simplePrefix = "# - "
+	const additionalPrefix = "# -+"
+	var r ByteRenderer
+
+	lineNum := node.LineNumber
+	line := node.Para.Content
+
+	// Sanity check
+	if !bytes.HasPrefix(line, []byte("# -")) {
+		fmt.Printf("processDiagramExplanation, line %d: invalid prefix\n", lineNum)
+		return ""
+	}
+
+	// Preprocess Markdown list markers
+	// They can start with plain dashes '-' but we support a special format '-(something)'.
+	// The 'something' inside parenthesis will be highlighted in the list item
+	if bytes.HasPrefix(line, []byte(simplePrefix)) {
+
+		restLine := line[len(simplePrefix):]
+
+		// Build the line
+		r.Render("<li id='", lineNum, "'>")
+		r.Render("<a href='#", lineNum, "' class='selfref'>")
+		r.Render("<b>-</b></a> ", restLine)
+
+		l := r.String()
+
+		return l
+
+	} else if bytes.HasPrefix(line, []byte(additionalPrefix)) {
+
+		restLine := line[len(simplePrefix):]
+
+		// Build the line
+		r.Render("<p>", restLine, "</p>")
+
+		l := r.String()
+
+		return l
+
+	} else if bytes.HasPrefix(line, []byte(bulletPrefix)) {
+
+		// Get the end ')'
+		indexRightBracket := bytes.IndexByte(line, ')')
+		if indexRightBracket == -1 {
+			log.Fatalf("processDiagramExplanation, line %d: no closing ')' in list bullet\n", lineNum)
+		}
+
+		// Check that there is at least one character inside the '()'
+		if indexRightBracket == len(bulletPrefix) {
+			log.Fatalf("processDiagramExplanation, line %d: no content inside '()' in list bullet\n", lineNum)
+		}
+
+		// Extract the whole tag spec, eliminating embedded blanks
+		bulletText := line[len(bulletPrefix):indexRightBracket]
+		bulletTextEncoded := bytes.ReplaceAll(bulletText, []byte(" "), []byte("_"))
+
+		// And the remaining text in the line
+		restLine := line[indexRightBracket+1:]
+
+		// Build the line
+		r.Render("<li id='", lineNum, ".", bulletTextEncoded, "'>")
+		r.Render("<a href='#", lineNum, ".", bulletTextEncoded, "' class='selfref'>")
+		r.Render("<b>", bulletText, "</b></a>", restLine, '\n')
+
+		// Skip all the blank lines following the section tag
+		if !p.SkipBlankLines() {
+			log.Printf("EOF reached at line %d", p.lineCounter)
+			l := r.String()
+			return l
+		}
+
+		// Parse the inner block
+		p.ParseInteriorBlock(node)
+
+		l := r.String()
+
+		return l
+
+	}
+
+	log.Fatalf("processDiagramExplanation, line %v: invalid explanation in list bullet\n", lineNum)
+	return ""
+}
+
+func (p *Parser) ParseDiagramBlock(node *Node) bool {
+
+	// Skip all the blank lines at the beginning of the block
+	if !p.SkipBlankLines() {
+		log.Printf("EOF reached at line %d", p.lineCounter)
+		return false
+	}
+
+	// The first line will determine the indentation of the block
+	sectionIndent := node.Indentation
+	blockIndentation := -1
+
+	// Check if the class of diagram has been set
+	if len(node.Class) == 0 {
+		log.Fatal("diagram type not found", "line", node.LineNumber)
+	}
+
+	// // Get the type of diagram
+	// diagType := strings.ToLower(string(node.Class))
+
+	// imageType := "png"
+	// if diagType == "d2" {
+	// 	imageType = "svg"
+	// }
+
+	// This will hold the string with the text lines for diagram
+	var diagContent []byte
+
+	// This will hold the set of lines with explanations inside the diagram
+	var explanations []string
+
+	// Loop until the end of the document or until we find a line with less or equal indentation
+	// Blank lines are assumed to pertain to the verbatim section
+	for {
+
+		line := p.ReadLine()
+
+		// If the line is blank, continue with the loop
+		if line == nil {
+			continue
+		}
+
+		if blockIndentation == -1 {
+			blockIndentation = line.Indentation
+		}
+
+		// The paragraph is finished if the line has less or equal indentation than the section
+		if line.Indentation <= sectionIndent {
+			p.UnreadLine(line)
+			break
+		}
+
+		// String with as many blanks as indentation
+		ind := bytes.Repeat([]byte(" "), line.Indentation-sectionIndent)
+		diagContent = append(diagContent, ind...)
+
+		// Lines starting with a '#' are special
+		if line.Content[0] != '#' {
+			// Append the line with a newline at the end
+			diagContent = append(diagContent, line.Content...)
+			diagContent = append(diagContent, '\n')
+
+			// Prepare to process next line
+			continue
+		}
+
+		// Add the line to the explanations list if it is a comment formatted in the proper way
+		if bytes.HasPrefix(line.Content, []byte("# -")) {
+			child := &Node{}
+			node.AppendChild(child)
+			child.Type = DiagramNode
+
+			para := &Text{
+				Indentation: line.Indentation,
+				LineNumber:  line.LineNumber,
+				Content:     line.Content,
+			}
+
+			// Add the paragraph to the node's paragraph
+			child.Para = para
+			// TODO: this is redundant, will eliminate it later
+			child.Indentation = line.Indentation
+			child.LineNumber = line.LineNumber
+
+			exp := p.processDiagramExplanation(child)
+			if len(exp) == 0 {
+				// Ignore the line and process next one
+				continue
+			}
+			explanations = append(explanations, exp)
+			continue
+		}
+
+		// Ignore the line and process next one
+		continue
+
+	}
+
+	return true
 }
 
 func (p *Parser) Parse() error {
@@ -346,7 +513,7 @@ func (p *Parser) Parse() error {
 		return err
 	}
 
-	p.parseInteriorBlock(p.doc)
+	p.ParseInteriorBlock(p.doc)
 	return nil
 
 }
@@ -457,146 +624,6 @@ func readTagAttrKey(tagSpec []byte) (Attribute, []byte) {
 
 	}
 	return attr, workingTagSpec
-}
-
-// parseLine returns a structure with the tag fields of the tag at the beginning of the line.
-// It returns nil and an error if the line does not start with a tag.
-func (p *Parser) parseLine(rawLine []byte) (*Token, error) {
-	var tagSpec []byte
-
-	// A token needs at least 3 chars
-	if len(rawLine) < 3 || rawLine[0] != startHTMLTag {
-		return nil, nil
-	}
-
-	t := &Token{}
-
-	t.number = p.lineCounter
-	t.indentation = p.currentIndentation
-
-	// Extract the whole tag string between the start and end tags
-	// The end bracket is optional if there is no more text in the line after the tag attributes
-	indexRightBracket := bytes.IndexByte(rawLine, endHTMLTag)
-	if indexRightBracket == -1 {
-		tagSpec = rawLine[1:]
-	} else {
-
-		// Extract the whole tag spec
-		tagSpec = rawLine[1:indexRightBracket]
-
-		// And the remaining text in the line
-		t.RestLine = rawLine[indexRightBracket+1:]
-
-	}
-
-	name, tagSpec := readTagName(tagSpec)
-	sname := string(name)
-	t.Data = sname
-
-	if sname == "section" {
-		t.Type = SectionToken
-	} else if sname == "diagram" {
-		t.Type = DiagramToken
-	} else if sname == "x-code" {
-		t.Type = CodeToken
-	} else if sname == "pre" {
-		t.Type = PreToken
-	} else if sname == "ol" || sname == "ul" {
-		t.Type = ListToken
-	} else {
-		t.Type = ParagraphToken
-	}
-
-	// offset := 0
-
-	for {
-
-		// We have finished the loop if there is no more data
-		if len(tagSpec) == 0 {
-			break
-		}
-
-		var attrVal []byte
-
-		switch tagSpec[0] {
-		case '#':
-			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
-			}
-			// Shortcut for id="xxxx"
-			// Only the first id attribute is used, others are ignored
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(t.Id) == 0 {
-				t.Id = attrVal
-			}
-
-		case '.':
-			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
-			}
-			// Shortcut for class="xxxx"
-			// The tag may specify more than one class and all are accumulated
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(t.Class) > 0 {
-				t.Class = append(t.Class, ' ')
-			}
-			t.Class = append(t.Class, attrVal...)
-		case '@':
-			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
-			}
-			// Shortcut for src="xxxx"
-			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(t.Src) == 0 {
-				t.Src = attrVal
-			}
-
-		case '-':
-			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
-			}
-			// Shortcut for href="xxxx"
-			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(t.Href) == 0 {
-				t.Href = attrVal
-			}
-		case ':':
-			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
-			}
-			// Special attribute "type" for item classification and counters
-			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(t.Bucket) == 0 {
-				t.Bucket = attrVal
-			}
-		case '=':
-			if len(tagSpec) < 2 {
-				return nil, fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", p.lineCounter)
-			}
-			// Special attribute "number" for list items
-			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(t.Number) == 0 {
-				t.Number = attrVal
-			}
-		default:
-			// This should be a standard attribute
-			var attr Attribute
-			attr, tagSpec = readTagAttrKey(tagSpec)
-			if len(attr.Key) == 0 {
-				tagSpec = nil
-			} else {
-				t.Attr = append(t.Attr, attr)
-			}
-
-		}
-
-	}
-
-	return t, nil
 }
 
 // NewDocumentFromFile reads a file and preprocesses it in memory
