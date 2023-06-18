@@ -115,7 +115,7 @@ func (p *Parser) SkipBlankLines() bool {
 		}
 	}
 
-	// All lines of the file were processed without finding a balnk line
+	// All lines of the file were processed without finding a blank line
 	return false
 }
 
@@ -226,8 +226,12 @@ func (p *Parser) ReadParagraph() *Text {
 
 	}
 
-	// Return the accumulated contents of all lines
+	// Get the accumulated contents of all lines
 	para.Content = br.Bytes()
+
+	// Preprocess the paragraph
+	para = p.PreprocesLine(para)
+
 	return para
 
 }
@@ -236,52 +240,267 @@ func (p *Parser) UnreadParagraph(para *Text) {
 	p.bufferedPara = para
 }
 
-func (p *Parser) ParseInteriorBlock(parent *Node) bool {
+func (p *Parser) PreprocesLine(lineSt *Text) *Text {
+	line := lineSt.Content
+	lineNum := lineSt.LineNumber
 
-	// Skip all the blank lines at the beginning of the block
-	if !p.SkipBlankLines() {
-		log.Printf("EOF reached at line %d", p.lineCounter)
-		return false
+	// We ignore any line starting with an end tag
+	if bytes.HasPrefix(line, []byte("</")) {
+		return nil
 	}
+
+	// Preprocess the special <x-ref> tag inside the text of the line
+	if bytes.Contains(line, []byte("<x-ref")) {
+		line = reXRef.ReplaceAll(line, []byte("<a href=\"#${1}\" class=\"xref\">[${1}]</a>"))
+	}
+	if bytes.Contains(line, []byte("`")) {
+		line = reCodeBackticks.ReplaceAll(line, []byte("<code>${1}</code>"))
+	}
+
+	// Preprocess Markdown headers ('#') and convert to h1, h2, ...
+	// We assume that a header starts with the '#' character, no matter what the rest of the line is
+	if line[0] == '#' {
+
+		// Trim and count the number of '#'
+		plainLine := trimLeft(line, '#')
+		lenPrefix := len(line) - len(plainLine)
+		hnum := byte('0' + lenPrefix)
+
+		// Trim the possible whitespace between the '#'s and the text
+		plainLine = trimLeft(plainLine, ' ')
+
+		// Build the new line and store it
+		line = append([]byte("<h"), hnum, '>')
+		line = append(line, plainLine...)
+
+	}
+
+	// Preprocess Markdown list markers
+	// They can start with plain dashes '-' but we support a special format '-(something)'.
+	// The 'something' inside parenthesis will be highlighted in the list item
+	if bytes.HasPrefix(line, []byte("- ")) {
+
+		line = bytes.Replace(line, []byte("- "), []byte("<li>"), 1)
+
+	} else if bytes.HasPrefix(line, []byte("-(")) {
+
+		// Get the end ')'
+		indexRightBracket := bytes.IndexByte(line, ')')
+		if indexRightBracket == -1 {
+			log.Fatalf("NewDocument, line %d: no closing ')' in list bullet", lineNum)
+		}
+
+		// Check that there is at least one character inside the '()'
+		if indexRightBracket == 2 {
+			log.Fatalf("NewDocument, line %d: no content inside '()' in list bullet", lineNum)
+		}
+
+		// Extract the whole tag spec, eliminating embedded blanks
+		bulletText := line[2:indexRightBracket]
+		bulletText = bytes.ReplaceAll(bulletText, []byte(" "), []byte("%20"))
+
+		// And the remaining text in the line
+		restLine := line[indexRightBracket+1:]
+
+		// Update the line
+		line = append([]byte("<li ="), bulletText...)
+		line = append(line, '>')
+		line = append(line, restLine...)
+
+	}
+
+	lineSt.Content = line
+	return lineSt
+}
+
+func (p *Parser) NewNode(text *Text) *Node {
+	var tagSpec []byte
+
+	n := &Node{}
+
+	// Set the basic fields
+	n.Indentation = text.Indentation
+	n.LineNumber = text.LineNumber
+	n.RawText = text
+
+	// Process the tag at the beginning of the line, if there is one
+
+	// If the is less than 3 chars or the node does not start with '<', mark it as a paragraph
+	// and do not process it anymore
+	if len(text.Content) < 3 || text.Content[0] != startHTMLTag {
+		n.Type = SectionNode
+		n.Name = "p"
+		return n
+	}
+
+	// Extract the whole tag string between the start and end tags
+	// The end bracket is optional if there is no more text in the line after the tag attributes
+	indexRightBracket := bytes.IndexByte(text.Content, endHTMLTag)
+	if indexRightBracket == -1 {
+		tagSpec = text.Content[1:]
+	} else {
+
+		// Extract the whole tag spec
+		tagSpec = text.Content[1:indexRightBracket]
+
+		// And the remaining text in the line
+		n.RestLine = text.Content[indexRightBracket+1:]
+
+	}
+
+	// Extract the pepe of the tag from the tagSpec
+	name, tagSpec := readTagName(tagSpec)
+
+	// Set the name of the node with the tag name
+	n.Name = string(name)
+
+	// Do not process the tag if it is not a section element or it i sa void one
+	if contains(noSectionElements, name) || contains(voidElements, name) {
+		n.Type = SectionNode
+		n.Name = "p"
+		return n
+	}
+
+	// Determine type of node
+	switch n.Name {
+	case "diagram", "x-code", "pre":
+		n.Type = VerbatimNode
+	default:
+		n.Type = SectionNode
+	}
+
+	// Process all the attributes in the tag
+	for {
+
+		// We have finished the loop if there is no more data
+		if len(tagSpec) == 0 {
+			break
+		}
+
+		var attrVal []byte
+
+		switch tagSpec[0] {
+		case '#':
+			if len(tagSpec) < 2 {
+				log.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Shortcut for id="xxxx"
+			// Only the first id attribute is used, others are ignored
+			attrVal, tagSpec = readWord(tagSpec[1:])
+			if len(n.Id) == 0 {
+				n.Id = attrVal
+			}
+
+		case '.':
+			if len(tagSpec) < 2 {
+				log.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Shortcut for class="xxxx"
+			// The tag may specify more than one class and all are accumulated
+			attrVal, tagSpec = readWord(tagSpec[1:])
+			if len(n.Class) > 0 {
+				n.Class = append(n.Class, ' ')
+			}
+			n.Class = append(n.Class, attrVal...)
+		case '@':
+			if len(tagSpec) < 2 {
+				log.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Shortcut for src="xxxx"
+			// Only the first attribute is used
+			attrVal, tagSpec = readWord(tagSpec[1:])
+			if len(n.Src) == 0 {
+				n.Src = attrVal
+			}
+
+		case '-':
+			if len(tagSpec) < 2 {
+				log.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Shortcut for href="xxxx"
+			// Only the first attribute is used
+			attrVal, tagSpec = readWord(tagSpec[1:])
+			if len(n.Href) == 0 {
+				n.Href = attrVal
+			}
+		case ':':
+			if len(tagSpec) < 2 {
+				log.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Special attribute "type" for item classification and counters
+			// Only the first attribute is used
+			attrVal, tagSpec = readWord(tagSpec[1:])
+			if len(n.Bucket) == 0 {
+				n.Bucket = attrVal
+			}
+		case '=':
+			if len(tagSpec) < 2 {
+				log.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Special attribute "number" for list items
+			// Only the first attribute is used
+			attrVal, tagSpec = readWord(tagSpec[1:])
+			if len(n.Number) == 0 {
+				n.Number = attrVal
+			}
+		default:
+			// This should be a standard attribute
+			var attr Attribute
+			attr, tagSpec = readTagAttrKey(tagSpec)
+			if len(attr.Key) == 0 {
+				tagSpec = nil
+			} else {
+				n.Attr = append(n.Attr, attr)
+			}
+
+		}
+
+	}
+
+	return n
+}
+
+func (p *Parser) ParseBlock(parent *Node) bool {
 
 	// The first line will determine the indentation of the block
 	blockIndentation := -1
 
 	for {
 
+		// Read a paragraph, skipping all blank lines if needed
 		para := p.ReadParagraph()
+		// If no paragraph, we have reached th eend of the file
 		if para == nil {
 			return false
 		}
 
+		// Set the indentation of the first line of the inner block
 		if blockIndentation == -1 {
 			blockIndentation = para.Indentation
 		}
 
+		// The block ends when the line has less or equal indentation than the parent node
+		if para.Indentation <= parent.Indentation {
+			p.UnreadParagraph(para)
+			return false
+		}
+
 		// This line belongs to this block
 		if para.Indentation == blockIndentation {
+
 			// Create a node for the paragraph
-			sibling := &Node{}
+			sibling := p.NewNode(para)
 			parent.AppendChild(sibling)
 
-			// Parse the line
-			err := sibling.parseParagraph(para)
-			if err != nil {
-				log.Fatalln(err)
-			}
-
 			// DEBUG
-			fmt.Printf("%d: %s%s\n", sibling.Para.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
+			// fmt.Printf("%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
+			// if sibling.Type == VerbatimNode {
+			// 	fmt.Printf("***VERBATIM***%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
+			// }
 
 			// Go to next paragraph
 			continue
 
-		}
-
-		// The paragraph is finished if the line has less indentation
-		if para.Indentation < blockIndentation {
-			p.UnreadParagraph(para)
-			return false
 		}
 
 		// Parse an interior block
@@ -294,8 +513,13 @@ func (p *Parser) ParseInteriorBlock(parent *Node) bool {
 				log.Fatalf("more indented paragraph without sibling node, line: %d\n", p.currentLineNum())
 			}
 
+			if parent.LastChild.Type == VerbatimNode {
+				// fmt.Printf("  ###VERBATIM***%d: %s%s\n", parent.LastChild.LineNumber, strings.Repeat(" ", blockIndentation), parent.LastChild)
+				p.ParseVerbatim(parent.LastChild)
+			}
+
 			// Parse the block using the child node
-			p.ParseInteriorBlock(parent.LastChild)
+			p.ParseBlock(parent.LastChild)
 			continue
 		}
 
@@ -310,7 +534,7 @@ func (p *Parser) processDiagramExplanation(node *Node) string {
 	var r ByteRenderer
 
 	lineNum := node.LineNumber
-	line := node.Para.Content
+	line := node.RawText.Content
 
 	// Sanity check
 	if !bytes.HasPrefix(line, []byte("# -")) {
@@ -378,7 +602,7 @@ func (p *Parser) processDiagramExplanation(node *Node) string {
 		}
 
 		// Parse the inner block
-		p.ParseInteriorBlock(node)
+		p.ParseBlock(node)
 
 		l := r.String()
 
@@ -390,7 +614,7 @@ func (p *Parser) processDiagramExplanation(node *Node) string {
 	return ""
 }
 
-func (p *Parser) ParseDiagramBlock(node *Node) bool {
+func (p *Parser) ParseVerbatim(node *Node) bool {
 
 	// Skip all the blank lines at the beginning of the block
 	if !p.SkipBlankLines() {
@@ -460,7 +684,7 @@ func (p *Parser) ParseDiagramBlock(node *Node) bool {
 		if bytes.HasPrefix(line.Content, []byte("# -")) {
 			child := &Node{}
 			node.AppendChild(child)
-			child.Type = DiagramNode
+			child.Type = VerbatimNode
 
 			para := &Text{
 				Indentation: line.Indentation,
@@ -469,7 +693,7 @@ func (p *Parser) ParseDiagramBlock(node *Node) bool {
 			}
 
 			// Add the paragraph to the node's paragraph
-			child.Para = para
+			child.RawText = para
 			// TODO: this is redundant, will eliminate it later
 			child.Indentation = line.Indentation
 			child.LineNumber = line.LineNumber
@@ -507,15 +731,32 @@ func (p *Parser) Parse() error {
 		p.figs = make(map[string]int)
 	}
 
+	p.doc.Indentation = -1
+
 	// Process the YAML header if there is one. It should be at the beginning of the file
 	err := p.preprocessYAMLHeader()
 	if err != nil {
 		return err
 	}
 
-	p.ParseInteriorBlock(p.doc)
+	p.ParseBlock(p.doc)
+
+	// DEBUG: travel the tree
+	p.Travel(p.doc)
+
 	return nil
 
+}
+
+func (p *Parser) Travel(n *Node) {
+	// Print the node info
+
+	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+		indentStr := strings.Repeat(" ", theNode.Indentation)
+		fmt.Printf("%d:%s%v-%v\n", theNode.LineNumber, indentStr, theNode, theNode.Type)
+		p.Travel(theNode)
+
+	}
 }
 
 func skipWhiteSpace(line []byte) []byte {

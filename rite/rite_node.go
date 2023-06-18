@@ -7,7 +7,6 @@ package rite
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 )
@@ -18,16 +17,18 @@ type NodeType uint32
 const (
 	ErrorNode NodeType = iota
 	DocumentNode
-	DivNode
-	D2Node
-	DiagramNode
-	CodeNode
-	PreNode
-	HeaderNode
-	ListNode
 	SectionNode
-	ParagraphNode
-	ExplanationsNode
+	VerbatimNode
+	ExplanationNode
+
+	// ParagraphNode
+	// DivNode
+	// D2Node
+	// DiagramNode
+	// CodeNode
+	// PreNode
+	// HeaderNode
+	// ListNode
 )
 
 // String returns a string representation of the TokenType.
@@ -37,25 +38,11 @@ func (n NodeType) String() string {
 		return "Error"
 	case DocumentNode:
 		return "Document"
-	case DivNode:
-		return "Div"
-	case D2Node:
-		return "D2"
-	case DiagramNode:
-		return "Diagram"
-	case CodeNode:
-		return "Code"
-	case PreNode:
-		return "Pre"
-	case HeaderNode:
-		return "List"
-	case ListNode:
-		return "Section"
 	case SectionNode:
 		return "Section"
-	case ParagraphNode:
-		return "Paragraph"
-	case ExplanationsNode:
+	case VerbatimNode:
+		return "Verbatim"
+	case ExplanationNode:
 		return "Explanations"
 	}
 	return "Invalid(" + strconv.Itoa(int(n)) + ")"
@@ -69,29 +56,25 @@ func (n NodeType) String() string {
 type Node struct {
 	Parent, FirstChild, LastChild, PrevSibling, NextSibling *Node
 
-	Type NodeType
-	Para *Text
-	// Token       *Token
+	Type        NodeType
+	RawText     *Text
 	Indentation int
 	LineNumber  int
-	Data        string
-	Namespace   string
+	Name        string
+	Id          []byte
+	Class       []byte
+	Src         []byte
+	Href        []byte
+	Bucket      []byte
+	Number      []byte
+	StdFields   []byte
 	Attr        []Attribute
-
-	number    int
-	Id        []byte
-	Class     []byte
-	Src       []byte
-	Href      []byte
-	Bucket    []byte
-	Number    []byte
-	StdFields []byte
-	RestLine  []byte
+	RestLine    []byte
 }
 
 // tagString returns a string representation of a tag Token's Data and Attr.
 func (n Node) tagString() string {
-	buf := bytes.NewBufferString(n.Data)
+	buf := bytes.NewBufferString(n.Name)
 	if n.Id != nil {
 		buf.WriteByte(' ')
 		buf.WriteString(`id="`)
@@ -132,12 +115,10 @@ func (n Node) String() string {
 	switch n.Type {
 	case ErrorNode:
 		return ""
-	case DiagramNode, CodeNode, PreNode, HeaderNode, ListNode, SectionNode, ExplanationsNode:
-		return "<" + n.tagString() + ">"
-	case ParagraphNode:
-		return "<p>"
 	case DocumentNode:
 		return "TopLevelDocument"
+	case SectionNode, VerbatimNode, ExplanationNode:
+		return "<" + n.tagString() + ">"
 	}
 	return "Invalid(" + strconv.Itoa(int(n.Type)) + ")"
 }
@@ -232,7 +213,7 @@ func reparentChildren(dst, src *Node) {
 func (n *Node) clone() *Node {
 	m := &Node{
 		Type: n.Type,
-		Data: n.Data,
+		Name: n.Name,
 		Attr: make([]Attribute, len(n.Attr)),
 	}
 	copy(m.Attr, n.Attr)
@@ -253,6 +234,35 @@ var noSectionElements = []string{
 }
 var headingElements = []string{"h1", "h2", "h3", "h4", "h5", "h6"}
 
+func contains(set []string, tagName []byte) bool {
+	for _, el := range set {
+		if string(tagName) == el {
+			return true
+		}
+	}
+	return false
+}
+
+// isVoidElement returns true if the tag is in the set of 'void' tags
+func isVoidElement(tagName []byte) bool {
+	for _, el := range voidElements {
+		if string(tagName) == el {
+			return true
+		}
+	}
+	return false
+}
+
+// isNoSectionElement returns true if the tag is in the set of 'noSectionElements' tags
+func isNoSectionElement(tagName []byte) bool {
+	for _, el := range noSectionElements {
+		if string(tagName) == el {
+			return true
+		}
+	}
+	return false
+}
+
 // An Attribute is an attribute namespace-key-value triple. Namespace is
 // non-empty for foreign attributes like xlink, Key is alphabetic (and hence
 // does not contain escapable characters like '&', '<' or '>'), and Val is
@@ -263,38 +273,6 @@ type Attribute struct {
 	Namespace, Key, Val string
 }
 
-// convertNewlines converts "\r" and "\r\n" in s to "\n".
-// The conversion happens in place, but the resulting slice may be shorter.
-func convertNewlines(s []byte) []byte {
-	for i, c := range s {
-		if c != '\r' {
-			continue
-		}
-
-		src := i + 1
-		if src >= len(s) || s[src] != '\n' {
-			s[i] = '\n'
-			continue
-		}
-
-		dst := i
-		for src < len(s) {
-			if s[src] == '\r' {
-				if src+1 < len(s) && s[src+1] == '\n' {
-					src++
-				}
-				s[dst] = '\n'
-			} else {
-				s[dst] = s[src]
-			}
-			src++
-			dst++
-		}
-		return s[:dst]
-	}
-	return s
-}
-
 var (
 	nul         = []byte("\x00")
 	replacement = []byte("\ufffd")
@@ -303,151 +281,3 @@ var (
 // This regex detects the <x-ref REFERENCE> tags that need special processing
 var reXRef = regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
 var reCodeBackticks = regexp.MustCompile(`\x60([0-9a-zA-Z-_\.]+)\x60`)
-
-// parseParagraph returns a structure with the tag fields of the tag at the beginning of the line.
-// It returns nil and an error if the line does not start with a tag.
-func (n *Node) parseParagraph(para *Text) error {
-	var tagSpec []byte
-
-	// Add the paragraph to the node's paragraph
-	n.Para = para
-	// TODO: this is redundant, will eliminate it later
-	n.Indentation = para.Indentation
-	n.LineNumber = para.LineNumber
-
-	rawLine := n.Para.Content
-
-	// A token needs at least 3 chars
-	if len(rawLine) < 3 || rawLine[0] != startHTMLTag {
-		n.Type = ParagraphNode
-		return nil
-	}
-
-	lineNumber := n.Para.LineNumber
-
-	// Extract the whole tag string between the start and end tags
-	// The end bracket is optional if there is no more text in the line after the tag attributes
-	indexRightBracket := bytes.IndexByte(rawLine, endHTMLTag)
-	if indexRightBracket == -1 {
-		tagSpec = rawLine[1:]
-	} else {
-
-		// Extract the whole tag spec
-		tagSpec = rawLine[1:indexRightBracket]
-
-		// And the remaining text in the line
-		n.RestLine = rawLine[indexRightBracket+1:]
-
-	}
-
-	name, tagSpec := readTagName(tagSpec)
-	sname := string(name)
-	n.Data = sname
-
-	if sname == "section" {
-		n.Type = SectionNode
-	} else if sname == "div" {
-		n.Type = DivNode
-	} else if sname == "diagram" {
-		n.Type = DiagramNode
-	} else if sname == "x-code" {
-		n.Type = CodeNode
-	} else if sname == "pre" {
-		n.Type = PreNode
-	} else if sname == "ol" || sname == "ul" {
-		n.Type = ListNode
-	} else {
-		n.Type = ParagraphNode
-	}
-
-	// offset := 0
-
-	for {
-
-		// We have finished the loop if there is no more data
-		if len(tagSpec) == 0 {
-			break
-		}
-
-		var attrVal []byte
-
-		switch tagSpec[0] {
-		case '#':
-			if len(tagSpec) < 2 {
-				return fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", lineNumber)
-			}
-			// Shortcut for id="xxxx"
-			// Only the first id attribute is used, others are ignored
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(n.Id) == 0 {
-				n.Id = attrVal
-			}
-
-		case '.':
-			if len(tagSpec) < 2 {
-				return fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", lineNumber)
-			}
-			// Shortcut for class="xxxx"
-			// The tag may specify more than one class and all are accumulated
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(n.Class) > 0 {
-				n.Class = append(n.Class, ' ')
-			}
-			n.Class = append(n.Class, attrVal...)
-		case '@':
-			if len(tagSpec) < 2 {
-				return fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", lineNumber)
-			}
-			// Shortcut for src="xxxx"
-			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(n.Src) == 0 {
-				n.Src = attrVal
-			}
-
-		case '-':
-			if len(tagSpec) < 2 {
-				return fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", lineNumber)
-			}
-			// Shortcut for href="xxxx"
-			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(n.Href) == 0 {
-				n.Href = attrVal
-			}
-		case ':':
-			if len(tagSpec) < 2 {
-				return fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", lineNumber)
-			}
-			// Special attribute "type" for item classification and counters
-			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(n.Bucket) == 0 {
-				n.Bucket = attrVal
-			}
-		case '=':
-			if len(tagSpec) < 2 {
-				return fmt.Errorf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", lineNumber)
-			}
-			// Special attribute "number" for list items
-			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
-			if len(n.Number) == 0 {
-				n.Number = attrVal
-			}
-		default:
-			// This should be a standard attribute
-			var attr Attribute
-			attr, tagSpec = readTagAttrKey(tagSpec)
-			if len(attr.Key) == 0 {
-				tagSpec = nil
-			} else {
-				n.Attr = append(n.Attr, attr)
-			}
-
-		}
-
-	}
-
-	return nil
-}
