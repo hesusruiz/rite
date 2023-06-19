@@ -61,6 +61,7 @@ type Node struct {
 
 	Type        NodeType
 	RawText     *Text
+	InnerText   []byte
 	Indentation int
 	LineNumber  int
 	Name        string

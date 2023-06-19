@@ -517,7 +517,7 @@ func (p *Parser) ParseBlock(parent *Node) {
 			// fmt.Printf("%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
 			if sibling.Type == DiagramNode {
 				fmt.Printf("***DIAGRAM***%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
-				p.ParseDiagram(sibling)
+				p.ParseVerbatim(sibling)
 			}
 			if sibling.Type == VerbatimNode {
 				fmt.Printf("***Verbatim***%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
@@ -548,7 +548,7 @@ func (p *Parser) ParseBlock(parent *Node) {
 
 }
 
-func (p *Parser) processDiagramExplanation(node *Node) {
+func (p *Parser) parseVerbatimExplanation(node *Node) {
 	const bulletPrefix = "# -("
 	const simplePrefix = "# - "
 	const additionalPrefix = "# -+"
@@ -559,7 +559,7 @@ func (p *Parser) processDiagramExplanation(node *Node) {
 
 	// Sanity check
 	if !bytes.HasPrefix(line, []byte("# -")) {
-		log.Fatalf("processDiagramExplanation, line %d: invalid prefix\n", lineNum)
+		log.Fatalf("parseVerbatimExplanation, line %d: invalid prefix\n", lineNum)
 	}
 
 	// Preprocess Markdown list markers
@@ -596,12 +596,12 @@ func (p *Parser) processDiagramExplanation(node *Node) {
 		// Get the end ')'
 		indexRightBracket := bytes.IndexByte(line, ')')
 		if indexRightBracket == -1 {
-			log.Fatalf("processDiagramExplanation, line %d: no closing ')' in list bullet\n", lineNum)
+			log.Fatalf("parseVerbatimExplanation, line %d: no closing ')' in list bullet\n", lineNum)
 		}
 
 		// Check that there is at least one character inside the '()'
 		if indexRightBracket == len(bulletPrefix) {
-			log.Fatalf("processDiagramExplanation, line %d: no content inside '()' in list bullet\n", lineNum)
+			log.Fatalf("parseVerbatimExplanation, line %d: no content inside '()' in list bullet\n", lineNum)
 		}
 
 		// Extract the whole tag spec, eliminating embedded blanks
@@ -626,115 +626,31 @@ func (p *Parser) processDiagramExplanation(node *Node) {
 
 	}
 
-	log.Fatalf("processDiagramExplanation, line %v: invalid explanation in list bullet\n", lineNum)
-}
-
-func (p *Parser) ParseDiagram(parent *Node) bool {
-
-	// Check if the class of diagram has been set
-	if len(parent.Class) == 0 {
-		log.Fatal("diagram type not found", "line", parent.LineNumber)
-	}
-
-	// Get the type of diagram
-	diagType := strings.ToLower(string(parent.Class))
-
-	imageType := "png"
-	if diagType == "d2" {
-		imageType = "svg"
-	}
-
-	fmt.Println(">>>>", string(parent.RawText.Content), "type", imageType)
-
-	// Skip all the blank lines at the beginning of the block
-	if !p.SkipBlankLines() {
-		log.Printf("EOF reached at line %d", p.lineCounter)
-		return false
-	}
-
-	// The first line will determine the indentation of the block
-	sectionIndent := parent.Indentation
-	blockIndentation := -1
-
-	// This will hold the string with the text lines for diagram
-	diagContentLines := []*Text{}
-
-	// We are going to calculate the minimum indentation for the whole block.
-	// The starting point is a very big value which will be reduced to the correct value during the loop
-	minimumIndentation := 9999999
-
-	// Loop until the end of the document or until we find a line with less or equal indentation
-	// Blank lines are assumed to pertain to the verbatim section
-	for {
-
-		line := p.ReadLine()
-
-		// If the line is blank, continue with the loop
-		if line == nil {
-			continue
-		}
-
-		// Set the indentation of the first line of the inner block
-		if blockIndentation == -1 {
-			blockIndentation = line.Indentation
-		}
-
-		// The paragraph is finished if the line has less or equal indentation than the section
-		if line.Indentation <= sectionIndent {
-			p.UnreadLine(line)
-			break
-		}
-
-		// Lines starting with a '#' are special
-		if line.Content[0] != '#' {
-			if line.Indentation < minimumIndentation {
-				minimumIndentation = line.Indentation
-			}
-			// Append the line
-			diagContentLines = append(diagContentLines, line)
-
-			// Go to process next line
-			continue
-		}
-
-		// Add the line to the explanations list if it is a comment formatted in the proper way
-		if bytes.HasPrefix(line.Content, []byte("# -")) {
-
-			// Create a note to parse the explanation text
-			child := &Node{}
-			parent.AppendChild(child)
-			child.Type = ExplanationNode
-
-			// Add the paragraph to the node's paragraph
-			child.RawText = line
-			// TODO: this is redundant, will eliminate it later
-			child.Indentation = line.Indentation
-			child.LineNumber = line.LineNumber
-
-			p.processDiagramExplanation(child)
-			continue
-		}
-
-		// Ignore the line and process next one
-		continue
-
-	}
-
-	fmt.Println("===== Begin: ", parent.LineNumber, "indent:", minimumIndentation, "=================")
-	var br ByteRenderer
-	for _, line := range diagContentLines {
-		br.Renderln(bytes.Repeat([]byte(" "), line.Indentation-minimumIndentation), line.Content)
-	}
-	dg := br.String()
-	fmt.Println(dg)
-	fmt.Println("===== End =================")
-
-	return true
+	log.Fatalf("parseVerbatimExplanation, line %v: invalid explanation in list bullet\n", lineNum)
 }
 
 func (p *Parser) ParseVerbatim(parent *Node) bool {
 
-	fmt.Println(">>>>", string(parent.RawText.Content))
+	// if parent.Type == DiagramNode {
+
+	// 	// Check if the class of diagram has been set
+	// 	if len(parent.Class) == 0 {
+	// 		log.Fatal("diagram type not found", "line", parent.LineNumber)
+	// 	}
+
+	// 	// Get the type of diagram
+	// 	diagType := strings.ToLower(string(parent.Class))
+
+	// 	imageType := "png"
+	// 	if diagType == "d2" {
+	// 		imageType = "svg"
+	// 	}
+
+	// 	fmt.Println(">>>>", string(parent.RawText.Content), "type", imageType)
+
+	// } else {
+	// 	fmt.Println(">>>>", string(parent.RawText.Content))
+	// }
 
 	// The first line will determine the indentation of the block
 	sectionIndent := parent.Indentation
@@ -795,7 +711,7 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 			child.Indentation = line.Indentation
 			child.LineNumber = line.LineNumber
 
-			p.processDiagramExplanation(child)
+			p.parseVerbatimExplanation(child)
 		}
 
 		// Go to process next line
@@ -803,7 +719,6 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 
 	}
 
-	fmt.Println("===== Begin: ", parent.LineNumber, "indent:", minimumIndentation, "=================")
 	var br ByteRenderer
 	for _, line := range diagContentLines {
 		if len(line.Content) > 0 {
@@ -812,9 +727,7 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 			br.Renderln()
 		}
 	}
-	dg := br.String()
-	fmt.Println(dg)
-	fmt.Println("===== End =================")
+	parent.InnerText = br.Bytes()
 
 	return true
 }
@@ -857,7 +770,13 @@ func (p *Parser) Travel(n *Node) {
 
 	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
 		indentStr := strings.Repeat(" ", theNode.Indentation)
-		fmt.Printf("%d:%s%v-%v\n", theNode.LineNumber, indentStr, theNode, theNode.Type)
+		if theNode.Type == VerbatimNode || theNode.Type == DiagramNode {
+			fmt.Printf("%d:%s%v-%v\n", theNode.LineNumber, indentStr, theNode, theNode.Type)
+			fmt.Println(string(theNode.InnerText))
+
+		} else {
+			fmt.Printf("%d:%s%v-%v\n", theNode.LineNumber, indentStr, theNode, theNode.Type)
+		}
 		p.Travel(theNode)
 
 	}
