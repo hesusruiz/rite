@@ -120,6 +120,8 @@ func (p *Parser) SkipBlankLines() bool {
 }
 
 func (p *Parser) ReadLine() *Text {
+	log.Printf("ReadLine in line: %d\n", p.currentLineNum())
+
 	if p.lastError != nil {
 		return nil
 	}
@@ -128,7 +130,6 @@ func (p *Parser) ReadLine() *Text {
 	if p.bufferedLine != nil {
 		line := p.bufferedLine
 		p.bufferedLine = nil
-		p.lineCounter++
 		return line
 	}
 
@@ -171,20 +172,46 @@ func (p *Parser) ReadLine() *Text {
 }
 
 func (p *Parser) UnreadLine(line *Text) {
+	log.Printf("Unreadline in line: %d\n", p.currentLineNum())
+	// if p.bufferedLine != nil {
+	// 	log.Fatalf("UnreadLine: too many calls in line: %d\n", p.currentLineNum())
+	// }
+	// if p.bufferedPara != nil {
+	// 	log.Fatalf("UnreadLine: already a Paragraph pending in line: %d\n", p.currentLineNum())
+	// }
 	p.bufferedLine = line
-	p.lineCounter--
+}
+
+func (p *Parser) UnreadParagraph(para *Text) {
+	log.Printf("UnreadParagraph in line: %d\n", p.currentLineNum())
+	// if p.bufferedPara != nil {
+	// 	log.Fatalf("UnreadParagraph: too many calls in line: %d\n", p.currentLineNum())
+	// }
+	// if p.bufferedLine != nil {
+	// 	log.Printf("UnreadParagraph: already a Line pending in line: %d\n", p.currentLineNum())
+	// }
+	p.bufferedPara = para
 }
 
 func (p *Parser) ReadParagraph() *Text {
+	log.Printf("ReadParagraph in line: %d\n", p.currentLineNum())
+
 	if p.lastError != nil {
 		return nil
 	}
 
+	if p.bufferedLine != nil && p.bufferedPara != nil {
+		log.Printf("ReadParagraph: both a Line and a Paragraph are buffered at the same time in line: %d\n", p.currentLineNum())
+	}
 	// If there is a paragraph alredy buffered, return it
 	if p.bufferedPara != nil {
 		para := p.bufferedPara
 		p.bufferedPara = nil
 		return para
+	}
+
+	if p.bufferedLine != nil {
+		log.Printf("reading a paragraph when a Line is buffered in line: %d\n", p.currentLineNum())
 	}
 
 	// Skip all blank lines until EOF or another error
@@ -206,6 +233,11 @@ func (p *Parser) ReadParagraph() *Text {
 				log.Fatalf("no paragraph read, line: %d\n", p.currentLineNum())
 			}
 
+			break
+		}
+
+		if para != nil && line.Indentation == para.Indentation && line.Content[0] == '-' {
+			p.UnreadLine(line)
 			break
 		}
 
@@ -234,10 +266,6 @@ func (p *Parser) ReadParagraph() *Text {
 
 	return para
 
-}
-
-func (p *Parser) UnreadParagraph(para *Text) {
-	p.bufferedPara = para
 }
 
 func (p *Parser) PreprocesLine(lineSt *Text) *Text {
@@ -363,7 +391,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 
 	// Determine type of node
 	switch n.Name {
-	case "diagram", "x-code", "pre":
+	case "x-diagram", "x-code", "pre":
 		n.Type = VerbatimNode
 	default:
 		n.Type = SectionNode
@@ -469,7 +497,7 @@ func (p *Parser) ParseBlock(parent *Node) bool {
 
 		// Read a paragraph, skipping all blank lines if needed
 		para := p.ReadParagraph()
-		// If no paragraph, we have reached th eend of the file
+		// If no paragraph, we have reached the end of the file
 		if para == nil {
 			return false
 		}
@@ -494,9 +522,10 @@ func (p *Parser) ParseBlock(parent *Node) bool {
 
 			// DEBUG
 			// fmt.Printf("%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
-			// if sibling.Type == VerbatimNode {
-			// 	fmt.Printf("***VERBATIM***%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
-			// }
+			if sibling.Type == VerbatimNode {
+				fmt.Printf("***VERBATIM***%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
+				p.ParseVerbatim(sibling)
+			}
 
 			// Go to next paragraph
 			continue
@@ -513,11 +542,6 @@ func (p *Parser) ParseBlock(parent *Node) bool {
 				log.Fatalf("more indented paragraph without sibling node, line: %d\n", p.currentLineNum())
 			}
 
-			if parent.LastChild.Type == VerbatimNode {
-				// fmt.Printf("  ###VERBATIM***%d: %s%s\n", parent.LastChild.LineNumber, strings.Repeat(" ", blockIndentation), parent.LastChild)
-				p.ParseVerbatim(parent.LastChild)
-			}
-
 			// Parse the block using the child node
 			p.ParseBlock(parent.LastChild)
 			continue
@@ -527,7 +551,7 @@ func (p *Parser) ParseBlock(parent *Node) bool {
 
 }
 
-func (p *Parser) processDiagramExplanation(node *Node) string {
+func (p *Parser) processDiagramExplanation(node *Node) {
 	const bulletPrefix = "# -("
 	const simplePrefix = "# - "
 	const additionalPrefix = "# -+"
@@ -538,8 +562,7 @@ func (p *Parser) processDiagramExplanation(node *Node) string {
 
 	// Sanity check
 	if !bytes.HasPrefix(line, []byte("# -")) {
-		fmt.Printf("processDiagramExplanation, line %d: invalid prefix\n", lineNum)
-		return ""
+		log.Fatalf("processDiagramExplanation, line %d: invalid prefix\n", lineNum)
 	}
 
 	// Preprocess Markdown list markers
@@ -554,9 +577,10 @@ func (p *Parser) processDiagramExplanation(node *Node) string {
 		r.Render("<a href='#", lineNum, "' class='selfref'>")
 		r.Render("<b>-</b></a> ", restLine)
 
-		l := r.String()
+		l := r.Bytes()
+		node.RawText.Content = l
 
-		return l
+		return
 
 	} else if bytes.HasPrefix(line, []byte(additionalPrefix)) {
 
@@ -565,9 +589,10 @@ func (p *Parser) processDiagramExplanation(node *Node) string {
 		// Build the line
 		r.Render("<p>", restLine, "</p>")
 
-		l := r.String()
+		l := r.Bytes()
+		node.RawText.Content = l
 
-		return l
+		return
 
 	} else if bytes.HasPrefix(line, []byte(bulletPrefix)) {
 
@@ -594,27 +619,22 @@ func (p *Parser) processDiagramExplanation(node *Node) string {
 		r.Render("<a href='#", lineNum, ".", bulletTextEncoded, "' class='selfref'>")
 		r.Render("<b>", bulletText, "</b></a>", restLine, '\n')
 
-		// Skip all the blank lines following the section tag
-		if !p.SkipBlankLines() {
-			log.Printf("EOF reached at line %d", p.lineCounter)
-			l := r.String()
-			return l
-		}
-
 		// Parse the inner block
 		p.ParseBlock(node)
 
-		l := r.String()
+		l := r.Bytes()
+		node.RawText.Content = l
 
-		return l
+		return
 
 	}
 
 	log.Fatalf("processDiagramExplanation, line %v: invalid explanation in list bullet\n", lineNum)
-	return ""
 }
 
-func (p *Parser) ParseVerbatim(node *Node) bool {
+func (p *Parser) ParseVerbatim(parent *Node) bool {
+
+	fmt.Println(">>>>", string(parent.RawText.Content))
 
 	// Skip all the blank lines at the beginning of the block
 	if !p.SkipBlankLines() {
@@ -623,12 +643,12 @@ func (p *Parser) ParseVerbatim(node *Node) bool {
 	}
 
 	// The first line will determine the indentation of the block
-	sectionIndent := node.Indentation
+	sectionIndent := parent.Indentation
 	blockIndentation := -1
 
 	// Check if the class of diagram has been set
-	if len(node.Class) == 0 {
-		log.Fatal("diagram type not found", "line", node.LineNumber)
+	if len(parent.Class) == 0 {
+		log.Fatal("diagram type not found", "line", parent.LineNumber)
 	}
 
 	// // Get the type of diagram
@@ -640,10 +660,8 @@ func (p *Parser) ParseVerbatim(node *Node) bool {
 	// }
 
 	// This will hold the string with the text lines for diagram
-	var diagContent []byte
-
-	// This will hold the set of lines with explanations inside the diagram
-	var explanations []string
+	// var diagContent []byte
+	var diagContent ByteRenderer
 
 	// Loop until the end of the document or until we find a line with less or equal indentation
 	// Blank lines are assumed to pertain to the verbatim section
@@ -653,9 +671,11 @@ func (p *Parser) ParseVerbatim(node *Node) bool {
 
 		// If the line is blank, continue with the loop
 		if line == nil {
+			diagContent.Renderln()
 			continue
 		}
 
+		// Set the indentation of the first line of the inner block
 		if blockIndentation == -1 {
 			blockIndentation = line.Indentation
 		}
@@ -668,42 +688,32 @@ func (p *Parser) ParseVerbatim(node *Node) bool {
 
 		// String with as many blanks as indentation
 		ind := bytes.Repeat([]byte(" "), line.Indentation-sectionIndent)
-		diagContent = append(diagContent, ind...)
+		diagContent.Render(ind)
 
 		// Lines starting with a '#' are special
 		if line.Content[0] != '#' {
 			// Append the line with a newline at the end
-			diagContent = append(diagContent, line.Content...)
-			diagContent = append(diagContent, '\n')
+			diagContent.Renderln(line.Content)
 
-			// Prepare to process next line
+			// Go to process next line
 			continue
 		}
 
 		// Add the line to the explanations list if it is a comment formatted in the proper way
 		if bytes.HasPrefix(line.Content, []byte("# -")) {
-			child := &Node{}
-			node.AppendChild(child)
-			child.Type = VerbatimNode
 
-			para := &Text{
-				Indentation: line.Indentation,
-				LineNumber:  line.LineNumber,
-				Content:     line.Content,
-			}
+			// Create a note to parse the explanation text
+			child := &Node{}
+			parent.AppendChild(child)
+			child.Type = ExplanationNode
 
 			// Add the paragraph to the node's paragraph
-			child.RawText = para
+			child.RawText = line
 			// TODO: this is redundant, will eliminate it later
 			child.Indentation = line.Indentation
 			child.LineNumber = line.LineNumber
 
-			exp := p.processDiagramExplanation(child)
-			if len(exp) == 0 {
-				// Ignore the line and process next one
-				continue
-			}
-			explanations = append(explanations, exp)
+			p.processDiagramExplanation(child)
 			continue
 		}
 
@@ -711,6 +721,11 @@ func (p *Parser) ParseVerbatim(node *Node) bool {
 		continue
 
 	}
+
+	dg := diagContent.String()
+	fmt.Println("===== Begin: ", parent.LineNumber, "=================")
+	fmt.Println(dg)
+	fmt.Println("===== End =================")
 
 	return true
 }
@@ -912,7 +927,8 @@ func ParseFromFile(fileName string) (*Parser, error) {
 		return nil, err
 	}
 
-	return p, nil
+	return p, fmt.Errorf("Hola")
+	// return p, nil
 
 }
 
