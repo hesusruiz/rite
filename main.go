@@ -23,6 +23,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/hesusruiz/rite/rite"
 	"github.com/hesusruiz/rite/sliceedit"
 	"github.com/hesusruiz/vcutils/yaml"
 	"github.com/urfave/cli/v2"
@@ -192,6 +193,11 @@ func process(c *cli.Context) error {
 	if c.Bool("watch") {
 		err = processWatch(inputFileName, outputFileName, log)
 		return err
+	}
+
+	_, err = rite.ParseFromFile(inputFileName)
+	if err != nil {
+		os.Exit(1)
 	}
 
 	// Preprocess the input file
@@ -830,7 +836,7 @@ func NewDocument(s *bufio.Scanner) (*Document, error) {
 		doc.theLines[lineNum].startTag = tagFields
 
 		// Preprocess headings (h1, h2, h3, ...), creating the tree of content to display hierarchical numbering.
-		// To enforce the HTML5 spece, we accept a heading of a given level only if it is the same level,
+		// To enforce the HTML5 spec, we accept a heading of a given level only if it is the same level,
 		// one more or one less than the previously encountered heading. H1 are always accepted in any context.
 		// We do this only if not using ReSpec format, in which case numbering will be done by ReSpec
 		// tagName, htmlTag, rest := doc.buildTagPresentation(tagFields)
