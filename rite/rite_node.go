@@ -20,6 +20,11 @@ import (
 	"strconv"
 	"strings"
 
+	hlhtml "github.com/alecthomas/chroma/formatters/html"
+
+	"github.com/alecthomas/chroma"
+	"github.com/alecthomas/chroma/lexers"
+	"github.com/alecthomas/chroma/styles"
 	"oss.terrastruct.com/d2/d2graph"
 	"oss.terrastruct.com/d2/d2layouts/d2dagrelayout"
 	"oss.terrastruct.com/d2/d2lib"
@@ -179,13 +184,34 @@ func (n *Node) RenderHTML(br *ByteRenderer) {
 	switch n.Type {
 	case DiagramNode:
 		n.RenderDiagram(br)
+	case VerbatimNode:
+		// _, startTag, endTag, _ := n.RenderTheTag()
+
+		// // Render the start tag of this node
+		// br.Renderln(strings.Repeat(" ", n.Indentation), startTag)
+		// br.Render(n.InnerText)
+
+		br.Renderln()
+		n.RenderCode(br)
+		br.Renderln()
+
+		// // We visit depth-first the children of the
+		// for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+		// 	theNode.RenderHTML(br)
+		// }
+
+		// // Render the end tag of the node
+		// br.Renderln(endTag)
+
 	case ExplanationNode:
 		// Render the start tag of this node
 		br.Renderln(strings.Repeat(" ", n.Indentation), n.RawText.Content)
 
 		// We visit depth-first the children of the
 		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+			br.Render("<div>\n")
 			theNode.RenderHTML(br)
+			br.Render("</div>\n")
 		}
 
 		// Render the end tag of the node
@@ -199,7 +225,13 @@ func (n *Node) RenderHTML(br *ByteRenderer) {
 
 		// We visit depth-first the children of the
 		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+			if n.Name == "li" {
+				br.Render("<div class='caca'>\n")
+			}
 			theNode.RenderHTML(br)
+			if n.Name == "li" {
+				br.Render("</div>\n")
+			}
 		}
 
 		// Render the end tag of the node
@@ -296,6 +328,69 @@ func (n *Node) RenderTheTag() (tagName string, startTag []byte, endTag []byte, r
 	}
 
 	return n.Name, startTag, endTag, restLine
+
+}
+
+type preWrapper struct {
+	s *chroma.Style
+}
+
+func (p preWrapper) Start(code bool, styleAttr string) string {
+	// <pre tabindex="0" style="background-color:#fff;">
+	if code {
+		//		return fmt.Sprintf(`<pre class="nohighlight"%s><div style="padding:0.5em;"><code>`, styleAttr)
+		return fmt.Sprintf(`<pre class="nohighlight"%s><code>`, styleAttr)
+	}
+	return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
+}
+
+func (p preWrapper) End(code bool) string {
+	if code {
+		return `</code></pre>`
+	}
+	return `</pre>`
+}
+
+func (n *Node) RenderCode(br *ByteRenderer) {
+
+	contentLines := string(n.InnerText)
+
+	if len(contentLines) > 0 {
+
+		// Determine lexer.
+		l := lexers.Get(string(bytes.TrimSpace(n.Class)))
+		if l == nil {
+			l = lexers.Analyse(contentLines)
+		}
+		if l == nil {
+			l = lexers.Fallback
+		}
+		l = chroma.Coalesce(l)
+
+		// Determine style from the config data, with "dracula" as default
+		styleName := config.String("rite.codeStyle", "swapoff")
+		s := styles.Get(styleName)
+
+		pr := preWrapper{s}
+
+		// Get the HTML formatter
+		f := hlhtml.New(hlhtml.Standalone(false), hlhtml.WithPreWrapper(pr))
+
+		it, err := l.Tokenise(nil, contentLines)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		br.Render('\n')
+		rb := &bytes.Buffer{}
+		err = f.Format(rb, s, it)
+		if err != nil {
+			log.Fatal(err)
+		}
+		br.Render(rb.Bytes())
+		br.Render('\n')
+
+	}
 
 }
 
@@ -501,17 +596,6 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 		}
 		br.Render(bytes.Repeat([]byte(" "), n.Indentation), "</ul>\n")
 	}
-
-	// // Write the explanations if there were any
-	// if len(explanations) > 0 {
-	// 	// Write the
-	// 	doc.Render("\n", bytes.Repeat([]byte(" "), sectionIndent), "<ul class='plain'>\n")
-
-	// 	for _, s := range explanations {
-	// 		doc.Render(bytes.Repeat([]byte(" "), sectionIndent+4), s, '\n')
-	// 	}
-	// 	doc.Render(bytes.Repeat([]byte(" "), sectionIndent), "</ul>\n")
-	// }
 
 }
 

@@ -92,6 +92,9 @@
         ul.plain li>div {
             text-indent:0;
         }
+        ul.plain li>p {
+            text-indent:0;
+        }
     </style>
 </head>
 

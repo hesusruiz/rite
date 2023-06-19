@@ -13,6 +13,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var config *yaml.YAML
+
 const blank byte = ' '
 
 type ByteRenderer struct {
@@ -86,9 +88,9 @@ type Parser struct {
 
 	lastError error
 
-	ids    map[string]int // To provide numbering of different entity classes
+	Ids    map[string]int // To provide numbering of different entity classes
 	figs   map[string]int // To provide numbering of figs of different types in the document
-	config *yaml.YAML
+	Config *yaml.YAML
 
 	log *zap.SugaredLogger
 }
@@ -503,6 +505,11 @@ func (p *Parser) ParseBlock(parent *Node) {
 			return
 		}
 
+		// We ignore any line starting with a comment marker: '//'
+		if bytes.HasPrefix(para.Content, []byte("//")) {
+			continue
+		}
+
 		// Set the indentation of the first line of the inner block
 		if blockIndentation == -1 {
 			blockIndentation = para.Indentation
@@ -711,7 +718,7 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 	return true
 }
 
-func (p *Parser) Parse() error {
+func (p *Parser) Parse() ([]byte, error) {
 
 	// // This regex detects the <x-ref REFERENCE> tags that need special processing
 	// reXRef := regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
@@ -723,7 +730,7 @@ func (p *Parser) Parse() error {
 
 	// Initialize the document structure
 	if p.doc.Type == DocumentNode {
-		p.ids = make(map[string]int)
+		p.Ids = make(map[string]int)
 		p.figs = make(map[string]int)
 	}
 
@@ -732,7 +739,7 @@ func (p *Parser) Parse() error {
 	// Process the YAML header if there is one. It should be at the beginning of the file
 	err := p.preprocessYAMLHeader()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Parse document and generate AST
@@ -740,9 +747,9 @@ func (p *Parser) Parse() error {
 
 	// DEBUG: travel the tree
 	theHTML := p.RenderHTML(p.doc)
-	fmt.Println(string(theHTML))
+	//	fmt.Println(string(theHTML))
 
-	return nil
+	return theHTML, nil
 
 }
 
@@ -756,12 +763,12 @@ func (p *Parser) RenderHTML(n *Node) []byte {
 }
 
 // NewDocumentFromFile reads a file and preprocesses it in memory
-func ParseFromFile(fileName string) (*Parser, error) {
+func ParseFromFile(fileName string) (*Parser, []byte, error) {
 
 	// Read the whole file into memory
 	file, err := os.Open(fileName)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer file.Close()
 
@@ -795,13 +802,12 @@ func ParseFromFile(fileName string) (*Parser, error) {
 	p.log = z.Sugar()
 	defer p.log.Sync()
 
-	err = p.Parse()
+	fragmentHTML, err := p.Parse()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return p, fmt.Errorf("Hola")
-	// return p, nil
+	return p, fragmentHTML, nil
 
 }
 
@@ -852,10 +858,12 @@ func (p *Parser) preprocessYAMLHeader() error {
 	}
 
 	// Parse the string that was built as YAML data
-	p.config, err = yaml.ParseYaml(yamlString.String())
+	p.Config, err = yaml.ParseYaml(yamlString.String())
 	if err != nil {
 		p.log.Fatalw("malformed YAML metadata", "error", err)
 	}
+
+	config = p.Config
 
 	return nil
 }

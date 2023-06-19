@@ -195,24 +195,27 @@ func process(c *cli.Context) error {
 		return err
 	}
 
-	_, err = rite.ParseFromFile(inputFileName)
-	if err != nil {
-		os.Exit(1)
-	}
+	var html string
 
-	// Preprocess the input file
-	b, err := NewDocumentFromFile(inputFileName)
-	if err != nil {
-		return err
-	}
+	newParser := true
 
-	// Print stats data if requested
-	if debug {
-		b.printPreprocessStats()
-	}
+	if newParser {
+		html = NewParseAndRender(inputFileName)
+	} else {
+		// Preprocess the input file
+		b, err := NewDocumentFromFile(inputFileName)
+		if err != nil {
+			return err
+		}
 
-	// // Generate the HTML from the preprocessed data
-	html := b.ToHTML()
+		// Print stats data if requested
+		if debug {
+			b.printPreprocessStats()
+		}
+
+		// // Generate the HTML from the preprocessed data
+		html = b.ToHTML()
+	}
 
 	// Do nothing if flag dryrun was specified
 	if dryrun {
@@ -1686,7 +1689,7 @@ func (doc *Document) processDiagramExplanation(diagramLineNum int) (string, int)
 		nextIndentation := r.Indentation(lineNum)
 		if nextIndentation > r.Indentation(diagramLineNum) {
 
-			r.Render(Indent(nextIndentation), "<div class='caca'>\n")
+			r.Render(Indent(nextIndentation), "<div>\n")
 			lineNum = r.ProcessBlock(lineNum)
 			r.Render(Indent(nextIndentation), "</div>\n")
 		}
@@ -2177,4 +2180,70 @@ func NewDocumentFromFile(fileName string) (*Document, error) {
 	linescanner := bufio.NewScanner(file)
 	b, err := NewDocument(linescanner)
 	return b, err
+}
+
+func NewParseAndRender(fileName string) string {
+
+	p, fragmentHTML, err := rite.ParseFromFile(fileName)
+	if err != nil {
+		panic(err)
+	}
+
+	// Initialise the template system
+	templateDir := p.Config.String("template", "assets/templates/respec")
+	fmt.Println("Using template dir:", templateDir)
+
+	// Parse all templates in the following directories
+	t := template.Must(template.ParseFS(assets, templateDir+"/layouts/*"))
+	t = template.Must(t.ParseFS(assets, templateDir+"/partials/*"))
+	t = template.Must(t.ParseFS(assets, templateDir+"/pages/*"))
+
+	// Get the bibliography for the references.
+	// It can be specified in the YAML header or in a separate file.
+	// The bibliography in the header has precedence if it exists.
+	bibData := p.Config.Map("localBiblio", nil)
+	if bibData == nil {
+
+		// Read the bibliography file if it exists
+		// First try reading the file specified in the YAML header, otherwise use the default name
+		bd, err := yaml.ParseYamlFile(p.Config.String("localBiblioFile", "localbiblio.yaml"))
+		if err == nil {
+			bibData = bd.Map("")
+		}
+	}
+
+	// Set the data that will be available for the templates
+	var data = map[string]any{
+		"Config": p.Config.Data(),
+		"Biblio": bibData,
+		"HTML":   string(fragmentHTML),
+	}
+
+	// Execute the template and store the result in memory
+	var out bytes.Buffer
+	if err := t.ExecuteTemplate(&out, "index.html.tpl", data); err != nil {
+		panic(err)
+	}
+
+	// Get the raw HTML where we still have to perform some processing
+	rawHtml := out.Bytes()
+
+	// Prepare the buffer for efficient editing operations minimizing allocations
+	edBuf := sliceedit.NewBuffer(rawHtml)
+
+	// For all IDs that were detected, store the intented changes
+	for idName, idNumber := range p.Ids {
+		searchString := "{#" + idName + ".num}"
+		newValue := fmt.Sprint(idNumber)
+		edBuf.ReplaceAllString(searchString, newValue)
+	}
+
+	// Replace the HTML escaped codes
+	edBuf.ReplaceAllString("\\<", "&lt")
+	edBuf.ReplaceAllString("\\>", "&gt")
+
+	// Apply the changes to the buffer and get the HTML
+	html := edBuf.String()
+
+	return html
 }
