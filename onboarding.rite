@@ -113,62 +113,6 @@ localBiblio:
 
     A common problem in ecosystems like Data Spaces is how organisations can onboard the ecosystem in a trusted and automated way, avoiding manual paperwork.
 
-    <x-diagram .d2>
-        shape: sequence_diagram
-
-        # Definition of the participants
-        user: John Doe {
-            icon: https://icons.terrastruct.com/essentials%2F365-user.svg
-        }
-        mobile: Webapp {
-            icon: https://icons.terrastruct.com/tech%2F052-smartphone-3.svg
-        }
-        browser: Laptop {
-            icon: https://icons.terrastruct.com/tech%2Fbrowser-2.svg
-        }
-        portal: Portal {
-            icon: https://icons.terrastruct.com/azure%2FIntegration%20Service%20Color%2FSoftware%20as%20a%20Service%20%28SaaS%29.svg
-        }
-        verifier: VC Verifier {
-            icon: https://icons.terrastruct.com/azure%2FSecurity%20Service%20Color%2FSecurity%20Center.svg
-        }
-        # ==================================================
-
-
-        # -(1) The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
-            <ul>
-                - signed or sealed with an eIDAS certificate which is either:
-
-                    <ul>
-                        - a <b>certificate for electronic seals</b> issued to a legal person by a Qualified Trust Service Provider, or
-                        - a <b>certificate for electronic signatures</b>, issued to a <b>legal representative of the legal person</b> by a Qualified Trust Service Provider.
-                - signed using the <b>JSON Advanced Electronic Signature</b> format described in [[[ETSI-JADES]]]
-
-        user -> browser: (1) Access DOM portal {
-            style.stroke-dash: 5
-        }
-    
-        # -(2) The browser sends a request to the Packet Delivery portal server.
-        browser -> portal.t: (2) Access DOM portal
-
-        # -(3) The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
-        portal.t -> browser.t: (3) HTTP 302 (redirect)
-        browser.t -> verifier.t: (3) Access Login page
-
-        # (4) The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
-        verifier.t -> verifier.t: (4) Generate QR code
-        verifier.t -> browser: (5) Display QR code
-
-        # (6) The user starts the scan with the wallet
-        user -> mobile.t: (6) Start QR scan {
-            style.stroke-dash: 5
-        }
-        browser -> mobile.t: (6) Scan QR code {
-            style.stroke-dash: 5
-        }
-
-
-
     This document describes how the process of onboarding can be performed by an employee of an organisation, who has been appointed to do so by a legal representative of the organisation using eIDAS certificates and Verifiable Credentials.
     
     The appointed employee will perform the process by using a special type of Verifiable Credential called `LEARCredential` (from <b>L</b>egal <b>E</b>ntity <b>A</b>ppointed <b>R</b>epresentative).
@@ -235,23 +179,56 @@ localBiblio:
         - Includes a public key where the corresponding private key is controlled by the employee, enabling him to prove that he is the holder of the credential when it is being used in an authentication process like the onboarding process described in this document.
 
 
+    <x-diagram .plantuml>
+        participant browser
+        participant webserver
+        participant database
+
+        browser  -> webserver++: **(1)** GET /indexito.html
+        return
+
+        browser  -> webserver++: **(2)** POST /blog/comment
+            webserver  -> database++: **(3)** INSERT comment
+            return
+        browser <-- webserver--
+
+
     The LEARCredential uses the `did:elsi` method for the identifiers of legal persons involved in the process, to facilitate the DID resolution and linkage with the eIDAS certificates. The `did:elsi` method is specified in [[[DID-ELSI]]].    
-  
+
+    <x-diagram .seqdiag>Testing the diagram
+        seqdiag {
+        browser  -> webserver [label = "GET /index.html"];
+        browser <-- webserver;
+        browser  -> webserver [label = "POST /blog/comment"];
+                    webserver  -> database [label = "INSERT comment"];
+                    webserver <-- database;
+        browser <-- webserver;
+        }
+    
     The high-level view of the process is described in the following diagram, when a COO (Chief Operating Officer) appoints an employee to perform the onboarding process:
 
-    <x-diagram .plantuml>High level view of issuance of LEARCredential
-        box "Company" #WhiteSmoke
-            actor "Employee of company" as employee
-            participant "COO of company" as COO
-        end box
-        control "Trust Service Provider" as TSP
-        database "Authentic Sources" as registry
+    <x-diagram .d2>
+        shape: sequence_diagram
 
-        COO -> TSP ++: Request a\ncertificate for signatures
+        # Definition of the participants
+        employee: Employee of company {
+            icon: https://icons.terrastruct.com/essentials%2F365-user.svg
+        }
+        COO: COO of company {
+            icon: https://icons.terrastruct.com/essentials%2F365-user.svg
+        }
+        TSP: Trust Service Provider {
+            icon: https://icons.terrastruct.com/azure%2FWeb%20Service%20Color%2FApp%20Service%20Certificates.svg
+        }
+        registry: Authentic Sources {
+            icon: https://icons.terrastruct.com/azure%2FIntegration%20Service%20Color%2FAzure%20Data%20Catalog.svg
+        }
+
+        COO -> TSP: Request a\ncertificate for signatures
 
         TSP <-> registry: Verify trusted data
         
-        TSP -> COO --: Provide certificate for signature
+        TSP -> COO: Provide certificate for signature
 
         COO -> employee: Issue LEARCredential
 
@@ -436,6 +413,31 @@ localBiblio:
             Authentic Sources in scope of Annex VI are required to provide interfaces to Qualified Electronic Attestation of Attributes  (QEAA) Providers to verify the authenticity of the above attributes, either directly or via designated intermediaries recognised at national level.
             
             Authentic Sources may also issue (Q)EAA-s themselves if they meet the requirements of the eIDAS Regulation. It is up to the Member States to define terms and conditions for the provisioning of these services, but according to the minimum technical specifications, standards, and procedures applicable to the verification procedures for qualified electronic attestations of attributes.
+
+        <x-diagram .d2>
+            shape: sequence_diagram
+
+            # Definition of the participants
+            COO: COO of GoodAir {
+                icon: https://icons.terrastruct.com/essentials%2F365-user.svg
+            }
+            TSP: Trust Service Provider {
+                icon: https://icons.terrastruct.com/azure%2FWeb%20Service%20Color%2FApp%20Service%20Certificates.svg
+            }
+            registry: Authentic Sources {
+                icon: https://icons.terrastruct.com/azure%2FIntegration%20Service%20Color%2FAzure%20Data%20Catalog.svg
+            }
+
+            COO -> TSP: Request a\ncertificate for signatures
+
+            Verification {
+                TSP."Data about the legal status of the company and powers of representation of the applicant"
+                TSP <-> registry: Verify trusted data
+
+            }
+            
+
+            TSP -> COO: Provide certificate for signature
 
 
         In accordance to the policies, RealTruth made those validations when issuing the certificate to the COO, in such a way that the Relying Parties verifying the certificate can have a high level of trust in the assertion that the natural person identified in the certificate (with Spanish ID of 56565656V) is a legal representative of he GoodAir company (organizationIdentifier VATES-12345678).
@@ -636,47 +638,10 @@ localBiblio:
         Not all types of Verifiable Credentials can be used for authentication, so for the purpose of this discussion we use the
         same taxonomy as <a href="https://ec.europa.eu/digital-building-blocks/wikis/display/EBSIDOC/Data+Models+and+Schemas">defined in EBSI</a>:
 
-        <x-diagram .ditaa>The LEARCredential is a Verifiable Authorisation and a VerifiableID
-                               +-----------------+
-                               |                 |
-                               |  W3C Verifiable |
-                               |    Credential   |
-                               |                 |
-                               +-----------------+
-                                        ^
-                                        |
-                                     extends
-                                        |
-                               +--------+--------+
-                               |                 |
-                               |   Verifiable    |
-                               |  Attestation    |
-                               |                 |
-                               +-----------------+
-                                        ^
-                                        |
-                                     extends
-                                        |
-                   /--------------------+-------------------\
-                   |                    |                   |
-            +------+--------+    +------+-------+    +------+--------+
-            |               |    |              |    |    Other      |
-            |  Verifiable   |    |  Verifiable  |    |   Verifiable  |
-            | Authorisation |    |     ID       |    |  Attestations |
-            |               |    |              |    |               |
-            +---------------+    +--------------+    +---------------+
-                    ^                    ^
-                    |       extends      |
-                    \---------+----------/
-                              |
-                     +--------+---------+
-                     |                  |
-                     |                  |
-                     |  LEARCredential  |
-                     |                  |
-                     |cGRE              |
-                     +------------------+
+        <figure #vc_taxonomy>
+            <img src="images/login_in_DOME/verifiable_data_model.png" alt="" />
 
+            <figcaption>Request and receive Credential.
 
         The full explanation is in the EBSI site, but for our purposes an example is enough.
 

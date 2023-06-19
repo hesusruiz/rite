@@ -9,8 +9,8 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "main.go",
-            "args": ["onboarding.rite"]
+            "program": "${fileDirname}",
+            "args": ["authn.rite"]
         }
     ]
 }

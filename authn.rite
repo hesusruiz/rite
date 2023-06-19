@@ -624,113 +624,111 @@ localBiblio:
 
     <section>Overview
 
-    The diagram below is describes the high level logical architecture that we will be use as a reference for the detailed explanations in the next sections.
+        The diagram below is describes the high level logical architecture that we will be use as a reference for the detailed explanations in the next sections.
 
-    The diagram uses the logical concepts also used in the XACML reference architecture, but the description is agnostic to the actual policy language used in a concrete implementation.
+        The diagram uses the logical concepts also used in the XACML reference architecture, but the description is agnostic to the actual policy language used in a concrete implementation.
 
-    In this description we assume that the user is a natural person who wants to access a protected resource. However, the architecture support machine-to-machine (M2M) interactions. The differences will be described in the description when they are relevant.
-
-
-    <x-img @images/login_in_DOME/authn_architecture.drawio.png>Architecture overview 
+        In this description we assume that the user is a natural person who wants to access a protected resource. However, the architecture support machine-to-machine (M2M) interactions. The differences will be described in the description when they are relevant.
 
 
-    // <x-diagram .d2>
-    //     shape: sequence_diagram
-
-    //     # Definition of the participants
-    //     user: John Doe {
-    //         icon: https://icons.terrastruct.com/essentials%2F365-user.svg
-    //     }
-    //     mobile: Webapp {
-    //         icon: https://icons.terrastruct.com/tech%2F052-smartphone-3.svg
-    //     }
-    //     browser: Laptop {
-    //         icon: https://icons.terrastruct.com/tech%2Fbrowser-2.svg
-    //     }
-    //     portal: Portal {
-    //         icon: https://icons.terrastruct.com/azure%2FIntegration%20Service%20Color%2FSoftware%20as%20a%20Service%20%28SaaS%29.svg
-    //     }
-    //     verifier: VC Verifier {
-    //         icon: https://icons.terrastruct.com/azure%2FSecurity%20Service%20Color%2FSecurity%20Center.svg
-    //     }
-    //     # ==================================================
-
-    //     Starting the OpenID for Verifiable Presentations flow {
-
-    //         # (1) The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
-    //         user -> browser: (1) Access DOM portal {
-    //             style.stroke-dash: 5
-    //         }
-        
-    //         # (2) The browser sends a request to the Packet Delivery portal server.
-    //         browser -> portal.t: (2) Access DOM portal
-
-    //         # (3) The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
-    //         portal.t -> browser.t: (3) HTTP 302 (redirect)
-    //         browser.t -> verifier.t: (3) Access Login page
-
-    //         # (4) The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
-    //         verifier.t -> verifier.t: (4) Generate QR code
-    //         verifier.t -> browser: (5) Display QR code
-
-    //         # (6) The user starts the scan with the wallet
-    //         user -> mobile.t: (6) Start QR scan {
-    //             style.stroke-dash: 5
-    //         }
-    //         browser -> mobile.t: (6) Scan QR code {
-    //             style.stroke-dash: 5
-    //         }
-
-    //         # (7) After confirmation by the user, the wallet performs a ` GET /authentication-requests` endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
-    //         mobile.t -> verifier.ar: (7) GET /authentication-requests
-
-    //     }
-
-    //     Generating the Authorization Request {
-
-    //         verifier.ar -> verifier.ar: (8) Create Authorization Request
-    //         verifier.ar -> mobile.var: (9) Reply with Authorization Request
-
-    //     }
-
-    //     Verification of the Authorization Request {
-
-    //         mobile.var -> mobile.var: (10) Verification of signature of Authorization Request
-
-    //         mobile.var -> mobile.var: (11) Verification of the identity of the Relying Party
-
-    //         mobile.var -> mobile.var: (12) Verification of the trusted nature of the RP
-
-    //     }
-
-    //     Creating and sending the Authentication Response {
-
-    //         mobile.car -> mobile.car: (13) Create Authentication Response
-        
-    //         mobile.car -> verifier.resp: (14) POST /api/siop/authentication_response
-
-    //     }
-
-    //     Authenticating the user with the LEARCredential {
-
-    //         verifier.resp -> verifier.resp: (15 and 16) Verify signature and issuer of LEARCredential
-
-    //         verifier.resp -> verifier.resp: (17) Verify sender of the Authentication Response
-
-    //         verifier.resp -> verifier.resp: (18) Generate Access Token
-
-    //         verifier.resp -> mobile: (19) HTTP 200 with <access token>
-
-    //         verifier.resp -> portal.refresh: (20) Notify with <access token> and <state>
-
-    //         portal.refresh -> browser: (21) Refresh screen with services and include <access token>
-
-    //     }
+        <x-img @images/login_in_DOME/authn_architecture_numbered.drawio.png>Architecture overview 
 
 
-    <section>Send a request to access a protected resource
+        // <x-diagram .d2>
+        //     shape: sequence_diagram
 
-        The user sends a request to perform a protected operation, which we define as any operation that requires authorisation.
+        //     # Definition of the participants
+        //     user: John Doe {
+        //         icon: https://icons.terrastruct.com/essentials%2F365-user.svg
+        //     }
+        //     mobile: Webapp {
+        //         icon: https://icons.terrastruct.com/tech%2F052-smartphone-3.svg
+        //     }
+        //     browser: Laptop {
+        //         icon: https://icons.terrastruct.com/tech%2Fbrowser-2.svg
+        //     }
+        //     portal: Portal {
+        //         icon: https://icons.terrastruct.com/azure%2FIntegration%20Service%20Color%2FSoftware%20as%20a%20Service%20%28SaaS%29.svg
+        //     }
+        //     verifier: VC Verifier {
+        //         icon: https://icons.terrastruct.com/azure%2FSecurity%20Service%20Color%2FSecurity%20Center.svg
+        //     }
+        //     # ==================================================
+
+        //     Starting the OpenID for Verifiable Presentations flow {
+
+        //         # (1) The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
+        //         user -> browser: (1) Access DOM portal {
+        //             style.stroke-dash: 5
+        //         }
+            
+        //         # (2) The browser sends a request to the Packet Delivery portal server.
+        //         browser -> portal.t: (2) Access DOM portal
+
+        //         # (3) The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
+        //         portal.t -> browser.t: (3) HTTP 302 (redirect)
+        //         browser.t -> verifier.t: (3) Access Login page
+
+        //         # (4) The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
+        //         verifier.t -> verifier.t: (4) Generate QR code
+        //         verifier.t -> browser: (5) Display QR code
+
+        //         # (6) The user starts the scan with the wallet
+        //         user -> mobile.t: (6) Start QR scan {
+        //             style.stroke-dash: 5
+        //         }
+        //         browser -> mobile.t: (6) Scan QR code {
+        //             style.stroke-dash: 5
+        //         }
+
+        //         # (7) After confirmation by the user, the wallet performs a ` GET /authentication-requests` endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
+        //         mobile.t -> verifier.ar: (7) GET /authentication-requests
+
+        //     }
+
+        //     Generating the Authorization Request {
+
+        //         verifier.ar -> verifier.ar: (8) Create Authorization Request
+        //         verifier.ar -> mobile.var: (9) Reply with Authorization Request
+
+        //     }
+
+        //     Verification of the Authorization Request {
+
+        //         mobile.var -> mobile.var: (10) Verification of signature of Authorization Request
+
+        //         mobile.var -> mobile.var: (11) Verification of the identity of the Relying Party
+
+        //         mobile.var -> mobile.var: (12) Verification of the trusted nature of the RP
+
+        //     }
+
+        //     Creating and sending the Authentication Response {
+
+        //         mobile.car -> mobile.car: (13) Create Authentication Response
+            
+        //         mobile.car -> verifier.resp: (14) POST /api/siop/authentication_response
+
+        //     }
+
+        //     Authenticating the user with the LEARCredential {
+
+        //         verifier.resp -> verifier.resp: (15 and 16) Verify signature and issuer of LEARCredential
+
+        //         verifier.resp -> verifier.resp: (17) Verify sender of the Authentication Response
+
+        //         verifier.resp -> verifier.resp: (18) Generate Access Token
+
+        //         verifier.resp -> mobile: (19) HTTP 200 with <access token>
+
+        //         verifier.resp -> portal.refresh: (20) Notify with <access token> and <state>
+
+        //         portal.refresh -> browser: (21) Refresh screen with services and include <access token>
+
+        //     }
+
+
+        We assume here that the user sends a request to perform a protected operation, which we define as any operation that requires authorisation.
 
         An example is an operation on resources controlled by Company A, where Company A allows a subset of employees of Company B to perform the operation. Another similar example is when Company A allows a subset of machines/devices of Company B to perform the operation.
 
@@ -746,63 +744,55 @@ localBiblio:
                 If the user is a machine using an API, the system can simply reject the request or reject it including information in the response that the caller can interpret to perform the login and retry.
 
 
-    <section>AuthenticationStarting the OpenID for Verifiable Presentations flow
+    <section>Starting the OpenID for Verifiable Presentations flow
 
-        The process starts an OpenID for Verifiable Presentations flow combined with combined with the Self-Issued OP v2 specification [[OpenID.SIOP2]], where the Verifier component of the portal plays the role of a Relying Party (RP in Open ID Connect terminology) and the wallet of the user is a Self-Issued IdP.
+        In this section we assume that the user tries to access a protected resource and that the user is not authenticated. The flow when the user is already authenticated is the same, just skipping the authentication phase (steps 1 to 6).
+
+        The authentication process starts an OpenID for Verifiable Presentations flow combined with the Self-Issued OP v2 specification [[OpenID.SIOP2]], where the VC Verifier component of the portal plays the role of a Relying Party (RP in Open ID Connect terminology) and the wallet of the user is a Self-Issued IdP.
         
         In this step, the Verifier has to send an Authorization Request to the wallet. But as a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
 
         We use a QR code to start the process and allow the wallet to receive the Authorization Request from the Verifier, and respond with an Authorization Response, sent to the Verifier in the body of an HTTP `POST` request.
 
-        <x-diagram .d2>
-            shape: sequence_diagram
+        <x-diagram .plantuml>Starting the authentication phase
+            box "Company" #WhiteSmoke
+                actor "User" as user
+                participant "Wallet" as mobile
+                participant "Laptop" as browser
+            end box
+            box "Relying Party" #WhiteSmoke
+                participant "Portal" as portal
+                participant "VC Verifier" as verifier
+            end box
 
-            # Definition of the participants
-            user: John Doe {
-                icon: https://icons.terrastruct.com/essentials%2F365-user.svg
-            }
-            mobile: Webapp {
-                icon: https://icons.terrastruct.com/tech%2F052-smartphone-3.svg
-            }
-            browser: Laptop {
-                icon: https://icons.terrastruct.com/tech%2Fbrowser-2.svg
-            }
-            portal: Portal {
-                icon: https://icons.terrastruct.com/azure%2FIntegration%20Service%20Color%2FSoftware%20as%20a%20Service%20%28SaaS%29.svg
-            }
-            verifier: VC Verifier {
-                icon: https://icons.terrastruct.com/azure%2FSecurity%20Service%20Color%2FSecurity%20Center.svg
-            }
-            # ==================================================
+            # -(1) The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
+                A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
 
-            # (1) The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
-            user -> browser: (1) Access DOM portal {
-                style.stroke-dash: 5
-            }
+                <x-code .ini>
+                    https://verifier.dome-marketplace.eu/authentication-requests?state=af0ifjsldkj
+
+            user -> browser ++: (1) Access DOM portal
         
-            # (2) The browser sends a request to the Packet Delivery portal server.
-            browser -> portal.t: (2) Access DOM portal
+            # -(2) The browser sends a request to the Packet Delivery portal server.
+            browser -> portal --++: (2) Access DOM portal
 
             # (3) The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
-            portal.t -> browser.t: (3) HTTP 302 (redirect)
-            browser.t -> verifier.t: (3) Access Login page
+            portal -> browser --++: (3) HTTP 302 (redirect)
+            browser -> verifier --++: (3) Access Login page
 
             # (4) The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
-            verifier.t -> verifier.t: (4) Generate QR code
-            verifier.t -> browser: (5) Display QR code
+            verifier -> verifier: (4) Generate QR code
+            verifier -> browser --: (5) Display QR code
 
             # (6) The user starts the scan with the wallet
-            user -> mobile.t: (6) Start QR scan {
-                style.stroke-dash: 5
-            }
-            browser -> mobile.t: (6) Scan QR code {
-                style.stroke-dash: 5
-            }
+            user -> mobile ++: (6) Start QR scan
+            browser -> mobile: (6) Scan QR code
 
-            # (7) After confirmation by the user, the wallet performs a ` GET /authentication-requests` endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
-            mobile.t -> verifier.ar: (7) GET /authentication-requests
-            verifier.ar -> verifier.ar: (8) Create Authorization Request
-            verifier.ar -> mobile: (9) Reply with Authorization Request
+            # (7) After confirmation by the user, the wallet performs a `GET /authentication-requests` endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
+            mobile -> verifier --++: (7) GET /authentication-requests
+            verifier -> verifier: (8) Create Authorization Request
+            verifier -> mobile --: (9) Reply with Authorization Request
+
 
         <ul .plain>
 
