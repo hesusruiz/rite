@@ -18,8 +18,9 @@ const (
 	ErrorNode NodeType = iota
 	DocumentNode
 	SectionNode
-	VerbatimNode
+	DiagramNode
 	ExplanationNode
+	VerbatimNode
 
 	// ParagraphNode
 	// DivNode
@@ -40,6 +41,8 @@ func (n NodeType) String() string {
 		return "Document"
 	case SectionNode:
 		return "Section"
+	case DiagramNode:
+		return "Diagram"
 	case VerbatimNode:
 		return "Verbatim"
 	case ExplanationNode:
@@ -117,7 +120,7 @@ func (n Node) String() string {
 		return ""
 	case DocumentNode:
 		return "TopLevelDocument"
-	case SectionNode, VerbatimNode, ExplanationNode:
+	case SectionNode, VerbatimNode, DiagramNode, ExplanationNode:
 		return "<" + n.tagString() + ">"
 	}
 	return "Invalid(" + strconv.Itoa(int(n.Type)) + ")"

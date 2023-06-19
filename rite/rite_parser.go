@@ -120,10 +120,13 @@ func (p *Parser) SkipBlankLines() bool {
 }
 
 func (p *Parser) ReadLine() *Text {
-	log.Printf("ReadLine in line: %d\n", p.currentLineNum())
 
 	if p.lastError != nil {
 		return nil
+	}
+
+	if p.bufferedLine != nil && p.bufferedPara != nil {
+		log.Fatalf("reading a line when both bufferd line and paragraph exist")
 	}
 
 	// If there is a line alredy buffered, return it
@@ -172,46 +175,30 @@ func (p *Parser) ReadLine() *Text {
 }
 
 func (p *Parser) UnreadLine(line *Text) {
-	log.Printf("Unreadline in line: %d\n", p.currentLineNum())
-	// if p.bufferedLine != nil {
-	// 	log.Fatalf("UnreadLine: too many calls in line: %d\n", p.currentLineNum())
-	// }
-	// if p.bufferedPara != nil {
-	// 	log.Fatalf("UnreadLine: already a Paragraph pending in line: %d\n", p.currentLineNum())
-	// }
+	if p.bufferedLine != nil {
+		log.Fatalf("UnreadLine: too many calls in line: %d\n", p.currentLineNum())
+	}
 	p.bufferedLine = line
 }
 
 func (p *Parser) UnreadParagraph(para *Text) {
-	log.Printf("UnreadParagraph in line: %d\n", p.currentLineNum())
-	// if p.bufferedPara != nil {
-	// 	log.Fatalf("UnreadParagraph: too many calls in line: %d\n", p.currentLineNum())
-	// }
-	// if p.bufferedLine != nil {
-	// 	log.Printf("UnreadParagraph: already a Line pending in line: %d\n", p.currentLineNum())
-	// }
+	if p.bufferedPara != nil {
+		log.Fatalf("UnreadParagraph: too many calls in line: %d\n", p.currentLineNum())
+	}
 	p.bufferedPara = para
 }
 
-func (p *Parser) ReadParagraph() *Text {
-	log.Printf("ReadParagraph in line: %d\n", p.currentLineNum())
+func (p *Parser) ReadParagraph(min_indentation int) *Text {
 
 	if p.lastError != nil {
 		return nil
 	}
 
-	if p.bufferedLine != nil && p.bufferedPara != nil {
-		log.Printf("ReadParagraph: both a Line and a Paragraph are buffered at the same time in line: %d\n", p.currentLineNum())
-	}
 	// If there is a paragraph alredy buffered, return it
 	if p.bufferedPara != nil {
 		para := p.bufferedPara
 		p.bufferedPara = nil
 		return para
-	}
-
-	if p.bufferedLine != nil {
-		log.Printf("reading a paragraph when a Line is buffered in line: %d\n", p.currentLineNum())
 	}
 
 	// Skip all blank lines until EOF or another error
@@ -236,6 +223,13 @@ func (p *Parser) ReadParagraph() *Text {
 			break
 		}
 
+		// If the line read is not more indented than the min_indentation, we have finished the paragraph
+		if line.Indentation <= min_indentation {
+			p.UnreadLine(line)
+			break
+		}
+
+		// Special case: A line starting with '-' if a line item and is considered a different paragraph
 		if para != nil && line.Indentation == para.Indentation && line.Content[0] == '-' {
 			p.UnreadLine(line)
 			break
@@ -258,11 +252,13 @@ func (p *Parser) ReadParagraph() *Text {
 
 	}
 
-	// Get the accumulated contents of all lines
-	para.Content = br.Bytes()
+	if para != nil {
+		// Get the accumulated contents of all lines
+		para.Content = br.Bytes()
 
-	// Preprocess the paragraph
-	para = p.PreprocesLine(para)
+		// Preprocess the paragraph
+		para = p.PreprocesLine(para)
+	}
 
 	return para
 
@@ -391,7 +387,9 @@ func (p *Parser) NewNode(text *Text) *Node {
 
 	// Determine type of node
 	switch n.Name {
-	case "x-diagram", "x-code", "pre":
+	case "x-diagram":
+		n.Type = DiagramNode
+	case "x-code", "pre":
 		n.Type = VerbatimNode
 	default:
 		n.Type = SectionNode
@@ -488,29 +486,24 @@ func (p *Parser) NewNode(text *Text) *Node {
 	return n
 }
 
-func (p *Parser) ParseBlock(parent *Node) bool {
+func (p *Parser) ParseBlock(parent *Node) {
 
 	// The first line will determine the indentation of the block
 	blockIndentation := -1
 
 	for {
 
-		// Read a paragraph, skipping all blank lines if needed
-		para := p.ReadParagraph()
-		// If no paragraph, we have reached the end of the file
+		// Read a paragraph more indented than the parent, skipping all blank lines if needed
+		para := p.ReadParagraph(parent.Indentation)
+
+		// If no paragraph, we have reached the end of the block or the file
 		if para == nil {
-			return false
+			return
 		}
 
 		// Set the indentation of the first line of the inner block
 		if blockIndentation == -1 {
 			blockIndentation = para.Indentation
-		}
-
-		// The block ends when the line has less or equal indentation than the parent node
-		if para.Indentation <= parent.Indentation {
-			p.UnreadParagraph(para)
-			return false
 		}
 
 		// This line belongs to this block
@@ -522,8 +515,12 @@ func (p *Parser) ParseBlock(parent *Node) bool {
 
 			// DEBUG
 			// fmt.Printf("%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
+			if sibling.Type == DiagramNode {
+				fmt.Printf("***DIAGRAM***%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
+				p.ParseDiagram(sibling)
+			}
 			if sibling.Type == VerbatimNode {
-				fmt.Printf("***VERBATIM***%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
+				fmt.Printf("***Verbatim***%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
 				p.ParseVerbatim(sibling)
 			}
 
@@ -632,9 +629,22 @@ func (p *Parser) processDiagramExplanation(node *Node) {
 	log.Fatalf("processDiagramExplanation, line %v: invalid explanation in list bullet\n", lineNum)
 }
 
-func (p *Parser) ParseVerbatim(parent *Node) bool {
+func (p *Parser) ParseDiagram(parent *Node) bool {
 
-	fmt.Println(">>>>", string(parent.RawText.Content))
+	// Check if the class of diagram has been set
+	if len(parent.Class) == 0 {
+		log.Fatal("diagram type not found", "line", parent.LineNumber)
+	}
+
+	// Get the type of diagram
+	diagType := strings.ToLower(string(parent.Class))
+
+	imageType := "png"
+	if diagType == "d2" {
+		imageType = "svg"
+	}
+
+	fmt.Println(">>>>", string(parent.RawText.Content), "type", imageType)
 
 	// Skip all the blank lines at the beginning of the block
 	if !p.SkipBlankLines() {
@@ -646,22 +656,12 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 	sectionIndent := parent.Indentation
 	blockIndentation := -1
 
-	// Check if the class of diagram has been set
-	if len(parent.Class) == 0 {
-		log.Fatal("diagram type not found", "line", parent.LineNumber)
-	}
-
-	// // Get the type of diagram
-	// diagType := strings.ToLower(string(node.Class))
-
-	// imageType := "png"
-	// if diagType == "d2" {
-	// 	imageType = "svg"
-	// }
-
 	// This will hold the string with the text lines for diagram
-	// var diagContent []byte
-	var diagContent ByteRenderer
+	diagContentLines := []*Text{}
+
+	// We are going to calculate the minimum indentation for the whole block.
+	// The starting point is a very big value which will be reduced to the correct value during the loop
+	minimumIndentation := 9999999
 
 	// Loop until the end of the document or until we find a line with less or equal indentation
 	// Blank lines are assumed to pertain to the verbatim section
@@ -671,7 +671,6 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 
 		// If the line is blank, continue with the loop
 		if line == nil {
-			diagContent.Renderln()
 			continue
 		}
 
@@ -686,14 +685,13 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 			break
 		}
 
-		// String with as many blanks as indentation
-		ind := bytes.Repeat([]byte(" "), line.Indentation-sectionIndent)
-		diagContent.Render(ind)
-
 		// Lines starting with a '#' are special
 		if line.Content[0] != '#' {
-			// Append the line with a newline at the end
-			diagContent.Renderln(line.Content)
+			if line.Indentation < minimumIndentation {
+				minimumIndentation = line.Indentation
+			}
+			// Append the line
+			diagContentLines = append(diagContentLines, line)
 
 			// Go to process next line
 			continue
@@ -722,8 +720,99 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 
 	}
 
-	dg := diagContent.String()
-	fmt.Println("===== Begin: ", parent.LineNumber, "=================")
+	fmt.Println("===== Begin: ", parent.LineNumber, "indent:", minimumIndentation, "=================")
+	var br ByteRenderer
+	for _, line := range diagContentLines {
+		br.Renderln(bytes.Repeat([]byte(" "), line.Indentation-minimumIndentation), line.Content)
+	}
+	dg := br.String()
+	fmt.Println(dg)
+	fmt.Println("===== End =================")
+
+	return true
+}
+
+func (p *Parser) ParseVerbatim(parent *Node) bool {
+
+	fmt.Println(">>>>", string(parent.RawText.Content))
+
+	// The first line will determine the indentation of the block
+	sectionIndent := parent.Indentation
+	blockIndentation := -1
+
+	// This will hold the string with the text lines for diagram
+	diagContentLines := []*Text{}
+
+	// We are going to calculate the minimum indentation for the whole block.
+	// The starting point is a very big value which will be reduced to the correct value during the loop
+	minimumIndentation := 9999999
+
+	// Loop until the end of the document or until we find a line with less or equal indentation
+	// Blank lines are assumed to pertain to the verbatim section
+	for {
+
+		line := p.ReadLine()
+
+		// If the line is blank, continue with the loop
+		if line == nil {
+			blankText := &Text{}
+			diagContentLines = append(diagContentLines, blankText)
+			continue
+		}
+
+		// Set the indentation of the first line of the inner block
+		if blockIndentation == -1 {
+			blockIndentation = line.Indentation
+		}
+
+		// The paragraph is finished if the line has less or equal indentation than the section
+		if line.Indentation <= sectionIndent {
+			p.UnreadLine(line)
+			break
+		}
+
+		// Process normal lines
+		if !bytes.HasPrefix(line.Content, []byte("# -")) {
+
+			// Update minimum indentation if needed
+			if line.Indentation < minimumIndentation {
+				minimumIndentation = line.Indentation
+			}
+
+			// Append the line
+			diagContentLines = append(diagContentLines, line)
+
+		} else {
+
+			// Create a node to parse the explanation text
+			child := &Node{}
+			parent.AppendChild(child)
+			child.Type = ExplanationNode
+
+			// Add the paragraph to the node's paragraph
+			child.RawText = line
+			// TODO: this is redundant, will eliminate it later
+			child.Indentation = line.Indentation
+			child.LineNumber = line.LineNumber
+
+			p.processDiagramExplanation(child)
+		}
+
+		// Go to process next line
+		continue
+
+	}
+
+	fmt.Println("===== Begin: ", parent.LineNumber, "indent:", minimumIndentation, "=================")
+	var br ByteRenderer
+	for _, line := range diagContentLines {
+		if len(line.Content) > 0 {
+			br.Renderln(bytes.Repeat([]byte(" "), line.Indentation-minimumIndentation), line.Content)
+		} else {
+			br.Renderln()
+		}
+	}
+	dg := br.String()
 	fmt.Println(dg)
 	fmt.Println("===== End =================")
 
