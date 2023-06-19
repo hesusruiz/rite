@@ -33,7 +33,7 @@ func (r *ByteRenderer) Render(inputs ...any) {
 		case rune:
 			r.WriteRune(v)
 		default:
-			log.Fatalf("attemping to write something not a string, int, rune, []byte or byte: %T", s)
+			log.Panicf("attemping to write something not a string, int, rune, []byte or byte: %T", s)
 		}
 	}
 }
@@ -354,6 +354,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 	if len(text.Content) < 3 || text.Content[0] != startHTMLTag {
 		n.Type = SectionNode
 		n.Name = "p"
+		n.RestLine = text.Content
 		return n
 	}
 
@@ -382,6 +383,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 	if contains(noSectionElements, name) || contains(voidElements, name) {
 		n.Type = SectionNode
 		n.Name = "p"
+		n.RestLine = text.Content
 		return n
 	}
 
@@ -516,11 +518,9 @@ func (p *Parser) ParseBlock(parent *Node) {
 			// DEBUG
 			// fmt.Printf("%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
 			if sibling.Type == DiagramNode {
-				fmt.Printf("***DIAGRAM***%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
 				p.ParseVerbatim(sibling)
 			}
 			if sibling.Type == VerbatimNode {
-				fmt.Printf("***Verbatim***%d: %s%s\n", sibling.LineNumber, strings.Repeat(" ", blockIndentation), sibling)
 				p.ParseVerbatim(sibling)
 			}
 
@@ -631,27 +631,6 @@ func (p *Parser) parseVerbatimExplanation(node *Node) {
 
 func (p *Parser) ParseVerbatim(parent *Node) bool {
 
-	// if parent.Type == DiagramNode {
-
-	// 	// Check if the class of diagram has been set
-	// 	if len(parent.Class) == 0 {
-	// 		log.Fatal("diagram type not found", "line", parent.LineNumber)
-	// 	}
-
-	// 	// Get the type of diagram
-	// 	diagType := strings.ToLower(string(parent.Class))
-
-	// 	imageType := "png"
-	// 	if diagType == "d2" {
-	// 		imageType = "svg"
-	// 	}
-
-	// 	fmt.Println(">>>>", string(parent.RawText.Content), "type", imageType)
-
-	// } else {
-	// 	fmt.Println(">>>>", string(parent.RawText.Content))
-	// }
-
 	// The first line will determine the indentation of the block
 	sectionIndent := parent.Indentation
 	blockIndentation := -1
@@ -756,138 +735,24 @@ func (p *Parser) Parse() error {
 		return err
 	}
 
+	// Parse document and generate AST
 	p.ParseBlock(p.doc)
 
 	// DEBUG: travel the tree
-	p.Travel(p.doc)
+	theHTML := p.RenderHTML(p.doc)
+	fmt.Println(string(theHTML))
 
 	return nil
 
 }
 
-func (p *Parser) Travel(n *Node) {
-	// Print the node info
-
+func (p *Parser) RenderHTML(n *Node) []byte {
+	br := &ByteRenderer{}
 	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-		indentStr := strings.Repeat(" ", theNode.Indentation)
-		if theNode.Type == VerbatimNode || theNode.Type == DiagramNode {
-			fmt.Printf("%d:%s%v-%v\n", theNode.LineNumber, indentStr, theNode, theNode.Type)
-			fmt.Println(string(theNode.InnerText))
-
-		} else {
-			fmt.Printf("%d:%s%v-%v\n", theNode.LineNumber, indentStr, theNode, theNode.Type)
-		}
-		p.Travel(theNode)
-
+		theNode.RenderHTML(br)
 	}
-}
-
-func skipWhiteSpace(line []byte) []byte {
-	for i, c := range line {
-		if c != ' ' && c != '\t' {
-			return line[i:]
-		}
-	}
-	return nil
-}
-
-func readWord(line []byte) (word []byte, rest []byte) {
-
-	// If no blank space found, return the whole tagSpec
-	indexSpace := bytes.IndexByte(line, ' ')
-	if indexSpace == -1 {
-		return line, nil
-	}
-
-	// Otherwise, return the tag name and the rest of the tag
-	word = line[:indexSpace]
-
-	// And the remaining text in the line
-	line = line[indexSpace+1:]
-
-	line = skipWhiteSpace(line)
-	return word, line
-
-}
-
-func readTagName(tagSpec []byte) (tagName []byte, rest []byte) {
-	return readWord(tagSpec)
-}
-
-func readRiteAttribute(tagSpec []byte) (Attribute, []byte) {
-	attr := Attribute{}
-
-	indexSpace := bytes.IndexByte(tagSpec, ' ')
-	if indexSpace == -1 {
-		attr.Val = string(tagSpec)
-		return attr, nil
-	} else {
-
-		// Extract the whole tag spec
-		attr.Val = string(tagSpec[:indexSpace])
-
-		// And the remaining text in the line
-		tagSpec = tagSpec[indexSpace+1:]
-
-		tagSpec = skipWhiteSpace(tagSpec)
-		return attr, tagSpec
-
-	}
-
-}
-
-func readTagAttrKey(tagSpec []byte) (Attribute, []byte) {
-	attr := Attribute{}
-
-	if len(tagSpec) == 0 {
-		return attr, nil
-	}
-
-	workingTagSpec := tagSpec
-
-	// Select the first word, ending on whitespace, '=' or endtag char '/'
-	for i, c := range workingTagSpec {
-		if c == ' ' || c == '\t' || c == '/' || c == '=' {
-			attr.Key = string(workingTagSpec[:i])
-			workingTagSpec = workingTagSpec[i:]
-			break
-		}
-		if i == len(workingTagSpec)-1 {
-			attr.Key = string(workingTagSpec)
-			return attr, nil
-		}
-	}
-
-	// Return if next character is not the '=' sign
-	workingTagSpec = skipWhiteSpace(workingTagSpec)
-	if len(workingTagSpec) == 0 || workingTagSpec[0] != '=' {
-		return attr, workingTagSpec
-	}
-
-	// Skip whitespace after the '=' sign
-	workingTagSpec = skipWhiteSpace(workingTagSpec[1:])
-
-	// This must be the quotation mark, or the end
-	quote := workingTagSpec[0]
-
-	switch quote {
-	case '>':
-		return attr, nil
-
-	case '\'', '"':
-		workingTagSpec = workingTagSpec[1:]
-		for i, c := range workingTagSpec {
-			if c == quote {
-				attr.Val = string(workingTagSpec)[:i]
-				return attr, workingTagSpec[i+1:]
-			}
-		}
-	default:
-		fmt.Printf("malformed tag: %s\n", workingTagSpec)
-		panic("malformed tag")
-
-	}
-	return attr, workingTagSpec
+	theHTML := br.Bytes()
+	return theHTML
 }
 
 // NewDocumentFromFile reads a file and preprocesses it in memory
@@ -993,15 +858,4 @@ func (p *Parser) preprocessYAMLHeader() error {
 	}
 
 	return nil
-}
-
-func trimLeft(input []byte, c byte) []byte {
-	offset := 0
-	for len(input) > 0 && input[0] == c {
-		input = input[1:]
-	}
-	if len(input) == 0 {
-		return nil
-	}
-	return input[offset:]
 }

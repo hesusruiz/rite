@@ -6,9 +6,26 @@ package rite
 
 import (
 	"bytes"
+	"context"
+	"crypto/md5"
 	"errors"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
+
+	"oss.terrastruct.com/d2/d2graph"
+	"oss.terrastruct.com/d2/d2layouts/d2dagrelayout"
+	"oss.terrastruct.com/d2/d2lib"
+	"oss.terrastruct.com/d2/d2renderers/d2svg"
+	"oss.terrastruct.com/d2/d2themes/d2themescatalog"
+	"oss.terrastruct.com/d2/lib/textmeasure"
 )
 
 // A NodeType is the type of a Node.
@@ -125,6 +142,377 @@ func (n Node) String() string {
 		return "<" + n.tagString() + ">"
 	}
 	return "Invalid(" + strconv.Itoa(int(n.Type)) + ")"
+}
+
+func (n Node) renderTagString(buf *ByteRenderer) {
+	buf.Render('<', n.Name)
+	if n.Id != nil {
+		buf.Render(` id="`, n.Id, `"`)
+	}
+	if n.Class != nil {
+		buf.Render(` class="`, n.Class, `"`)
+	}
+	if n.Src != nil {
+		buf.Render(` src="`, n.Src, `"`)
+	}
+	if n.Href != nil {
+		buf.Render(` href="`, n.Href, `"`)
+	}
+
+	for _, a := range n.Attr {
+		buf.Render(' ', a.Key, `="`)
+		escape(buf, a.Val)
+		buf.Render('"')
+	}
+	buf.Render('>')
+}
+
+func (n *Node) String2() string {
+	br := &ByteRenderer{}
+	n.RenderHTML(br)
+	s := br.String()
+	return s
+}
+
+func (n *Node) RenderHTML(br *ByteRenderer) {
+
+	switch n.Type {
+	case DiagramNode:
+		n.RenderDiagram(br)
+	case ExplanationNode:
+		// Render the start tag of this node
+		br.Renderln(strings.Repeat(" ", n.Indentation), n.RawText.Content)
+
+		// We visit depth-first the children of the
+		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+			theNode.RenderHTML(br)
+		}
+
+		// Render the end tag of the node
+		br.Renderln(strings.Repeat(" ", n.Indentation), "</li>")
+
+	default:
+		_, startTag, endTag, rest := n.RenderTheTag()
+
+		// Render the start tag of this node
+		br.Renderln(strings.Repeat(" ", n.Indentation), startTag, rest)
+
+		// We visit depth-first the children of the
+		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+			theNode.RenderHTML(br)
+		}
+
+		// Render the end tag of the node
+		br.Renderln(strings.Repeat(" ", n.Indentation), endTag)
+
+	}
+
+}
+
+func (n *Node) RenderTheTag() (tagName string, startTag []byte, endTag []byte, rest []byte) {
+
+	switch n.Name {
+
+	case "pre":
+		// Handle the 'pre' tag, with special case when the section started with '<pre><code>
+		startTag = fmt.Appendf(startTag, "<pre")
+		if bytes.HasPrefix(n.RestLine, []byte("<code")) {
+			endTag = fmt.Appendf(endTag, "</code>")
+		}
+		endTag = fmt.Appendf(endTag, "</pre>")
+
+	case "x-code":
+		// Handle the 'x-code' special tag
+		startTag = fmt.Appendf(startTag, "<pre")
+		endTag = fmt.Appendf(endTag, "</code></pre>")
+
+	case "x-note":
+		// Handle the 'x-note' special tag
+		startTag = fmt.Appendf(startTag, "<aside class='note'")
+		endTag = fmt.Appendf(endTag, "</aside>")
+
+	case "x-warning":
+		// Handle the 'x-note' special tag
+		startTag = fmt.Appendf(startTag, "<aside class='warning'")
+		endTag = fmt.Appendf(endTag, "</aside>")
+
+	case "x-img":
+		// Handle the 'x-img' special tag
+		startTag = fmt.Appendf(startTag, "<figure><img")
+		endTag = fmt.Appendf(endTag, "<figcaption>%s</figcaption></figure>", n.RestLine)
+
+	default:
+		startTag = fmt.Appendf(startTag, "<%s", n.Name)
+		endTag = fmt.Appendf(endTag, "</%s>", n.Name)
+
+	}
+
+	if len(n.Id) > 0 {
+		startTag = fmt.Appendf(startTag, " id='%s'", n.Id)
+	}
+	if len(n.Class) > 0 {
+		startTag = fmt.Appendf(startTag, " class='%s'", n.Class)
+	}
+	if len(n.Src) > 0 {
+		startTag = fmt.Appendf(startTag, " src='%s'", n.Src)
+	}
+	if len(n.Href) > 0 {
+		startTag = fmt.Appendf(startTag, " href='%s'", n.Href)
+	}
+
+	for _, a := range n.Attr {
+		startTag = fmt.Appendf(startTag, " %s='%s'", a.Key, a.Val)
+	}
+
+	restLine := n.RestLine
+
+	// Handle the special cases
+	switch string(n.Name) {
+	case "section":
+		startTag = fmt.Appendf(startTag, ">")
+		if len(n.RestLine) > 0 {
+			startTag = fmt.Appendf(startTag, "<h2>%s</h2>\n", n.RestLine)
+		}
+		restLine = nil
+
+	case "x-note", "x-warning":
+		if len(n.RestLine) > 0 {
+			startTag = fmt.Appendf(startTag, " title='%s'", n.RestLine)
+		}
+		startTag = fmt.Appendf(startTag, ">")
+		restLine = nil
+
+	case "x-code":
+		startTag = fmt.Appendf(startTag, "><code>")
+		restLine = nil
+
+	case "x-img":
+		startTag = fmt.Appendf(startTag, "/>")
+		restLine = nil
+
+	default:
+		startTag = fmt.Appendf(startTag, ">")
+
+	}
+
+	return n.Name, startTag, endTag, restLine
+
+}
+
+func (n *Node) RenderDiagram(br *ByteRenderer) {
+
+	// Check if the class of diagram has been set
+	if len(n.Class) == 0 {
+		log.Fatalf("diagram type not found in line %d\n", n.LineNumber)
+	}
+
+	// Get the type of diagram
+	diagType := strings.ToLower(string(n.Class))
+
+	imageType := "png"
+	if diagType == "d2" {
+		imageType = "svg"
+	}
+
+	// We are going to write a file with the generated image contents (png/svg).
+	// To enable caching, we calculate the hash of the diagram input data
+	hh := md5.Sum(n.InnerText)
+	hhString := fmt.Sprintf("%x", hh)
+
+	// The file will be in the 'builtassets' directory
+	fileName := "builtassets/diagram_" + string(hhString) + "." + imageType
+
+	skinParams := []byte(`
+skinparam shadowing true
+skinparam ParticipantBorderColor black
+skinparam arrowcolor black
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceLifeLineBackgroundColor PapayaWhip
+	`)
+
+	var body []byte
+
+	// Check if the file already exists
+	if _, err := os.Stat(fileName); err != nil || diagType == "plantuml" {
+		// File does not exist, generate the image
+
+		if diagType == "d2" {
+			// Special processing for D2 diagrams, which are generated by the embedded D2 processor
+			log.Println("Calling the D2 embedded generator:", fileName)
+
+			// Create the SVG from the D2 description
+			ruler, err := textmeasure.NewRuler()
+			if err != nil {
+				log.Fatalf("processD2 in line %d\n", n.LineNumber)
+			}
+
+			defaultLayout := func(ctx context.Context, g *d2graph.Graph) error {
+				return d2dagrelayout.Layout(ctx, g, nil)
+			}
+			diagram, _, err := d2lib.Compile(context.Background(), string(n.InnerText), &d2lib.CompileOptions{
+				Layout: defaultLayout,
+				Ruler:  ruler,
+			})
+			if err != nil {
+				log.Fatalf("processD2 in line %d, error %v\n", n.LineNumber, err)
+			}
+			body, err = d2svg.Render(diagram, &d2svg.RenderOpts{
+				Pad:     d2svg.DEFAULT_PADDING,
+				ThemeID: d2themescatalog.NeutralDefault.ID,
+			})
+			if err != nil {
+				log.Fatalf("processD2 in line %d\n", n.LineNumber)
+			}
+
+		} else if diagType == "plantuml" {
+
+			fmt.Println("Calling PlantUML locally:", fileName)
+			fileName = "builtassets/plantuml_" + string(hhString) + "." + imageType
+
+			input := bytes.NewBuffer(skinParams)
+			input.Write(n.InnerText)
+			entrada := input.Bytes()
+
+			fmt.Println(string(entrada))
+
+			// Get the user home directory
+			homeDir, err := os.UserHomeDir()
+			if err != nil {
+				log.Fatalf("error calling UserHomeDir, line: %d, error: %v\n", n.LineNumber, err)
+			}
+
+			plantumlPath := filepath.Join(homeDir, ".plantuml", "plantuml.jar")
+
+			cmd := exec.Command("java", "-jar", plantumlPath, "-pipe")
+
+			cmd.Stdin = bytes.NewReader(entrada)
+			var out bytes.Buffer
+			var cmderr bytes.Buffer
+			cmd.Stdout = &out
+			cmd.Stderr = &cmderr
+			err = cmd.Run()
+			if err != nil {
+				fmt.Printf("error calling Plantuml, line: %d, error: %v\n", n.LineNumber, err)
+				fmt.Println(cmderr.String())
+				panic(err)
+			}
+			body = out.Bytes()
+
+		} else if diagType == "plantuml_server" {
+
+			fmt.Println("Calling the PlantUML server:", fileName)
+
+			// Encode the diagram content
+			diagEncoded := fmt.Sprintf("~h%x", n.InnerText)
+
+			// Build the url
+			plantumlServer := "http://www.plantuml.com/plantuml/png/" + diagEncoded
+			fmt.Println(diagEncoded)
+
+			resp, err := http.Get(plantumlServer)
+			if err != nil {
+				fmt.Printf("error received from PlantUML, line: %d, error: %v\n", n.LineNumber, err)
+				panic(err)
+			}
+
+			// Read the whole body in the reply
+			defer resp.Body.Close()
+			body, err = io.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Printf("error reading response body from PlantUML, line: %d, error: %v\n", n.LineNumber, err)
+				panic(err)
+			}
+
+			// Check the HTTP Status code in the reply
+			if resp.StatusCode != http.StatusOK {
+				fmt.Printf("PlantUML server responded (line: %d) with status: %v: %s\n", n.LineNumber, resp.StatusCode, string(body))
+				panic("Error from PlantUML server")
+			}
+
+		} else {
+
+			fmt.Printf("calling the Kroki server, line: %d, file name: %s\n", n.LineNumber, fileName)
+
+			// Build the url
+			krokiURL := "https://kroki.io/" + string(diagType) + "/" + imageType
+			fmt.Println(krokiURL)
+
+			// Create the request to Kroki server
+			in := bytes.NewReader(n.InnerText)
+
+			// Send the request
+			resp, err := http.Post(krokiURL, "text/plain", in)
+			if err != nil {
+				fmt.Printf("error received from Kroki, line: %d, error: %v\n", n.LineNumber, err)
+				panic(err)
+			}
+
+			// Read the whole body in the reply
+			defer resp.Body.Close()
+			body, err = io.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Println("Error reading response body from Kroki:", err)
+				panic(err)
+			}
+
+			// Check the HTTP Status code in the reply
+			if resp.StatusCode != http.StatusOK {
+				fmt.Println("Kroki server responded:", resp.StatusCode, string(body))
+				panic("Error from Kroki server")
+			}
+
+		}
+
+		// Make sure the directory exists before attempting to write the file
+		err = os.Mkdir("builtassets", 0750)
+		if err != nil && !os.IsExist(err) {
+			log.Fatal(err)
+		}
+
+		// Permissions for user:rw group:rw others:r
+		err = os.WriteFile(fileName, body, 0664)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("File written successfuly:", fileName)
+
+	} else {
+		fmt.Println("Skipping generating image:", fileName)
+	}
+
+	// // Write the diagram as an HTML comment to enhance readability
+	// doc.Render("<!-- Original Kroki diagram definition\n", diagContent, " -->\n\n")
+
+	sectionIndentStr := strings.Repeat(" ", n.Indentation)
+
+	br.Render(sectionIndentStr, "<figure><img src='"+fileName+"' alt=''>\n")
+
+	br.Render(sectionIndentStr, "<figcaption>", n.RestLine, "</figcaption></figure>\n\n")
+
+	// Write the explanations if there were any
+	if n.FirstChild != nil {
+		// Write the
+		br.Render("<!-- ****** EXPLANATIONS **** -->\n")
+		br.Render("\n", bytes.Repeat([]byte(" "), n.Indentation), "<ul class='plain'>\n")
+		// We visit depth-first the children of the
+		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+			theNode.RenderHTML(br)
+		}
+		br.Render(bytes.Repeat([]byte(" "), n.Indentation), "</ul>\n")
+	}
+
+	// // Write the explanations if there were any
+	// if len(explanations) > 0 {
+	// 	// Write the
+	// 	doc.Render("\n", bytes.Repeat([]byte(" "), sectionIndent), "<ul class='plain'>\n")
+
+	// 	for _, s := range explanations {
+	// 		doc.Render(bytes.Repeat([]byte(" "), sectionIndent+4), s, '\n')
+	// 	}
+	// 	doc.Render(bytes.Repeat([]byte(" "), sectionIndent), "</ul>\n")
+	// }
+
 }
 
 // InsertBefore inserts newChild as a child of n, immediately before oldChild
