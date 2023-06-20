@@ -1,7 +1,3 @@
-// Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package rite
 
 import (
@@ -33,6 +29,13 @@ import (
 	"oss.terrastruct.com/d2/lib/textmeasure"
 )
 
+// The indentation string
+var aBigIndentationString = bytes.Repeat([]byte(" "), 200)
+
+func indent(n int) []byte {
+	return aBigIndentationString[:n]
+}
+
 // A NodeType is the type of a Node.
 type NodeType uint32
 
@@ -43,15 +46,6 @@ const (
 	DiagramNode
 	ExplanationNode
 	VerbatimNode
-
-	// ParagraphNode
-	// DivNode
-	// D2Node
-	// DiagramNode
-	// CodeNode
-	// PreNode
-	// HeaderNode
-	// ListNode
 )
 
 // String returns a string representation of the TokenType.
@@ -73,11 +67,6 @@ func (n NodeType) String() string {
 	return "Invalid(" + strconv.Itoa(int(n)) + ")"
 }
 
-// A Node consists of a NodeType and some Data (tag name for element nodes,
-// content for text) and are part of a tree of Nodes. Element nodes may also
-// have a Namespace and contain a slice of Attributes. Data is unescaped, so
-// that it looks like "a<b" rather than "a&lt;b". For element nodes, DataAtom
-// is the atom for Data, or zero if Data is not a known tag name.
 type Node struct {
 	Parent, FirstChild, LastChild, PrevSibling, NextSibling *Node
 
@@ -181,31 +170,18 @@ func (n *Node) String2() string {
 
 func (n *Node) RenderHTML(br *ByteRenderer) {
 
+	indentStr := indent(n.Indentation)
+
 	switch n.Type {
 	case DiagramNode:
 		n.RenderDiagram(br)
+
 	case VerbatimNode:
-		// _, startTag, endTag, _ := n.RenderTheTag()
-
-		// // Render the start tag of this node
-		// br.Renderln(strings.Repeat(" ", n.Indentation), startTag)
-		// br.Render(n.InnerText)
-
-		br.Renderln()
 		n.RenderCode(br)
-		br.Renderln()
-
-		// // We visit depth-first the children of the
-		// for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-		// 	theNode.RenderHTML(br)
-		// }
-
-		// // Render the end tag of the node
-		// br.Renderln(endTag)
 
 	case ExplanationNode:
 		// Render the start tag of this node
-		br.Renderln(strings.Repeat(" ", n.Indentation), n.RawText.Content)
+		br.Renderln(indentStr, n.RawText.Content)
 
 		// We visit depth-first the children of the
 		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
@@ -215,29 +191,39 @@ func (n *Node) RenderHTML(br *ByteRenderer) {
 		}
 
 		// Render the end tag of the node
-		br.Renderln(strings.Repeat(" ", n.Indentation), "</li>")
+		br.Renderln(indentStr, "</li>")
 
 	default:
-		_, startTag, endTag, rest := n.RenderTheTag()
-
-		// Render the start tag of this node
-		br.Renderln(strings.Repeat(" ", n.Indentation), startTag, rest)
-
-		// We visit depth-first the children of the
-		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-			if n.Name == "li" {
-				br.Render("<div class='caca'>\n")
-			}
-			theNode.RenderHTML(br)
-			if n.Name == "li" {
-				br.Render("</div>\n")
-			}
-		}
-
-		// Render the end tag of the node
-		br.Renderln(strings.Repeat(" ", n.Indentation), endTag)
+		n.RenderNormalNode(br)
 
 	}
+
+}
+
+func (n *Node) RenderNormalNode(br *ByteRenderer) {
+
+	indentStr := indent(n.Indentation)
+
+	_, startTag, endTag, rest := n.RenderTheTag()
+
+	// Render the start tag of this node
+	br.Renderln(indentStr, startTag, rest)
+
+	// We visit depth-first the children of the
+	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+		indentChild := indent(theNode.Indentation)
+
+		if n.Name == "li" {
+			br.Render(indentChild, "<div>\n")
+		}
+		theNode.RenderHTML(br)
+		if n.Name == "li" {
+			br.Render(indentChild, "</div>\n")
+		}
+	}
+
+	// Render the end tag of the node
+	br.Renderln(strings.Repeat(" ", n.Indentation), endTag)
 
 }
 
@@ -388,7 +374,7 @@ func (n *Node) RenderCode(br *ByteRenderer) {
 			log.Fatal(err)
 		}
 		br.Render(rb.Bytes())
-		br.Render('\n')
+		br.Render("\n\n")
 
 	}
 

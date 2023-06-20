@@ -328,10 +328,12 @@ func (p *Parser) PreprocesLine(lineSt *Text) *Text {
 		// And the remaining text in the line
 		restLine := line[indexRightBracket+1:]
 
-		// Update the line
-		line = append([]byte("<li ="), bulletText...)
-		line = append(line, '>')
-		line = append(line, restLine...)
+		// Build the line
+		var br ByteRenderer
+		br.Render("<li id='", lineSt.LineNumber, "'>")
+		br.Render("<a href='#", lineSt.LineNumber, "' class='selfref'>")
+		br.Render("<b>", bulletText, "</b></a> ", restLine)
+		line = br.Bytes()
 
 	}
 
