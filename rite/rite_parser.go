@@ -51,9 +51,11 @@ type Text struct {
 	Content     []byte
 }
 
+// String represents the Text with the 10 first characters
 func (para *Text) String() string {
+	// This is helpful for debugging
 	if para == nil {
-		return "<nil><nil><nil>"
+		return "<nil>"
 	}
 
 	numChars := 10
@@ -71,14 +73,15 @@ type Parser struct {
 	// doc is the document root element.
 	doc *Node
 
+	// To support one-level backtracking, which is enough for this parser
 	bufferedPara *Text
 	bufferedLine *Text
 
-	// currentLine is the current raw currentLine
+	// currentLine is the current source line being processed
 	currentLine []byte
 
-	// lineCounter is the number of lines processed
-	lineCounter int
+	// currentLineCounter is the number of lines processed
+	currentLineCounter int
 
 	// currentIndentation is the current currentIndentation
 	currentIndentation int
@@ -86,6 +89,7 @@ type Parser struct {
 	// This is true when we have read the whole file
 	atEOF bool
 
+	// Contains the last error encountered. When this is set, parsin stops
 	lastError error
 
 	Ids    map[string]int // To provide numbering of different entity classes
@@ -96,10 +100,8 @@ type Parser struct {
 }
 
 func (p *Parser) currentLineNum() int {
-	return p.lineCounter
+	return p.currentLineCounter
 }
-
-var errorEOF = fmt.Errorf("end of file")
 
 // SkipBlankLines returns the line number of the first non-blank line,
 // starting from the provided line number, or EOF if there are no more blank lines.
@@ -121,14 +123,17 @@ func (p *Parser) SkipBlankLines() bool {
 	return false
 }
 
+// ReadLine returns one line from the underlying bufio.Scanner.
+// It supports one-level backtracking, with the UnreadLine method.
 func (p *Parser) ReadLine() *Text {
 
+	// Parsing is stopped when an error is encountered
 	if p.lastError != nil {
 		return nil
 	}
 
 	if p.bufferedLine != nil && p.bufferedPara != nil {
-		log.Fatalf("reading a line when both bufferd line and paragraph exist")
+		log.Fatalf("reading a line when both buffered line and paragraph exist")
 	}
 
 	// If there is a line alredy buffered, return it
@@ -138,13 +143,12 @@ func (p *Parser) ReadLine() *Text {
 		return line
 	}
 
-	s := p.s
-
-	if s.Scan() {
+	// Retrieve a line and return it in the *Text
+	if p.s.Scan() {
 
 		// Get a rawLine from the file
-		rawLine := bytes.Clone(s.Bytes())
-		p.lineCounter++
+		rawLine := bytes.Clone(p.s.Bytes())
+		p.currentLineCounter++
 
 		// Strip blanks at the beginning of the line and calculate indentation based on the difference in length
 		// We do not support other whitespace like tabs
@@ -154,18 +158,21 @@ func (p *Parser) ReadLine() *Text {
 			return nil
 		}
 
+		// Calculate indentation by the difference in lengths of the raw vs. the trimmed line
 		p.currentIndentation = len(rawLine) - len(p.currentLine)
 
+		// Build the struct to return to caller
 		line := &Text{}
 		line.LineNumber = p.currentLineNum()
 		line.Content = p.currentLine
 		line.Indentation = p.currentIndentation
+
 		return line
 
 	}
 
 	// Check if there were other errors apart from EOF
-	if err := s.Err(); err != nil {
+	if err := p.s.Err(); err != nil {
 		p.lastError = err
 		log.Fatalf("error scanning: %v", err)
 	}
@@ -176,6 +183,7 @@ func (p *Parser) ReadLine() *Text {
 	return nil
 }
 
+// UnreadLine allows one-level backtracking by buffering one line that was already returned from bufio.Scanner
 func (p *Parser) UnreadLine(line *Text) {
 	if p.bufferedLine != nil {
 		log.Fatalf("UnreadLine: too many calls in line: %d\n", p.currentLineNum())
@@ -183,13 +191,8 @@ func (p *Parser) UnreadLine(line *Text) {
 	p.bufferedLine = line
 }
 
-func (p *Parser) UnreadParagraph(para *Text) {
-	if p.bufferedPara != nil {
-		log.Fatalf("UnreadParagraph: too many calls in line: %d\n", p.currentLineNum())
-	}
-	p.bufferedPara = para
-}
-
+// ReadParagraph is like ReadLine but returns all contiguous lines at the same level of indentation.
+// The paragraph starts at the first non-blank line with more indentation than the specified one.
 func (p *Parser) ReadParagraph(min_indentation int) *Text {
 
 	if p.lastError != nil {
@@ -266,81 +269,66 @@ func (p *Parser) ReadParagraph(min_indentation int) *Text {
 
 }
 
+// UnreadParagraph allows one-level backtracking by buffering one paragraph that was already returned from bufio.Scanner
+func (p *Parser) UnreadParagraph(para *Text) {
+	if p.bufferedPara != nil {
+		log.Fatalf("UnreadParagraph: too many calls in line: %d\n", p.currentLineNum())
+	}
+	p.bufferedPara = para
+}
+
+// PreprocesLine applies some preprocessing to the raw line that was just read from the stream
 func (p *Parser) PreprocesLine(lineSt *Text) *Text {
-	line := lineSt.Content
-	lineNum := lineSt.LineNumber
+
+	// We ignore any line starting with a comment marker: '//'
+	if bytes.HasPrefix(lineSt.Content, []byte("//")) {
+		return nil
+	}
 
 	// We ignore any line starting with an end tag
-	if bytes.HasPrefix(line, []byte("</")) {
+	if bytes.HasPrefix(lineSt.Content, []byte("</")) {
 		return nil
 	}
 
 	// Preprocess the special <x-ref> tag inside the text of the line
-	if bytes.Contains(line, []byte("<x-ref")) {
-		line = reXRef.ReplaceAll(line, []byte("<a href=\"#${1}\" class=\"xref\">[${1}]</a>"))
+	if bytes.Contains(lineSt.Content, []byte("<x-ref")) {
+		lineSt.Content = reXRef.ReplaceAll(lineSt.Content, []byte("<a href=\"#${1}\" class=\"xref\">[${1}]</a>"))
 	}
-	if bytes.Contains(line, []byte("`")) {
-		line = reCodeBackticks.ReplaceAll(line, []byte("<code>${1}</code>"))
+	if bytes.Contains(lineSt.Content, []byte("`")) {
+		lineSt.Content = reCodeBackticks.ReplaceAll(lineSt.Content, []byte("<code>${1}</code>"))
 	}
 
 	// Preprocess Markdown headers ('#') and convert to h1, h2, ...
 	// We assume that a header starts with the '#' character, no matter what the rest of the line is
-	if line[0] == '#' {
+	if lineSt.Content[0] == '#' {
 
 		// Trim and count the number of '#'
-		plainLine := trimLeft(line, '#')
-		lenPrefix := len(line) - len(plainLine)
+		plainLine := trimLeft(lineSt.Content, '#')
+		lenPrefix := len(lineSt.Content) - len(plainLine)
 		hnum := byte('0' + lenPrefix)
 
 		// Trim the possible whitespace between the '#'s and the text
 		plainLine = trimLeft(plainLine, ' ')
 
 		// Build the new line and store it
-		line = append([]byte("<h"), hnum, '>')
-		line = append(line, plainLine...)
+		lineSt.Content = append([]byte("<h"), hnum, '>')
+		lineSt.Content = append(lineSt.Content, plainLine...)
 
 	}
 
 	// Preprocess Markdown list markers
 	// They can start with plain dashes '-' but we support a special format '-(something)'.
 	// The 'something' inside parenthesis will be highlighted in the list item
-	if bytes.HasPrefix(line, []byte("- ")) {
-
-		line = bytes.Replace(line, []byte("- "), []byte("<li>"), 1)
-
-	} else if bytes.HasPrefix(line, []byte("-(")) {
-
-		// Get the end ')'
-		indexRightBracket := bytes.IndexByte(line, ')')
-		if indexRightBracket == -1 {
-			log.Fatalf("NewDocument, line %d: no closing ')' in list bullet", lineNum)
-		}
-
-		// Check that there is at least one character inside the '()'
-		if indexRightBracket == 2 {
-			log.Fatalf("NewDocument, line %d: no content inside '()' in list bullet", lineNum)
-		}
-
-		// Extract the whole tag spec, eliminating embedded blanks
-		bulletText := line[2:indexRightBracket]
-		bulletText = bytes.ReplaceAll(bulletText, []byte(" "), []byte("%20"))
-
-		// And the remaining text in the line
-		restLine := line[indexRightBracket+1:]
-
-		// Build the line
-		var br ByteRenderer
-		br.Render("<li id='", lineSt.LineNumber, "'>")
-		br.Render("<a href='#", lineSt.LineNumber, "' class='selfref'>")
-		br.Render("<b>", bulletText, "</b></a> ", restLine)
-		line = br.Bytes()
-
+	if bytes.HasPrefix(lineSt.Content, []byte("- ")) || bytes.HasPrefix(lineSt.Content, []byte("-(")) {
+		lineSt = p.parseMdList(lineSt)
 	}
 
-	lineSt.Content = line
 	return lineSt
 }
 
+// NewNode creates a node from the text line that is passed.
+// The new node is set to the proper type and its attributes populated.
+// If the line starts with a proper tag, it is processed and the node is updated accordingly.
 func (p *Parser) NewNode(text *Text) *Node {
 	var tagSpec []byte
 
@@ -507,11 +495,6 @@ func (p *Parser) ParseBlock(parent *Node) {
 			return
 		}
 
-		// We ignore any line starting with a comment marker: '//'
-		if bytes.HasPrefix(para.Content, []byte("//")) {
-			continue
-		}
-
 		// Set the indentation of the first line of the inner block
 		if blockIndentation == -1 {
 			blockIndentation = para.Indentation
@@ -557,18 +540,20 @@ func (p *Parser) ParseBlock(parent *Node) {
 
 }
 
-func (p *Parser) parseVerbatimExplanation(node *Node) {
-	const bulletPrefix = "# -("
-	const simplePrefix = "# - "
-	const additionalPrefix = "# -+"
+func (p *Parser) parseMdList(lineSt *Text) *Text {
+	const bulletPrefix = "-("
+	const simplePrefix = "- "
+	const additionalPrefix = "-+"
 	var r ByteRenderer
 
-	lineNum := node.LineNumber
-	line := node.RawText.Content
+	// We receive a list item in Markdown format and we converto to proper HTML
 
-	// Sanity check
-	if !bytes.HasPrefix(line, []byte("# -")) {
-		log.Fatalf("parseVerbatimExplanation, line %d: invalid prefix\n", lineNum)
+	lineNum := lineSt.LineNumber
+	line := lineSt.Content
+
+	// This is to support explanations inside verbatim text, which start with a comment: "# -"
+	if bytes.HasPrefix(line, []byte("# -")) {
+		line = line[2:]
 	}
 
 	// Preprocess Markdown list markers
@@ -583,37 +568,27 @@ func (p *Parser) parseVerbatimExplanation(node *Node) {
 		r.Render("<a href='#", lineNum, "' class='selfref'>")
 		r.Render("<b>-</b></a> ", restLine)
 
-		l := r.Bytes()
-		node.RawText.Content = l
-
-		return
-
 	} else if bytes.HasPrefix(line, []byte(additionalPrefix)) {
 
-		restLine := line[len(simplePrefix):]
+		restLine := line[len(additionalPrefix):]
 
 		// Build the line
-		r.Render("<p>", restLine, "</p>")
-
-		l := r.Bytes()
-		node.RawText.Content = l
-
-		return
+		r.Render("<div>", restLine, "</div>")
 
 	} else if bytes.HasPrefix(line, []byte(bulletPrefix)) {
 
 		// Get the end ')'
 		indexRightBracket := bytes.IndexByte(line, ')')
 		if indexRightBracket == -1 {
-			log.Fatalf("parseVerbatimExplanation, line %d: no closing ')' in list bullet\n", lineNum)
+			log.Panicf("parseMdList, line %d: no closing ')' in list bullet\n", lineNum)
 		}
 
 		// Check that there is at least one character inside the '()'
 		if indexRightBracket == len(bulletPrefix) {
-			log.Fatalf("parseVerbatimExplanation, line %d: no content inside '()' in list bullet\n", lineNum)
+			log.Panicf("parseMdList, line %d: no content inside '()' in list bullet\n", lineNum)
 		}
 
-		// Extract the whole tag spec, eliminating embedded blanks
+		// Extract the whole bullet text, replacing embedded blanks
 		bulletText := line[len(bulletPrefix):indexRightBracket]
 		bulletTextEncoded := bytes.ReplaceAll(bulletText, []byte(" "), []byte("_"))
 
@@ -625,17 +600,24 @@ func (p *Parser) parseVerbatimExplanation(node *Node) {
 		r.Render("<a href='#", lineNum, ".", bulletTextEncoded, "' class='selfref'>")
 		r.Render("<b>", bulletText, "</b></a>", restLine, '\n')
 
-		// Parse the inner block
-		p.ParseBlock(node)
-
-		l := r.Bytes()
-		node.RawText.Content = l
-
-		return
-
 	}
 
-	log.Fatalf("parseVerbatimExplanation, line %v: invalid explanation in list bullet\n", lineNum)
+	l := r.Bytes()
+	lineSt.Content = l
+	return lineSt
+
+}
+
+func (p *Parser) parseVerbatimExplanation(node *Node) {
+
+	// We receive in node.RawText the unparsed explanation paragraph
+	// We convert it into a list item with the proper markup
+	// Sanity check
+	node.RawText = p.parseMdList(node.RawText)
+
+	// Parse the possible inner block
+	p.ParseBlock(node)
+
 }
 
 func (p *Parser) ParseVerbatim(parent *Node) bool {
@@ -650,6 +632,10 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 	// We are going to calculate the minimum indentation for the whole block.
 	// The starting point is a very big value which will be reduced to the correct value during the loop
 	minimumIndentation := 9999999
+
+	// This is to keep track of the last non-blank line in the diagram
+	// Because of the way we detect the end of the block, there may be spurious blank lines at the end
+	lastNonBlankLine := 0
 
 	// Loop until the end of the document or until we find a line with less or equal indentation
 	// Blank lines are assumed to pertain to the verbatim section
@@ -685,6 +671,7 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 
 			// Append the line
 			diagContentLines = append(diagContentLines, line)
+			lastNonBlankLine = len(diagContentLines)
 
 		} else {
 
@@ -695,11 +682,13 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 
 			// Add the paragraph to the node's paragraph
 			child.RawText = line
-			// TODO: this is redundant, will eliminate it later
+			// This is really redundant but facilitates life for processing
+			// This way the node has all relevant info at the main level
 			child.Indentation = line.Indentation
 			child.LineNumber = line.LineNumber
 
 			p.parseVerbatimExplanation(child)
+
 		}
 
 		// Go to process next line
@@ -708,27 +697,23 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 	}
 
 	var br ByteRenderer
-	for _, line := range diagContentLines {
+
+	// We will accumulate the content in the InnerText field of the node
+	// Loop for all entries until the last one which is non-blank
+	for _, line := range diagContentLines[:lastNonBlankLine] {
 		if len(line.Content) > 0 {
 			br.Renderln(bytes.Repeat([]byte(" "), line.Indentation-minimumIndentation), line.Content)
 		} else {
 			br.Renderln()
 		}
 	}
+
 	parent.InnerText = br.Bytes()
 
 	return true
 }
 
 func (p *Parser) Parse() ([]byte, error) {
-
-	// // This regex detects the <x-ref REFERENCE> tags that need special processing
-	// reXRef := regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
-	// reCodeBackticks := regexp.MustCompile(`\x60([0-9a-zA-Z-_\.]+)\x60`)
-
-	// // Verbatim sections require special processing to keep their exact format
-	// insideVerbatim := false
-	// indentationVerbatim := 0
 
 	// Initialize the document structure
 	if p.doc.Type == DocumentNode {
@@ -831,7 +816,7 @@ func (p *Parser) preprocessYAMLHeader() error {
 		return fmt.Errorf("no YAML metadata found")
 	}
 
-	p.lineCounter++
+	p.currentLineCounter++
 
 	// Build a string with all subsequent lines up to the next "---"
 	var yamlString strings.Builder
@@ -843,7 +828,7 @@ func (p *Parser) preprocessYAMLHeader() error {
 		p.currentLine = bytes.Clone(s.Bytes())
 
 		// Calculate the line number
-		p.lineCounter++
+		p.currentLineCounter++
 
 		if bytes.HasPrefix(p.currentLine, []byte("---")) {
 			endYamlFound = true

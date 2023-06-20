@@ -1032,15 +1032,15 @@ localBiblio:
                         "definition_id": "OnboardingPresentationDefinition",
                         "id": "OnboardingPresentationSubmission",
                         "descriptor_map": [
-                        {
-                            "id": "id_credential",
-                            "path": "$",
-                            "format": "ldp_vp",
-                            "path_nested": {
-                                "format": "ldp_vc",
-                                "path": "$.verifiableCredential[0]"
+                            {
+                                "id": "id_credential",
+                                "path": "$",
+                                "format": "ldp_vp",
+                                "path_nested": {
+                                    "format": "ldp_vc",
+                                    "path": "$.verifiableCredential[0]"
+                                }
                             }
-                        }
                         ]
                     }
 
