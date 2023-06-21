@@ -473,6 +473,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 			if err != nil {
 				fmt.Printf("error calling Plantuml, line: %d, error: %v\n", n.LineNumber, err)
 				fmt.Println(cmderr.String())
+				fmt.Println(string(entrada))
 				panic(err)
 			}
 			body = out.Bytes()
