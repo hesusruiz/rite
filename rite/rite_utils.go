@@ -103,7 +103,7 @@ func readTagAttrKey(tagSpec []byte) (Attribute, []byte) {
 		workingTagSpec = workingTagSpec[1:]
 		for i, c := range workingTagSpec {
 			if c == quote {
-				attr.Val = string(workingTagSpec)[:i]
+				attr.Val = workingTagSpec[:i]
 				return attr, workingTagSpec[i+1:]
 			}
 		}

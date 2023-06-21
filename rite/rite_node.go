@@ -71,6 +71,7 @@ type Node struct {
 	Parent, FirstChild, LastChild, PrevSibling, NextSibling *Node
 
 	Type        NodeType
+	p           *Parser
 	RawText     *Text
 	InnerText   []byte
 	Indentation int
@@ -119,7 +120,7 @@ func (n Node) tagString() string {
 		buf.WriteByte(' ')
 		buf.WriteString(a.Key)
 		buf.WriteString(`="`)
-		escape(buf, a.Val)
+		escape(buf, string(a.Val))
 		buf.WriteByte('"')
 	}
 	return buf.String()
@@ -155,7 +156,7 @@ func (n Node) renderTagString(buf *ByteRenderer) {
 
 	for _, a := range n.Attr {
 		buf.Render(' ', a.Key, `="`)
-		escape(buf, a.Val)
+		escape(buf, string(a.Val))
 		buf.Render('"')
 	}
 	buf.Render('>')
@@ -200,11 +201,27 @@ func (n *Node) RenderHTML(br *ByteRenderer) {
 
 }
 
+var reXRef = regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
+
 func (n *Node) RenderNormalNode(br *ByteRenderer) {
 
 	indentStr := indent(n.Indentation)
 
-	_, startTag, endTag, rest := n.RenderTheTag()
+	_, startTag, endTag, rest := n.preRenderTheTag()
+
+	// Preprocess the special <x-ref> tag inside the text of the line
+	if bytes.Contains(rest, []byte("<x-ref")) {
+
+		if submatchs := reXRef.FindSubmatch(rest); len(submatchs) > 1 {
+			description := n.p.xref[string(submatchs[1])]
+
+			if len(description) > 0 {
+				rest = reXRef.ReplaceAll(rest, []byte("<a href=\"#${1}\" class=\"xref\">"+string(description)+"</a>"))
+			} else {
+				rest = reXRef.ReplaceAll(rest, []byte("<a href=\"#${1}\" class=\"xref\">[${1}]</a>"))
+			}
+		}
+	}
 
 	// Render the start tag of this node
 	br.Renderln(indentStr, startTag, rest)
@@ -227,7 +244,7 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) {
 
 }
 
-func (n *Node) RenderTheTag() (tagName string, startTag []byte, endTag []byte, rest []byte) {
+func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte, rest []byte) {
 
 	switch n.Name {
 
@@ -729,7 +746,8 @@ func isNoSectionElement(tagName []byte) bool {
 //
 // Namespace is only used by the parser, not the tokenizer.
 type Attribute struct {
-	Namespace, Key, Val string
+	Namespace, Key string
+	Val            []byte
 }
 
 var (
@@ -738,5 +756,4 @@ var (
 )
 
 // This regex detects the <x-ref REFERENCE> tags that need special processing
-var reXRef = regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
 var reCodeBackticks = regexp.MustCompile(`\x60([0-9a-zA-Z-_\.]+)\x60`)

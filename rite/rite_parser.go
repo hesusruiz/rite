@@ -92,8 +92,10 @@ type Parser struct {
 	// Contains the last error encountered. When this is set, parsin stops
 	lastError error
 
-	Ids    map[string]int // To provide numbering of different entity classes
-	figs   map[string]int // To provide numbering of figs of different types in the document
+	Ids  map[string]int // To provide numbering of different entity classes
+	figs map[string]int // To provide numbering of figs of different types in the document
+	xref map[string][]byte
+
 	Config *yaml.YAML
 
 	log *zap.SugaredLogger
@@ -290,10 +292,10 @@ func (p *Parser) PreprocesLine(lineSt *Text) *Text {
 		return nil
 	}
 
-	// Preprocess the special <x-ref> tag inside the text of the line
-	if bytes.Contains(lineSt.Content, []byte("<x-ref")) {
-		lineSt.Content = reXRef.ReplaceAll(lineSt.Content, []byte("<a href=\"#${1}\" class=\"xref\">[${1}]</a>"))
-	}
+	// // Preprocess the special <x-ref> tag inside the text of the line
+	// if bytes.Contains(lineSt.Content, []byte("<x-ref")) {
+	// 	lineSt.Content = reXRef.ReplaceAll(lineSt.Content, []byte("<a href=\"#${1}\" class=\"xref\">[${1}]</a>"))
+	// }
 	if bytes.Contains(lineSt.Content, []byte("`")) {
 		lineSt.Content = reCodeBackticks.ReplaceAll(lineSt.Content, []byte("<code>${1}</code>"))
 	}
@@ -335,6 +337,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 	n := &Node{}
 
 	// Set the basic fields
+	n.p = p
 	n.Indentation = text.Indentation
 	n.LineNumber = text.LineNumber
 	n.RawText = text
@@ -348,6 +351,11 @@ func (p *Parser) NewNode(text *Text) *Node {
 		n.Name = "p"
 		n.RestLine = text.Content
 		return n
+	}
+
+	// DEBUG
+	if n.LineNumber == 132 {
+		fmt.Println("line", n.LineNumber)
 	}
 
 	// Extract the whole tag string between the start and end tags
@@ -365,7 +373,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 
 	}
 
-	// Extract the pepe of the tag from the tagSpec
+	// Extract the name of the tag from the tagSpec
 	name, tagSpec := readTagName(tagSpec)
 
 	// Set the name of the node with the tag name
@@ -470,11 +478,46 @@ func (p *Parser) NewNode(text *Text) *Node {
 			if len(attr.Key) == 0 {
 				tagSpec = nil
 			} else {
-				n.Attr = append(n.Attr, attr)
+
+				// Treat the most important attributes specially
+				switch attr.Key {
+				case "id":
+					// Set the special Id field if it is not already set
+					if len(n.Id) == 0 {
+						n.Id = attr.Val
+					}
+				case "class":
+					// More than one class can be specified and and all are accumulated, separated by a spece
+					if len(n.Class) > 0 {
+						n.Class = append(n.Class, ' ')
+					}
+					n.Class = append(n.Class, attr.Val...)
+				case "src":
+					// Only the first attribute is used
+					if len(n.Src) == 0 {
+						n.Src = attr.Val
+					}
+				case "href":
+					// Only the first attribute is used
+					if len(n.Href) == 0 {
+						n.Href = attr.Val
+					}
+				default:
+					n.Attr = append(n.Attr, attr)
+				}
 			}
 
 		}
 
+	}
+
+	// Update the table for cross-references using Ids in the x-ref tag
+	if len(n.Id) > 0 {
+		// We enforce uniqueness of ids
+		if len(p.xref[string(n.Id)]) > 0 {
+			log.Panicf("id already used, processing line %d\n", n.LineNumber)
+		}
+		p.xref[string(n.Id)] = n.RestLine
 	}
 
 	return n
@@ -675,6 +718,7 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 
 			// Create a node to parse the explanation text
 			child := &Node{}
+			child.p = p
 			parent.AppendChild(child)
 			child.Type = ExplanationNode
 
@@ -766,6 +810,7 @@ func ParseFromFile(fileName string) (*Parser, []byte, error) {
 			Type: DocumentNode,
 		},
 	}
+	p.xref = make(map[string][]byte)
 
 	var z *zap.Logger
 
