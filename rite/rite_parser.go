@@ -253,7 +253,7 @@ func (p *Parser) ReadParagraph(min_indentation int) *Text {
 		}
 
 		// Add the contents of the line to the paragraph
-		br.Write(p.currentLine)
+		br.Renderln(p.currentLine)
 
 	}
 
@@ -541,8 +541,8 @@ func (p *Parser) ParseBlock(parent *Node) {
 }
 
 func (p *Parser) parseMdList(lineSt *Text) *Text {
-	const bulletPrefix = "-("
 	const simplePrefix = "- "
+	const bulletPrefix = "-("
 	const additionalPrefix = "-+"
 	var r ByteRenderer
 
@@ -564,9 +564,7 @@ func (p *Parser) parseMdList(lineSt *Text) *Text {
 		restLine := line[len(simplePrefix):]
 
 		// Build the line
-		r.Render("<li id='", lineNum, "'>")
-		r.Render("<a href='#", lineNum, "' class='selfref'>")
-		r.Render("<b>-</b></a> ", restLine)
+		r.Render("<li>", restLine)
 
 	} else if bytes.HasPrefix(line, []byte(additionalPrefix)) {
 
