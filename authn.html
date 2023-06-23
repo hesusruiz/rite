@@ -143,10 +143,57 @@
         };
     </script>
     <style>
+        .xnotet {
+            width:100%;
+            display: inline-block;
+            margin: 0;
+            border-left: 0.5em solid #52e052;
+            border-right: 6px solid #e9fbe9;
+            border-top: 6px solid #e9fbe9;
+            border-bottom: 6px solid #e9fbe9;
+        
+            overflow: auto;
+            page-break-inside: avoid;
+        }
+        .xnotea {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
+        .xwarnt {
+            width:100%;
+            display: inline-block;
+            margin: 0;
+            border-left: 0.5em solid #f11;
+            border-right: 6px solid #fbe9e9;
+            border-top: 6px solid #fbe9e9;
+            border-bottom: 6px solid #fbe9e9;
+        
+            overflow: auto;
+            page-break-inside: avoid;
+        }
+        .xwarna {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
+        .xnotep {
+            font-weight: bold;
+        }
         code {
             color: red;
         }
         pre.nohighlight {
+            padding: 0.5em;
+            margin: 0;
+        }
+        .codecolor {
+            width:100%;
+            display: inline-block;
+            margin: 0;
+            box-shadow: 5px 5px 5px rgba(68, 68, 68, 0.6);
+            border-radius: 7px;
+            border: 1px solid black;
+        }
+        div.nohighlight {
             padding: 0.5em
         }
         ul.plain {
@@ -359,15 +406,17 @@
 
         </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">cn</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">56565656V Jesus Ruiz</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">serialNumber</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">56565656V</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">givenName</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">Jesus</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">sn</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">Ruiz</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">2.5.4.97</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">VATES-12345678</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">o</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">GoodAir</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">c</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">ES</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">2.5.4.13</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">Notary:Juan Lopez/Protocol Num:7172/Date:07-06-2021</span>
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#008080">cn</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">56565656V Jesus Ruiz</span>
+<span style="color:#008080">serialNumber</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">56565656V</span>
+<span style="color:#008080">givenName</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">Jesus</span>
+<span style="color:#008080">sn</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">Ruiz</span>
+<span style="color:#008080">2.5.4.97</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">VATES-12345678</span>
+<span style="color:#008080">o</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">GoodAir</span>
+<span style="color:#008080">c</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">ES</span>
+<span style="color:#008080">2.5.4.13</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">Notary:Juan Lopez/Protocol Num:7172/Date:07-06-2021</span>
+</pre></td></tr></table>
 
         <p>The above set of fields bind the legal identity of the COO with the identity of the business:
 
@@ -407,12 +456,14 @@
 
         </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">2.5.4.97</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">VATDE-170173453</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">CN</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">DRV QC 11 MA CA 2017ca</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">OU</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">QC 11 Mitarbeiter CA</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">O</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">Deutsche Rentenversicherung Westfalen</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">C</span> <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">DE</span>
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#008080">2.5.4.97</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">VATDE-170173453</span>
+<span style="color:#008080">CN</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">DRV QC 11 MA CA 2017ca</span>
+<span style="color:#008080">OU</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">QC 11 Mitarbeiter CA</span>
+<span style="color:#008080">O</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">Deutsche Rentenversicherung Westfalen</span>
+<span style="color:#008080">C</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">DE</span>
+</pre></td></tr></table>
 
         <p>Which in the <code>organizationIdentifier</code> field (OID 2.5.4.97) specifies the unique organisation identifier assigned by the German regulatory authority to the TSP: VATDE-170173453.
 
@@ -528,18 +579,20 @@
 
         </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;title&#34;</span>: <span style="color:#f1fa8c">&#34;Mr.&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;first_name&#34;</span>: <span style="color:#f1fa8c">&#34;John&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;last_name&#34;</span>: <span style="color:#f1fa8c">&#34;Doe&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;gender&#34;</span>: <span style="color:#f1fa8c">&#34;M&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;postal_address&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;email&#34;</span>: <span style="color:#f1fa8c">&#34;johndoe@goodair.com&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;telephone&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;fax&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;mobile_phone&#34;</span>: <span style="color:#f1fa8c">&#34;+34787426623&#34;</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;title&#34;</span>: <span style="color:#d14">&#34;Mr.&#34;</span>,
+    <span style="color:#000080">&#34;first_name&#34;</span>: <span style="color:#d14">&#34;John&#34;</span>,
+    <span style="color:#000080">&#34;last_name&#34;</span>: <span style="color:#d14">&#34;Doe&#34;</span>,
+    <span style="color:#000080">&#34;gender&#34;</span>: <span style="color:#d14">&#34;M&#34;</span>,
+    <span style="color:#000080">&#34;postal_address&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+    <span style="color:#000080">&#34;email&#34;</span>: <span style="color:#d14">&#34;johndoe@goodair.com&#34;</span>,
+    <span style="color:#000080">&#34;telephone&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+    <span style="color:#000080">&#34;fax&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+    <span style="color:#000080">&#34;mobile_phone&#34;</span>: <span style="color:#d14">&#34;+34787426623&#34;</span>
+}
+</pre></td></tr></table>
 
     </section>
     <section><h2>DID of the employee
@@ -552,28 +605,32 @@
 
         </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>
+}
+</pre></td></tr></table>
 
         <p>With the DID for the employee, the set of claims identifying him would be then:
 
         </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;title&#34;</span>: <span style="color:#f1fa8c">&#34;Mr.&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;first_name&#34;</span>: <span style="color:#f1fa8c">&#34;John&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;last_name&#34;</span>: <span style="color:#f1fa8c">&#34;Doe&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;gender&#34;</span>: <span style="color:#f1fa8c">&#34;M&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;postal_address&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;email&#34;</span>: <span style="color:#f1fa8c">&#34;johndoe@goodair.com&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;telephone&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;fax&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;mobile_phone&#34;</span>: <span style="color:#f1fa8c">&#34;+34787426623&#34;</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
+    <span style="color:#000080">&#34;title&#34;</span>: <span style="color:#d14">&#34;Mr.&#34;</span>,
+    <span style="color:#000080">&#34;first_name&#34;</span>: <span style="color:#d14">&#34;John&#34;</span>,
+    <span style="color:#000080">&#34;last_name&#34;</span>: <span style="color:#d14">&#34;Doe&#34;</span>,
+    <span style="color:#000080">&#34;gender&#34;</span>: <span style="color:#d14">&#34;M&#34;</span>,
+    <span style="color:#000080">&#34;postal_address&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+    <span style="color:#000080">&#34;email&#34;</span>: <span style="color:#d14">&#34;johndoe@goodair.com&#34;</span>,
+    <span style="color:#000080">&#34;telephone&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+    <span style="color:#000080">&#34;fax&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+    <span style="color:#000080">&#34;mobile_phone&#34;</span>: <span style="color:#d14">&#34;+34787426623&#34;</span>
+}
+</pre></td></tr></table>
 
     </section>
     <section><h2><code>legalRepresentative</code>
@@ -583,14 +640,16 @@
 
         </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;legalRepresentative&#34;</span>: {
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;cn&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V Jesus Ruiz&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;serialNumber&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;organizationIdentifier&#34;</span>: <span style="color:#f1fa8c">&#34;VATES-12345678&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;o&#34;</span>: <span style="color:#f1fa8c">&#34;GoodAir&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;c&#34;</span>: <span style="color:#f1fa8c">&#34;ES&#34;</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#d14">&#34;legalRepresentative&#34;</span><span style="color:#a61717;background-color:#e3d2d2">:</span> {
+    <span style="color:#000080">&#34;cn&#34;</span>: <span style="color:#d14">&#34;56565656V Jesus Ruiz&#34;</span>,
+    <span style="color:#000080">&#34;serialNumber&#34;</span>: <span style="color:#d14">&#34;56565656V&#34;</span>,
+    <span style="color:#000080">&#34;organizationIdentifier&#34;</span>: <span style="color:#d14">&#34;VATES-12345678&#34;</span>,
+    <span style="color:#000080">&#34;o&#34;</span>: <span style="color:#d14">&#34;GoodAir&#34;</span>,
+    <span style="color:#000080">&#34;c&#34;</span>: <span style="color:#d14">&#34;ES&#34;</span>
+}
+</pre></td></tr></table>
 
     </section>
     <section><h2><code>rolesAndDuties</code> of the LEAR
@@ -603,26 +662,30 @@
 
         </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;rolesAndDuties&#34;</span>: [
-</span></span><span style="display:flex;"><span>    {
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;type&#34;</span>: <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>]
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#d14">&#34;rolesAndDuties&#34;</span><span style="color:#a61717;background-color:#e3d2d2">:</span> [
+    {
+        <span style="color:#000080">&#34;type&#34;</span>: <span style="color:#d14">&#34;LEARCredential&#34;</span>,
+        <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>
+    }
+]
+</pre></td></tr></table>
 
-        <p>Where the last part of the url can correspond to the hash of the external linked document to ensure that any modification or tampering can be detected. The contents of that object ata that url could be:
+        <p>Where the last part of the url can correspond to the hash of the external linked document to ensure that any modification or tampering can be detected. The contents of that object at that url could be:
 
         </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>[
-</span></span><span style="display:flex;"><span>    {
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;target:&#34;</span>https:<span style="color:#6272a4">//bae.dome-marketplace.eu/&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>        <span style="color:#f1fa8c">&#34;roleNames&#34;</span>: [<span style="color:#f1fa8c">&#34;seller&#34;</span>, <span style="color:#f1fa8c">&#34;customer&#34;</span>]
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>]
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+[
+    {
+        <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>,
+        <span style="color:#000080">&#34;target&#34;</span>: <span style="color:#d14">&#34;https://bae.dome-marketplace.eu/&#34;</span>,
+        <span style="color:#000080">&#34;roleNames&#34;</span>: [<span style="color:#d14">&#34;seller&#34;</span>, <span style="color:#d14">&#34;customer&#34;</span>]
+    }
+]
+</pre></td></tr></table>
 
         <p>In the above example, we have specified that the roles object referenced in the credential with `id: https://dome-marketplace.eu//lear/v1/6484994n4r9e990494` is granting the employee of GoodAir (in our example) to access services in the DOME marketplace (specified with the field <code>target</code>) with the roles <code>seller</code> and <code>customer</code> (which are the roles of the <a href="https://business-api-ecosystem.readthedocs.io/en/latest/index.html">FIWARE BAE component</a>).
 
@@ -630,12 +693,16 @@
         <p>If <code>target</code> is omitted, the roles would apply to any target organisation. If we need to specify more than one target organisation, the array should include as many objects as required.
 
         </p>
-        <aside class='note' title='
-'>
+        <table style='width:100%;'><tr><td class='xwarnt'><aside class='xwarna'><p class='xnotep'>WARNING! About the roles</p>
             <p>The way we have specified the roles is just an example. There is work ongoing to define the detailed mechanism formally (e.g. with ODRL), and it is expected to change. This example is intended only to describe the concepts in detail.
 
             </p>
-        </aside>
+        </aside></td></tr></table>
+        <table style='width:100%;'><tr><td class='xnotet'><aside class='xnotea'><p class='xnotep'>NOTE: About the roles</p>
+            <p>The way we have specified the roles is just an example. There is work ongoing to define the detailed mechanism formally (e.g. with ODRL), and it is expected to change. This example is intended only to describe the concepts in detail.
+
+            </p>
+        </aside></td></tr></table>
     </section>
     <section><h2>Assembling the pieces together
 </h2>
@@ -644,46 +711,48 @@
 
         </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;@context&#34;</span>: [
-</span></span><span style="display:flex;"><span>        <span style="color:#f1fa8c">&#34;https://www.w3.org/2018/credentials/v1&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//2022/credentials/learcredential/v1&#34;</span>
-</span></span><span style="display:flex;"><span>    ],
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;urn:did:elsi:25159389-8dd17b796ac0&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;type&#34;</span>: [<span style="color:#f1fa8c">&#34;VerifiableCredential&#34;</span>, <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>],
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;issuer&#34;</span>: {
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATES-12345678&#34;</span>
-</span></span><span style="display:flex;"><span>    },
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;issuanceDate&#34;</span>: <span style="color:#f1fa8c">&#34;2022-03-22T14:00:00Z&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;validFrom&#34;</span>: <span style="color:#f1fa8c">&#34;2022-03-22T14:00:00Z&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;expirationDate&#34;</span>: <span style="color:#f1fa8c">&#34;2023-03-22T14:00:00Z&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;credentialSubject&#34;</span>: {
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;title&#34;</span>: <span style="color:#f1fa8c">&#34;Mr.&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;first_name&#34;</span>: <span style="color:#f1fa8c">&#34;John&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;last_name&#34;</span>: <span style="color:#f1fa8c">&#34;Doe&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;gender&#34;</span>: <span style="color:#f1fa8c">&#34;M&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;postal_address&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;email&#34;</span>: <span style="color:#f1fa8c">&#34;johndoe@goodair.com&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;telephone&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;fax&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;mobile_phone&#34;</span>: <span style="color:#f1fa8c">&#34;+34787426623&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;legalRepresentative&#34;</span>: {
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;cn&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V Jesus Ruiz&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;serialNumber&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;organizationIdentifier&#34;</span>: <span style="color:#f1fa8c">&#34;VATES-12345678&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;o&#34;</span>: <span style="color:#f1fa8c">&#34;GoodAir&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;c&#34;</span>: <span style="color:#f1fa8c">&#34;ES&#34;</span>
-</span></span><span style="display:flex;"><span>        },
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;rolesAndDuties&#34;</span>: [
-</span></span><span style="display:flex;"><span>            {
-</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&#34;type&#34;</span>: <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>,
-</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>
-</span></span><span style="display:flex;"><span>            }
-</span></span><span style="display:flex;"><span>        ]
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;@context&#34;</span>: [
+        <span style="color:#d14">&#34;https://www.w3.org/2018/credentials/v1&#34;</span>,
+        <span style="color:#d14">&#34;https://dome-marketplace.eu//2022/credentials/learcredential/v1&#34;</span>
+    ],
+    <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;urn:did:elsi:25159389-8dd17b796ac0&#34;</span>,
+    <span style="color:#000080">&#34;type&#34;</span>: [<span style="color:#d14">&#34;VerifiableCredential&#34;</span>, <span style="color:#d14">&#34;LEARCredential&#34;</span>],
+    <span style="color:#000080">&#34;issuer&#34;</span>: {
+        <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;did:elsi:VATES-12345678&#34;</span>
+    },
+    <span style="color:#000080">&#34;issuanceDate&#34;</span>: <span style="color:#d14">&#34;2022-03-22T14:00:00Z&#34;</span>,
+    <span style="color:#000080">&#34;validFrom&#34;</span>: <span style="color:#d14">&#34;2022-03-22T14:00:00Z&#34;</span>,
+    <span style="color:#000080">&#34;expirationDate&#34;</span>: <span style="color:#d14">&#34;2023-03-22T14:00:00Z&#34;</span>,
+    <span style="color:#000080">&#34;credentialSubject&#34;</span>: {
+        <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
+        <span style="color:#000080">&#34;title&#34;</span>: <span style="color:#d14">&#34;Mr.&#34;</span>,
+        <span style="color:#000080">&#34;first_name&#34;</span>: <span style="color:#d14">&#34;John&#34;</span>,
+        <span style="color:#000080">&#34;last_name&#34;</span>: <span style="color:#d14">&#34;Doe&#34;</span>,
+        <span style="color:#000080">&#34;gender&#34;</span>: <span style="color:#d14">&#34;M&#34;</span>,
+        <span style="color:#000080">&#34;postal_address&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+        <span style="color:#000080">&#34;email&#34;</span>: <span style="color:#d14">&#34;johndoe@goodair.com&#34;</span>,
+        <span style="color:#000080">&#34;telephone&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+        <span style="color:#000080">&#34;fax&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+        <span style="color:#000080">&#34;mobile_phone&#34;</span>: <span style="color:#d14">&#34;+34787426623&#34;</span>,
+        <span style="color:#000080">&#34;legalRepresentative&#34;</span>: {
+            <span style="color:#000080">&#34;cn&#34;</span>: <span style="color:#d14">&#34;56565656V Jesus Ruiz&#34;</span>,
+            <span style="color:#000080">&#34;serialNumber&#34;</span>: <span style="color:#d14">&#34;56565656V&#34;</span>,
+            <span style="color:#000080">&#34;organizationIdentifier&#34;</span>: <span style="color:#d14">&#34;VATES-12345678&#34;</span>,
+            <span style="color:#000080">&#34;o&#34;</span>: <span style="color:#d14">&#34;GoodAir&#34;</span>,
+            <span style="color:#000080">&#34;c&#34;</span>: <span style="color:#d14">&#34;ES&#34;</span>
+        },
+        <span style="color:#000080">&#34;rolesAndDuties&#34;</span>: [
+            {
+                <span style="color:#000080">&#34;type&#34;</span>: <span style="color:#d14">&#34;LEARCredential&#34;</span>,
+                <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>
+            }
+        ]
+    }
+}
+</pre></td></tr></table>
 
         <p>Which is virtually identical to the one described in [[DID-ONBOARDING]].
 
@@ -812,32 +881,32 @@
 <!-- ****** EXPLANATIONS **** -->
 
         <ul class='plain'>
-            <li id='675.1'><a href='#675.1' class='selfref'><b>1</b></a> The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
+            <li id='677.1'><a href='#677.1' class='selfref'><b>1</b></a> The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
 
 <div>
 </div>
             </li>
-            <li id='678.2'><a href='#678.2' class='selfref'><b>2</b></a> The browser sends a request to the Packet Delivery portal server.
+            <li id='680.2'><a href='#680.2' class='selfref'><b>2</b></a> The browser sends a request to the Packet Delivery portal server.
 
 <div>
 </div>
             </li>
-            <li id='681.3'><a href='#681.3' class='selfref'><b>3</b></a> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
+            <li id='683.3'><a href='#683.3' class='selfref'><b>3</b></a> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
 
 <div>
 </div>
             </li>
-            <li id='685.4'><a href='#685.4' class='selfref'><b>4</b></a> The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
+            <li id='687.4'><a href='#687.4' class='selfref'><b>4</b></a> The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
 
 <div>
 </div>
             </li>
-            <li id='689.6'><a href='#689.6' class='selfref'><b>6</b></a> The user starts the scan with the wallet
+            <li id='691.6'><a href='#691.6' class='selfref'><b>6</b></a> The user starts the scan with the wallet
 
 <div>
 </div>
             </li>
-            <li id='693.7'><a href='#693.7' class='selfref'><b>7</b></a> After confirmation by the user, the wallet performs a `GET /authentication-requests` endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
+            <li id='695.7'><a href='#695.7' class='selfref'><b>7</b></a> After confirmation by the user, the wallet performs a `GET /authentication-requests` endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
 
 <div>
 </div>
@@ -845,7 +914,7 @@
         </ul>
         <ul class='plain'>
 
-            <li id='701.1'><a href='#701.1' class='selfref'><b>1</b></a> The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
+            <li id='703.1'><a href='#703.1' class='selfref'><b>1</b></a> The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
 
 
                 <div>
@@ -854,15 +923,15 @@
                 </p>
                 </div>
             </li>
-            <li id='705.2'><a href='#705.2' class='selfref'><b>2</b></a> The browser sends a request to the Packet Delivery portal server.
+            <li id='707.2'><a href='#707.2' class='selfref'><b>2</b></a> The browser sends a request to the Packet Delivery portal server.
 
 
             </li>
-            <li id='707.3'><a href='#707.3' class='selfref'><b>3</b></a> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
+            <li id='709.3'><a href='#709.3' class='selfref'><b>3</b></a> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
 
 
             </li>
-            <li id='710.4'><a href='#710.4' class='selfref'><b>4</b></a> The Verifier generates and displays a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
+            <li id='712.4'><a href='#712.4' class='selfref'><b>4</b></a> The Verifier generates and displays a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
 
 
                 <div>
@@ -872,28 +941,30 @@
                 </div>
                 <div>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">https://verifier.dome-marketplace.eu/authentication-requests?state</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">af0ifjsldkj</span>
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#008080">https://verifier.dome-marketplace.eu/authentication-requests?state</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">af0ifjsldkj</span>
+</pre></td></tr></table>
 
                 </div>
             </li>
-            <li id='717.5'><a href='#717.5' class='selfref'><b>5</b></a> The QR code is displayed in the user browser with instructions to scan it and go to the URL inside it.
+            <li id='719.5'><a href='#719.5' class='selfref'><b>5</b></a> The QR code is displayed in the user browser with instructions to scan it and go to the URL inside it.
 
 
             </li>
-            <li id='719.6'><a href='#719.6' class='selfref'><b>6</b></a> The user scans the QR with his wallet and tells the wallet to go to the URL in the QR.
+            <li id='721.6'><a href='#721.6' class='selfref'><b>6</b></a> The user scans the QR with his wallet and tells the wallet to go to the URL in the QR.
 
 
             </li>
-            <li id='721.7'><a href='#721.7' class='selfref'><b>7</b></a> The mobile performs a GET request to the url inside the QR. The reply to the GET request is an Authorization Request
+            <li id='723.7'><a href='#723.7' class='selfref'><b>7</b></a> The mobile performs a GET request to the url inside the QR. The reply to the GET request is an Authorization Request
 
 
             </li>
-            <li id='723.8'><a href='#723.8' class='selfref'><b>8</b></a> The Verifier creates an Authorization Request. The process is described in detail in the next section
+            <li id='725.8'><a href='#725.8' class='selfref'><b>8</b></a> The Verifier creates an Authorization Request. The process is described in detail in the next section
 
 
             </li>
-            <li id='725.9'><a href='#725.9' class='selfref'><b>9</b></a> The Verifier replies to the wallet with the Authorization Request
+            <li id='727.9'><a href='#727.9' class='selfref'><b>9</b></a> The Verifier replies to the wallet with the Authorization Request
 
 
             </li>
@@ -909,28 +980,28 @@
 
             <ul>
 
-                <li id='736.response_type'><a href='#736.response_type' class='selfref'><b>response_type</b></a> REQUIRED. Must be <code>vp_token</code>. This parameter is defined in [[RFC6749]]> The possible values are determined by the response type registry established by [[RFC6749]]. The [[OpenID.VP]] specification introduces the response type <code>vp_token</code>. This response type asks the SIOP to return only a VP Token in the Authorization Response, which is what we want in our case.
+                <li id='738.response_type'><a href='#738.response_type' class='selfref'><b>response_type</b></a> REQUIRED. Must be <code>vp_token</code>. This parameter is defined in [[RFC6749]]> The possible values are determined by the response type registry established by [[RFC6749]]. The [[OpenID.VP]] specification introduces the response type <code>vp_token</code>. This response type asks the SIOP to return only a VP Token in the Authorization Response, which is what we want in our case.
 
 
                 </li>
-                <li id='738.scope'><a href='#738.scope' class='selfref'><b>scope</b></a> REQUIRED. This parameter is defined in [[RFC6749]] which allows it to be used by verifiers to request presentation of credentials by utilizing a pre-defined scope value designating the type of credential. See section <a href="#request_scope" class="xref">Request Scope
+                <li id='740.scope'><a href='#740.scope' class='selfref'><b>scope</b></a> REQUIRED. This parameter is defined in [[RFC6749]] which allows it to be used by verifiers to request presentation of credentials by utilizing a pre-defined scope value designating the type of credential. See section <a href="#request_scope" class="xref">Request Scope
 </a> for more details. We use in this instance the value <code>dome.credentials.presentation.LEARCredential</code> which means that the RP (DOME onboarding service) is asking the SIOP (user wallet) to send a credential of type <code>LEARCredential</code>.
 
 
                 </li>
-                <li id='740.response_mode'><a href='#740.response_mode' class='selfref'><b>response_mode</b></a> REQUIRED. MUST be <code>direct_post</code>. As this is a cross-device scenario, this response mode is used to instruct the Self-Issued OP to deliver the result of the authentication process to a certain endpoint using the HTTP POST method. This endpoint to which the SIOP shall deliver the authentication result is conveyed in the parameter <code>redirect_uri</code> described below.
+                <li id='742.response_mode'><a href='#742.response_mode' class='selfref'><b>response_mode</b></a> REQUIRED. MUST be <code>direct_post</code>. As this is a cross-device scenario, this response mode is used to instruct the Self-Issued OP to deliver the result of the authentication process to a certain endpoint using the HTTP POST method. This endpoint to which the SIOP shall deliver the authentication result is conveyed in the parameter <code>redirect_uri</code> described below.
 
 
                 </li>
-                <li id='742.redirect_uri'><a href='#742.redirect_uri' class='selfref'><b>redirect_uri</b></a> (REQUIRED). MUST be a valid RP endpoint. The Authentication Response is sent to this endpoint using <code>POST</code> and encoding `application/json`).
+                <li id='744.redirect_uri'><a href='#744.redirect_uri' class='selfref'><b>redirect_uri</b></a> (REQUIRED). MUST be a valid RP endpoint. The Authentication Response is sent to this endpoint using <code>POST</code> and encoding `application/json`).
 
 
                 </li>
-                <li id='744.client_id'><a href='#744.client_id' class='selfref'><b>client_id</b></a> REQUIRED. MUST be the DID of the RP (DOM onboarding entity) so it can be resolved by the SIOP and checked against a Trusted List, or rejected if it does not pass validation. This provides a high level of assurance to the SIOP that the RP is really who it claims.
+                <li id='746.client_id'><a href='#746.client_id' class='selfref'><b>client_id</b></a> REQUIRED. MUST be the DID of the RP (DOM onboarding entity) so it can be resolved by the SIOP and checked against a Trusted List, or rejected if it does not pass validation. This provides a high level of assurance to the SIOP that the RP is really who it claims.
 
 
                 </li>
-                <li id='746.client_id_scheme'><a href='#746.client_id_scheme' class='selfref'><b>client_id_scheme</b></a> REQUIRED. MUST have the value <code>did</code>. This value indicates that the Client Identifier is a DID defined in [[DID-Core]]. The request MUST be signed with a private key associated with the DID. To obtain the corresponding private key, the Wallet MUST use DID Resolution defined by the DID method used by the Verifier. For most DID methods and since the associated DID Document may include multiple public keys, a particular public key used to sign the request in question MUST be identified by the kid in the JOSE Header. However, in our case the Verifier uses `did:elsi` and so the request MUST be signed with the eIDAS certificate according to the [[ETSI-JADES]] format, which defines the mechanism to identify the public key.
+                <li id='748.client_id_scheme'><a href='#748.client_id_scheme' class='selfref'><b>client_id_scheme</b></a> REQUIRED. MUST have the value <code>did</code>. This value indicates that the Client Identifier is a DID defined in [[DID-Core]]. The request MUST be signed with a private key associated with the DID. To obtain the corresponding private key, the Wallet MUST use DID Resolution defined by the DID method used by the Verifier. For most DID methods and since the associated DID Document may include multiple public keys, a particular public key used to sign the request in question MUST be identified by the kid in the JOSE Header. However, in our case the Verifier uses `did:elsi` and so the request MUST be signed with the eIDAS certificate according to the [[ETSI-JADES]] format, which defines the mechanism to identify the public key.
 
 
                     <div>
@@ -939,19 +1010,19 @@
                     </p>
                     </div>
                 </li>
-                <li id='750.nonce'><a href='#750.nonce' class='selfref'><b>nonce</b></a> REQUIRED. This parameter follows the definition given in [[OpenID.Core]]. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.
+                <li id='752.nonce'><a href='#752.nonce' class='selfref'><b>nonce</b></a> REQUIRED. This parameter follows the definition given in [[OpenID.Core]]. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.
 
 
                 </li>
-                <li id='752.state'><a href='#752.state' class='selfref'><b>state</b></a> REQUIRED. Used by the portal component of DOM onboarding to associate the start of an authentication session with the end of that session when the RP Verifier component notifies to the portal.
+                <li id='754.state'><a href='#754.state' class='selfref'><b>state</b></a> REQUIRED. Used by the portal component of DOM onboarding to associate the start of an authentication session with the end of that session when the RP Verifier component notifies to the portal.
 
 
                 </li>
-                <li id='754.presentation_definition'><a href='#754.presentation_definition' class='selfref'><b>presentation_definition</b></a> CONDITIONAL. A string containing a <code>presentation_definition</code> JSON object as defined in Section 4 of [[DIF.PresentationExchange]]. We do not use this parameter because <code>scope</code> already specifies the credential type.
+                <li id='756.presentation_definition'><a href='#756.presentation_definition' class='selfref'><b>presentation_definition</b></a> CONDITIONAL. A string containing a <code>presentation_definition</code> JSON object as defined in Section 4 of [[DIF.PresentationExchange]]. We do not use this parameter because <code>scope</code> already specifies the credential type.
 
 
                 </li>
-                <li id='756.presentation_definition_uri'><a href='#756.presentation_definition_uri' class='selfref'><b>presentation_definition_uri</b></a> CONDITIONAL. A string containing a URL pointing to a resource where a <code>presentation_definition</code> JSON object as defined in Section 4 of [[DIF.PresentationExchange]] can be retrieved. We do not use this parameter because <code>scope</code> already specifies the credential type.
+                <li id='758.presentation_definition_uri'><a href='#758.presentation_definition_uri' class='selfref'><b>presentation_definition_uri</b></a> CONDITIONAL. A string containing a URL pointing to a resource where a <code>presentation_definition</code> JSON object as defined in Section 4 of [[DIF.PresentationExchange]] can be retrieved. We do not use this parameter because <code>scope</code> already specifies the credential type.
 
 
                 </li>
@@ -963,15 +1034,17 @@
 
             </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">openid://?</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">scope</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">dome.credentials.presentation.LEARCredential&amp;</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">response_type</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">vp_token&amp;</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">response_mode</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">direct_post&amp;</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">client_id</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">did:elsi:VATFR-99999999&amp;</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">redirect_uri</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">https://verifier.dome-marketplace.eu/api/authentication_response&amp;</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">state</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">af0ifjsldkj&amp;</span>
-</span></span><span style="display:flex;"><span><span style="color:#50fa7b">nonce</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">n-0S6_WzA2Mj</span>
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#008080">openid://?</span>
+<span style="color:#008080">scope</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">dome.credentials.presentation.LEARCredential&amp;</span>
+<span style="color:#008080">response_type</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">vp_token&amp;</span>
+<span style="color:#008080">response_mode</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">direct_post&amp;</span>
+<span style="color:#008080">client_id</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">did:elsi:VATFR-99999999&amp;</span>
+<span style="color:#008080">redirect_uri</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">https://verifier.dome-marketplace.eu/api/authentication_response&amp;</span>
+<span style="color:#008080">state</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">af0ifjsldkj&amp;</span>
+<span style="color:#008080">nonce</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">n-0S6_WzA2Mj</span>
+</pre></td></tr></table>
 
             <p>(URL encoding removed, line breaks and leading spaces added for readability).
 
@@ -984,15 +1057,17 @@
 
         </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;iss&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATFR-99999999&#34;</span>,   <span style="color:#6272a4">// Should correspond with the client_id in the AR
-</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">&#34;sub&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATFR-99999999&#34;</span>,   <span style="color:#6272a4">// Should correspond with the client_id in the AR
-</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">&#34;aud&#34;</span>: <span style="color:#f1fa8c">&#34;https://self-issued.me/v2&#34;</span>, <span style="color:#6272a4">// As specified in section 5.5 of OIDC4VP
-</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">&#34;iat&#34;</span>: <span style="color:#bd93f9">1667194901</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;exp&#34;</span>: <span style="color:#bd93f9">1667194961</span>,                  <span style="color:#6272a4">// To avoid replays, here it expires in 60 secs
-</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">&#34;auth_request&#34;</span>: <span style="color:#f1fa8c">&#34;openid://?scope=...&amp;amp;response_type=vp_token&amp;amp;...&#34;</span>,
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;iss&#34;</span>: <span style="color:#d14">&#34;did:elsi:VATFR-99999999&#34;</span>,   <span style="color:#998;font-style:italic">// Should correspond with the client_id in the AR
+</span><span style="color:#998;font-style:italic"></span>    <span style="color:#000080">&#34;sub&#34;</span>: <span style="color:#d14">&#34;did:elsi:VATFR-99999999&#34;</span>,   <span style="color:#998;font-style:italic">// Should correspond with the client_id in the AR
+</span><span style="color:#998;font-style:italic"></span>    <span style="color:#000080">&#34;aud&#34;</span>: <span style="color:#d14">&#34;https://self-issued.me/v2&#34;</span>, <span style="color:#998;font-style:italic">// As specified in section 5.5 of OIDC4VP
+</span><span style="color:#998;font-style:italic"></span>    <span style="color:#000080">&#34;iat&#34;</span>: <span style="color:#099">1667194901</span>,
+    <span style="color:#000080">&#34;exp&#34;</span>: <span style="color:#099">1667194961</span>,                  <span style="color:#998;font-style:italic">// To avoid replays, here it expires in 60 secs
+</span><span style="color:#998;font-style:italic"></span>    <span style="color:#000080">&#34;auth_request&#34;</span>: <span style="color:#d14">&#34;openid://?scope=...&amp;amp;response_type=vp_token&amp;amp;...&#34;</span>,
+}
+</pre></td></tr></table>
 
         <p>Where the claims <code>iss</code> and <code>sub</code> MUST be the DID of the RP (in this case DOME onboarding) and MUST correspond exactly with the <code>client_id</code> parameter in the Authentication Request. The claim <code>auth_request</code> contains the Authentication Request as a string. The expiration time in claim <code>exp</code> avoids replays and can be very short because it is used by the SIOP just on reception of the Authentication Request.
 
@@ -1007,7 +1082,7 @@
 <!-- ****** EXPLANATIONS **** -->
 
         <ul class='plain'>
-            <li id='814.7'><a href='#814.7' class='selfref'><b>7</b></a> After confirmation by the user, the wallet performs a ` GET /authentication-requests` endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
+            <li id='816.7'><a href='#816.7' class='selfref'><b>7</b></a> After confirmation by the user, the wallet performs a ` GET /authentication-requests` endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
 
 <div>
 </div>
@@ -1015,11 +1090,11 @@
         </ul>
         <ul>
 
-            <li id='820.8'><a href='#820.8' class='selfref'><b>8</b></a> Packet Delivery company RP creates a SIOP Authentication Request. The parameters comprising a request for verifiable presentations are given in section 5 of [[OpenID.VP]] and in section 10.1 of [[OpenID.SIOP2]] and are reproduced here with the particularities of this use case, in particular that this is a cross-device interaction:
+            <li id='822.8'><a href='#822.8' class='selfref'><b>8</b></a> Packet Delivery company RP creates a SIOP Authentication Request. The parameters comprising a request for verifiable presentations are given in section 5 of [[OpenID.VP]] and in section 10.1 of [[OpenID.SIOP2]] and are reproduced here with the particularities of this use case, in particular that this is a cross-device interaction:
 
 
             </li>
-            <li id='822.9'><a href='#822.9' class='selfref'><b>9</b></a> The SIOP Authentication Request is returned to the mobile in the reply body of the GET request, as a JWT in JWS form ([[RFC7515]]), signed with the public key associated with the DID in the client_id field of the Authorization Request. The JWT MUST be generated according to the best practices described in [[RFC8725]]. 
+            <li id='824.9'><a href='#824.9' class='selfref'><b>9</b></a> The SIOP Authentication Request is returned to the mobile in the reply body of the GET request, as a JWT in JWS form ([[RFC7515]]), signed with the public key associated with the DID in the client_id field of the Authorization Request. The JWT MUST be generated according to the best practices described in [[RFC8725]]. 
 
 
             </li>
@@ -1037,15 +1112,15 @@
 
         <ul>
 
-            <li id='860.10'><a href='#860.10' class='selfref'><b>10</b></a> Verification of the signature. As mentioned in the previous section, the Authorization Request is received as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service. This allows the wallet to verify that the signature corresponds to a real-world entity.
+            <li id='862.10'><a href='#862.10' class='selfref'><b>10</b></a> Verification of the signature. As mentioned in the previous section, the Authorization Request is received as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service. This allows the wallet to verify that the signature corresponds to a real-world entity.
 
 
             </li>
-            <li id='862.11'><a href='#862.11' class='selfref'><b>11</b></a> Verification that the DID in the <code>client_id</code> field of the Authorization Request corresponds to the entity that signed the Authorization Request. This is easy in our case because we use the `did:elsi` method.
+            <li id='864.11'><a href='#864.11' class='selfref'><b>11</b></a> Verification that the DID in the <code>client_id</code> field of the Authorization Request corresponds to the entity that signed the Authorization Request. This is easy in our case because we use the `did:elsi` method.
 
 
             </li>
-            <li id='864.12'><a href='#864.12' class='selfref'><b>12</b></a> Verification that the entity identified in the <code>client_id</code> field of the Authorization Request is a trusted entity belonging to the ecosystem, by resolving the DID of in the <code>client_id</code> field.
+            <li id='866.12'><a href='#866.12' class='selfref'><b>12</b></a> Verification that the entity identified in the <code>client_id</code> field of the Authorization Request is a trusted entity belonging to the ecosystem, by resolving the DID of in the <code>client_id</code> field.
 
 
                 <div>
@@ -1078,7 +1153,7 @@
 
         <ul>
 
-            <li id='913.13'><a href='#913.13' class='selfref'><b>13</b></a> The wallet creates an Authentication Response to be posted in the <code>redirect_uri</code> specified by GoodAir in the Authorization Request that was sent to the wallet. The contents of the Authentication Response are described below.
+            <li id='915.13'><a href='#915.13' class='selfref'><b>13</b></a> The wallet creates an Authentication Response to be posted in the <code>redirect_uri</code> specified by GoodAir in the Authorization Request that was sent to the wallet. The contents of the Authentication Response are described below.
 
 
                 <div>
@@ -1093,13 +1168,15 @@
                 </div>
                 <div>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">POST</span> /api/siop/authentication_response <span style="color:#ff79c6">HTTP</span><span style="color:#ff79c6">/</span><span style="color:#bd93f9">1.1</span>
-</span></span><span style="display:flex;"><span>Host<span style="color:#ff79c6">:</span> verifier.dome-onboarding.org
-</span></span><span style="display:flex;"><span>Content-Type<span style="color:#ff79c6">:</span> application/x-www-form-urlencoded
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>presentation_submission=[see definition below]
-</span></span><span style="display:flex;"><span>&amp;vp_token=[see definition below]
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#900;font-weight:bold">POST</span> <span style="color:#555">/api/siop/authentication_response</span> <span style="color:#000;font-weight:bold">HTTP</span><span style="color:#000;font-weight:bold">/</span><span style="color:#099">1.1</span>
+Host<span style="color:#000;font-weight:bold">:</span> verifier.dome-onboarding.org
+Content-Type<span style="color:#000;font-weight:bold">:</span> application/x-www-form-urlencoded
+
+presentation_submission=[see definition below]
+&amp;vp_token=[see definition below]
+</pre></td></tr></table>
 
                 </div>
                 <div>
@@ -1109,22 +1186,24 @@
                 </div>
                 <div>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;definition_id&#34;</span>: <span style="color:#f1fa8c">&#34;OnboardingPresentationDefinition&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;OnboardingPresentationSubmission&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;descriptor_map&#34;</span>: [
-</span></span><span style="display:flex;"><span>    {
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;id_credential&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;path&#34;</span>: <span style="color:#f1fa8c">&#34;$&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;format&#34;</span>: <span style="color:#f1fa8c">&#34;ldp_vp&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;path_nested&#34;</span>: {
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;format&#34;</span>: <span style="color:#f1fa8c">&#34;ldp_vc&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;path&#34;</span>: <span style="color:#f1fa8c">&#34;$.verifiableCredential[0]&#34;</span>
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    ]
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;definition_id&#34;</span>: <span style="color:#d14">&#34;OnboardingPresentationDefinition&#34;</span>,
+    <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;OnboardingPresentationSubmission&#34;</span>,
+    <span style="color:#000080">&#34;descriptor_map&#34;</span>: [
+    {
+        <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;id_credential&#34;</span>,
+        <span style="color:#000080">&#34;path&#34;</span>: <span style="color:#d14">&#34;$&#34;</span>,
+        <span style="color:#000080">&#34;format&#34;</span>: <span style="color:#d14">&#34;ldp_vp&#34;</span>,
+        <span style="color:#000080">&#34;path_nested&#34;</span>: {
+            <span style="color:#000080">&#34;format&#34;</span>: <span style="color:#d14">&#34;ldp_vc&#34;</span>,
+            <span style="color:#000080">&#34;path&#34;</span>: <span style="color:#d14">&#34;$.verifiableCredential[0]&#34;</span>
+        }
+    }
+    ]
+}
+</pre></td></tr></table>
 
                 </div>
                 <div>
@@ -1133,7 +1212,7 @@
                 </p>
                 </div>
             </li>
-            <li id='948.14'><a href='#948.14' class='selfref'><b>14</b></a> The wallet sends the Authentication Response to the endpoint received in the <code>redirect_uri</code> parameter of the Authentication Request, sending an HTTP <code>POST</code> request using the encoding `application/x-www-form-urlencoded`.
+            <li id='950.14'><a href='#950.14' class='selfref'><b>14</b></a> The wallet sends the Authentication Response to the endpoint received in the <code>redirect_uri</code> parameter of the Authentication Request, sending an HTTP <code>POST</code> request using the encoding `application/x-www-form-urlencoded`.
 
 
             </li>
@@ -1154,7 +1233,7 @@
 
         <ul>
 
-            <li id='995.15_and_16'><a href='#995.15_and_16' class='selfref'><b>15 and 16</b></a> The Verifier receives the Authorization Request and has to perform verifications, the standard ones being defined in [[DIF.PresentationExchange]]. In order to verify that the Verifiable Credential has been issued by a trusted entity, the Relying Party has to verify:
+            <li id='997.15_and_16'><a href='#997.15_and_16' class='selfref'><b>15 and 16</b></a> The Verifier receives the Authorization Request and has to perform verifications, the standard ones being defined in [[DIF.PresentationExchange]]. In order to verify that the Verifiable Credential has been issued by a trusted entity, the Relying Party has to verify:
 
 
                 <div>
@@ -1179,11 +1258,11 @@
                 </p>
                 </div>
             </li>
-            <li id='1005.17'><a href='#1005.17' class='selfref'><b>17</b></a> After verifying the credential, the Relying Party can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the user and not by a malicious agent. To do so, it uses the public key associated to the `did:key` identifier <code>id</code> field inside the <code>credentialSubject</code> structure. That public key is cryptographically bound to the customer DID during the onboarding process that GoodAir performed with its employee.
+            <li id='1007.17'><a href='#1007.17' class='selfref'><b>17</b></a> After verifying the credential, the Relying Party can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the user and not by a malicious agent. To do so, it uses the public key associated to the `did:key` identifier <code>id</code> field inside the <code>credentialSubject</code> structure. That public key is cryptographically bound to the customer DID during the onboarding process that GoodAir performed with its employee.
 
 
             </li>
-            <li id='1007.18'><a href='#1007.18' class='selfref'><b>18</b></a> The Verifier creates an Access Token for the user so he can use it to access services in the DOME onboarding portal. The Access Token is generated in JWT format and signed by the RP component. The access token is intended for use as bearer token over HTTP [[RFC2616]] using Transport Layer Security (TLS) [[RFC5246]] to access protected resources, and it should use the JWT Profile profile described in [[RFC9068]].
+            <li id='1009.18'><a href='#1009.18' class='selfref'><b>18</b></a> The Verifier creates an Access Token for the user so he can use it to access services in the DOME onboarding portal. The Access Token is generated in JWT format and signed by the RP component. The access token is intended for use as bearer token over HTTP [[RFC2616]] using Transport Layer Security (TLS) [[RFC5246]] to access protected resources, and it should use the JWT Profile profile described in [[RFC9068]].
 
 
                 <div>
@@ -1193,18 +1272,20 @@
                 </div>
                 <div>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;iss&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATFR-99999999&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;sub&#34;</span>: <span style="color:#f1fa8c">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;aud&#34;</span>:   <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu/onboarding&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;exp&#34;</span>: <span style="color:#bd93f9">1639528912</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;iat&#34;</span>: <span style="color:#bd93f9">1618354090</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;jti&#34;</span> : <span style="color:#f1fa8c">&#34;dbe39bf3a3ba4238a513f51d6e1691c4&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;client_id&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATFR-99999999&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;scope&#34;</span>: <span style="color:#f1fa8c">&#34;vp_token&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;verifiableCredential&#34;</span>: [the VC that was received inside the Verifiable Presentation]
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;iss&#34;</span>: <span style="color:#d14">&#34;did:elsi:VATFR-99999999&#34;</span>,
+    <span style="color:#000080">&#34;sub&#34;</span>: <span style="color:#d14">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
+    <span style="color:#000080">&#34;aud&#34;</span>:   <span style="color:#d14">&#34;https://dome-marketplace.eu/onboarding&#34;</span>,
+    <span style="color:#000080">&#34;exp&#34;</span>: <span style="color:#099">1639528912</span>,
+    <span style="color:#000080">&#34;iat&#34;</span>: <span style="color:#099">1618354090</span>,
+    <span style="color:#000080">&#34;jti&#34;</span> : <span style="color:#d14">&#34;dbe39bf3a3ba4238a513f51d6e1691c4&#34;</span>,
+    <span style="color:#000080">&#34;client_id&#34;</span>: <span style="color:#d14">&#34;did:elsi:VATFR-99999999&#34;</span>,
+    <span style="color:#000080">&#34;scope&#34;</span>: <span style="color:#d14">&#34;vp_token&#34;</span>,
+    <span style="color:#000080">&#34;verifiableCredential&#34;</span>: [<span style="color:#a61717;background-color:#e3d2d2">the</span> <span style="color:#a61717;background-color:#e3d2d2">VC</span> <span style="color:#a61717;background-color:#e3d2d2">that</span> <span style="color:#a61717;background-color:#e3d2d2">was</span> <span style="color:#a61717;background-color:#e3d2d2">received</span> <span style="color:#a61717;background-color:#e3d2d2">inside</span> <span style="color:#a61717;background-color:#e3d2d2">the</span> <span style="color:#a61717;background-color:#e3d2d2">Verifiable</span> <span style="color:#a61717;background-color:#e3d2d2">Presentation</span>]
+}
+</pre></td></tr></table>
 
                 </div>
                 <div>
@@ -1236,11 +1317,11 @@
                 </ul>
                 </div>
             </li>
-            <li id='1039.19'><a href='#1039.19' class='selfref'><b>19</b></a> The Verifier sends a successful response to the POST request from the wallet. The wallet receives the response to the POST indicating the success or failure of the process. The Verifier continues processing because the web portal of Packet Delivery has to be refreshed with the services that this specific user can access, based on the information received in the Verifiable Credential and the access control policies implemented by the DOME portal.
+            <li id='1041.19'><a href='#1041.19' class='selfref'><b>19</b></a> The Verifier sends a successful response to the POST request from the wallet. The wallet receives the response to the POST indicating the success or failure of the process. The Verifier continues processing because the web portal of Packet Delivery has to be refreshed with the services that this specific user can access, based on the information received in the Verifiable Credential and the access control policies implemented by the DOME portal.
 
 
             </li>
-            <li id='1041.20'><a href='#1041.20' class='selfref'><b>20</b></a> The Verifier notifies the DOME portal to refresh the login page so it can present the services to the user. The notification includes the following:
+            <li id='1043.20'><a href='#1043.20' class='selfref'><b>20</b></a> The Verifier notifies the DOME portal to refresh the login page so it can present the services to the user. The notification includes the following:
 
 
                 <div>
@@ -1261,13 +1342,15 @@
                 </div>
                 <div>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span><span style="color:#50fa7b">POST</span> /api/notify <span style="color:#ff79c6">HTTP</span><span style="color:#ff79c6">/</span><span style="color:#bd93f9">1.1</span>
-</span></span><span style="display:flex;"><span>Host<span style="color:#ff79c6">:</span> dome-marketplace.eu
-</span></span><span style="display:flex;"><span>Content-Type<span style="color:#ff79c6">:</span> application/x-www-form-urlencoded
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>access_token=[the access token]
-</span></span><span style="display:flex;"><span>&amp;state=af0ifjsldkj
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#900;font-weight:bold">POST</span> <span style="color:#555">/api/notify</span> <span style="color:#000;font-weight:bold">HTTP</span><span style="color:#000;font-weight:bold">/</span><span style="color:#099">1.1</span>
+Host<span style="color:#000;font-weight:bold">:</span> dome-marketplace.eu
+Content-Type<span style="color:#000;font-weight:bold">:</span> application/x-www-form-urlencoded
+
+access_token=[the access token]
+&amp;state=af0ifjsldkj
+</pre></td></tr></table>
 
                 </div>
                 <div>
@@ -1276,7 +1359,7 @@
                 </p>
                 </div>
             </li>
-            <li id='1060.21'><a href='#1060.21' class='selfref'><b>21</b></a> The DOM portal refreshes the screen and displays the services available to users, sending the Access Token to the browser of the user. The Access Token will be sent by the browser to the DOME portal whenever the user tries to access a protected resource of the portal, and so access control can be performed using the data inside the token, in the same way as with any other access token in other authentication mechanisms.
+            <li id='1062.21'><a href='#1062.21' class='selfref'><b>21</b></a> The DOM portal refreshes the screen and displays the services available to users, sending the Access Token to the browser of the user. The Access Token will be sent by the browser to the DOME portal whenever the user tries to access a protected resource of the portal, and so access control can be performed using the data inside the token, in the same way as with any other access token in other authentication mechanisms.
 
 
             </li>
@@ -1296,35 +1379,37 @@
 
     </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;dome.credentials.presentation.LEARCredential&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;input_descriptors&#34;</span>: [
-</span></span><span style="display:flex;"><span>        {
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;LEARCredentialDefinitionv1.01&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;format&#34;</span>: {
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;ldp_vc&#34;</span>: {
-</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&#34;proof_type&#34;</span>: [
-</span></span><span style="display:flex;"><span>                    <span style="color:#f1fa8c">&#34;RsaSignature2018&#34;</span>
-</span></span><span style="display:flex;"><span>                ]
-</span></span><span style="display:flex;"><span>            }
-</span></span><span style="display:flex;"><span>        },
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;constraints&#34;</span>: {
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;fields&#34;</span>: [
-</span></span><span style="display:flex;"><span>                {
-</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">&#34;path&#34;</span>: [
-</span></span><span style="display:flex;"><span>                        <span style="color:#f1fa8c">&#34;$.type&#34;</span>
-</span></span><span style="display:flex;"><span>                    ],
-</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">&#34;filter&#34;</span>: {
-</span></span><span style="display:flex;"><span>                        <span style="color:#ff79c6">&#34;type&#34;</span>: <span style="color:#f1fa8c">&#34;string&#34;</span>,
-</span></span><span style="display:flex;"><span>                        <span style="color:#ff79c6">&#34;pattern&#34;</span>: <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>
-</span></span><span style="display:flex;"><span>                    }
-</span></span><span style="display:flex;"><span>                }
-</span></span><span style="display:flex;"><span>            ]
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>    ]
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;dome.credentials.presentation.LEARCredential&#34;</span>,
+    <span style="color:#000080">&#34;input_descriptors&#34;</span>: [
+        {
+        <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;LEARCredentialDefinitionv1.01&#34;</span>,
+        <span style="color:#000080">&#34;format&#34;</span>: {
+            <span style="color:#000080">&#34;ldp_vc&#34;</span>: {
+                <span style="color:#000080">&#34;proof_type&#34;</span>: [
+                    <span style="color:#d14">&#34;RsaSignature2018&#34;</span>
+                ]
+            }
+        },
+        <span style="color:#000080">&#34;constraints&#34;</span>: {
+            <span style="color:#000080">&#34;fields&#34;</span>: [
+                {
+                    <span style="color:#000080">&#34;path&#34;</span>: [
+                        <span style="color:#d14">&#34;$.type&#34;</span>
+                    ],
+                    <span style="color:#000080">&#34;filter&#34;</span>: {
+                        <span style="color:#000080">&#34;type&#34;</span>: <span style="color:#d14">&#34;string&#34;</span>,
+                        <span style="color:#000080">&#34;pattern&#34;</span>: <span style="color:#d14">&#34;LEARCredential&#34;</span>
+                    }
+                }
+            ]
+        }
+        }
+    ]
+}
+</pre></td></tr></table>
 
 </section>
 <section><h2>Access control with the LEARCredential
@@ -1366,15 +1451,15 @@
 
     <ul>
 
-        <li id='1178.1'><a href='#1178.1' class='selfref'><b>1</b></a> The user interacts with the browser to access a protected resource.
+        <li id='1180.1'><a href='#1180.1' class='selfref'><b>1</b></a> The user interacts with the browser to access a protected resource.
 
 
         </li>
-        <li id='1180.2'><a href='#1180.2' class='selfref'><b>2</b></a> The PEP intercepts the call. The PEP is normally implemented as a reverse proxy or API gateway, so all calls to protected resources entering the organisation are intercepted and forwarded if they are accepted.
+        <li id='1182.2'><a href='#1182.2' class='selfref'><b>2</b></a> The PEP intercepts the call. The PEP is normally implemented as a reverse proxy or API gateway, so all calls to protected resources entering the organisation are intercepted and forwarded if they are accepted.
 
 
         </li>
-        <li id='1182.3'><a href='#1182.3' class='selfref'><b>3</b></a> The PEP requests a decision from the PEP. The request from the PEP to the PDP consists of subject attributes (typically for the user who issued the request), resource attributes (the resource for which access is sought), action attributes (the operations to be performed on the resource), and environment attributes.
+        <li id='1184.3'><a href='#1184.3' class='selfref'><b>3</b></a> The PEP requests a decision from the PEP. The request from the PEP to the PDP consists of subject attributes (typically for the user who issued the request), resource attributes (the resource for which access is sought), action attributes (the operations to be performed on the resource), and environment attributes.
 
 
         </li>
@@ -1389,57 +1474,61 @@
 
     </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;token_type&#34;</span>: <span style="color:#f1fa8c">&#34;Bearer&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;expires_in&#34;</span>: <span style="color:#bd93f9">3600</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;access_token&#34;</span>: <span style="color:#f1fa8c">&#34;ewogICJhbGciOiAiRVMyNTYiLAogICJraWQiOiAiV09IRnU0SFo1OVNNODUzQzdlTjBPdmxLR3JNZWVyRENwSE9VUm9UUXdIdyIsCiAgInR5cCI6ICJKV1QiCn0.ewogICJAY29udGV4dCI6IFsKICAgICJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIKICBdLAogICJ0eXBlIjogWwogICAgIlZlcmlmaWFibGVQcmVzZW50YXRpb24iCiAgXSwKICAidmVyaWZpYWJsZUNyZWRlbnRpYWwiOiBbCiAgICB7CiAgICAgICJ0eXBlcyI6IFsKICAgICAgICAiUGFja2V0RGVsaXZlcnlTZXJ2aWNlIiwKICAgICAgICAiVmVyaWZpYWJsZUNyZWRlbnRpYWwiCiAgICAgIF0sCiAgICAgICJAY29udGV4dCI6IFsKICAgICAgICAiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLAogICAgICAgICJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L3N1aXRlcy9qd3MtMjAyMC92MSIKICAgICAgXSwKICAgICAgImNyZWRlbnRpYWxzU3ViamVjdCI6IHt9LAogICAgICAiYWRkaXRpb25hbFByb3AxIjoge30KICAgIH0KICBdLAogICJpZCI6ICJlYmM2ZjFjMiIsCiAgImhvbGRlciI6IHsKICAgICJpZCI6ICJkaWQ6a2V5Ono2TWtzOW05aWZMd3kzSldxSDRjNTdFYkJRVlMyU3BSQ2pmYTc5d0hiNXZXTTZ2aCIKICB9LAogICJwcm9vZiI6IHsKICAgICJ0eXBlIjogIkpzb25XZWJTaWduYXR1cmUyMDIwIiwKICAgICJjcmVhdG9yIjogImRpZDprZXk6ejZNa3M5bTlpZkx3eTNKV3FINGM1N0ViQlFWUzJTcFJDamZhNzl3SGI1dldNNnZoIiwKICAgICJjcmVhdGVkIjogIjIwMjMtMDEtMDZUMDc6NTE6MzZaIiwKICAgICJ2ZXJpZmljYXRpb25NZXRob2QiOiAiZGlkOmtleTp6Nk1rczltOWlmTHd5M0pXcUg0YzU3RWJCUVZTMlNwUkNqZmE3OXdIYjV2V002dmgjejZNa3M5bTlpZkx3eTNKV3FINGM1N0ViQlFWUzJTcFJDamZhNzl3SGI1dldNNnZoIiwKICAgICJqd3MiOiAiZXlKaU5qUWlPbVpoYkhObExDSmpjbWwwSWpwYkltSTJOQ0pkTENKaGJHY2lPaUpGWkVSVFFTSjkuLjZ4U3FvWmphME53akYwYWY5WmtucXgzQ2JoOUdFTnVuQmY5Qzh1TDJ1bEdmd3VzM1VGTV9abmhQald0SFBsLTcyRTlwM0JUNWYycHRab1lrdE1LcERBIgogIH0KfQ&#34;</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;token_type&#34;</span>: <span style="color:#d14">&#34;Bearer&#34;</span>,
+    <span style="color:#000080">&#34;expires_in&#34;</span>: <span style="color:#099">3600</span>,
+    <span style="color:#000080">&#34;access_token&#34;</span>: <span style="color:#d14">&#34;ewogICJhbGciOiAiRVMyNTYiLAogICJraWQiOiAiV09IRnU0SFo1OVNNODUzQzdlTjBPdmxLR3JNZWVyRENwSE9VUm9UUXdIdyIsCiAgInR5cCI6ICJKV1QiCn0.ewogICJAY29udGV4dCI6IFsKICAgICJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIKICBdLAogICJ0eXBlIjogWwogICAgIlZlcmlmaWFibGVQcmVzZW50YXRpb24iCiAgXSwKICAidmVyaWZpYWJsZUNyZWRlbnRpYWwiOiBbCiAgICB7CiAgICAgICJ0eXBlcyI6IFsKICAgICAgICAiUGFja2V0RGVsaXZlcnlTZXJ2aWNlIiwKICAgICAgICAiVmVyaWZpYWJsZUNyZWRlbnRpYWwiCiAgICAgIF0sCiAgICAgICJAY29udGV4dCI6IFsKICAgICAgICAiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLAogICAgICAgICJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L3N1aXRlcy9qd3MtMjAyMC92MSIKICAgICAgXSwKICAgICAgImNyZWRlbnRpYWxzU3ViamVjdCI6IHt9LAogICAgICAiYWRkaXRpb25hbFByb3AxIjoge30KICAgIH0KICBdLAogICJpZCI6ICJlYmM2ZjFjMiIsCiAgImhvbGRlciI6IHsKICAgICJpZCI6ICJkaWQ6a2V5Ono2TWtzOW05aWZMd3kzSldxSDRjNTdFYkJRVlMyU3BSQ2pmYTc5d0hiNXZXTTZ2aCIKICB9LAogICJwcm9vZiI6IHsKICAgICJ0eXBlIjogIkpzb25XZWJTaWduYXR1cmUyMDIwIiwKICAgICJjcmVhdG9yIjogImRpZDprZXk6ejZNa3M5bTlpZkx3eTNKV3FINGM1N0ViQlFWUzJTcFJDamZhNzl3SGI1dldNNnZoIiwKICAgICJjcmVhdGVkIjogIjIwMjMtMDEtMDZUMDc6NTE6MzZaIiwKICAgICJ2ZXJpZmljYXRpb25NZXRob2QiOiAiZGlkOmtleTp6Nk1rczltOWlmTHd5M0pXcUg0YzU3RWJCUVZTMlNwUkNqZmE3OXdIYjV2V002dmgjejZNa3M5bTlpZkx3eTNKV3FINGM1N0ViQlFWUzJTcFJDamZhNzl3SGI1dldNNnZoIiwKICAgICJqd3MiOiAiZXlKaU5qUWlPbVpoYkhObExDSmpjbWwwSWpwYkltSTJOQ0pkTENKaGJHY2lPaUpGWkVSVFFTSjkuLjZ4U3FvWmphME53akYwYWY5WmtucXgzQ2JoOUdFTnVuQmY5Qzh1TDJ1bEdmd3VzM1VGTV9abmhQald0SFBsLTcyRTlwM0JUNWYycHRab1lrdE1LcERBIgogIH0KfQ&#34;</span>
+}
+</pre></td></tr></table>
 
     <p>Decoding the <code>access_token</code> field we could see a Verifiable Presentation including the LEARCredential that the user presented when authenticating:
 
     </p>
 
-<pre class="nohighlight" style="color:#f8f8f2;background-color:#282a36;"><code><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;@context&#34;</span>: [
-</span></span><span style="display:flex;"><span>        <span style="color:#f1fa8c">&#34;https://www.w3.org/2018/credentials/v1&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//2022/credentials/learcredential/v1&#34;</span>
-</span></span><span style="display:flex;"><span>    ],
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;urn:did:elsi:25159389-8dd17b796ac0&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;type&#34;</span>: [<span style="color:#f1fa8c">&#34;VerifiableCredential&#34;</span>, <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>],
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;issuer&#34;</span>: {
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:elsi:VATES-12345678&#34;</span>
-</span></span><span style="display:flex;"><span>    },
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;issuanceDate&#34;</span>: <span style="color:#f1fa8c">&#34;2022-03-22T14:00:00Z&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;validFrom&#34;</span>: <span style="color:#f1fa8c">&#34;2022-03-22T14:00:00Z&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;expirationDate&#34;</span>: <span style="color:#f1fa8c">&#34;2023-03-22T14:00:00Z&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;credentialSubject&#34;</span>: {
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;title&#34;</span>: <span style="color:#f1fa8c">&#34;Mr.&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;first_name&#34;</span>: <span style="color:#f1fa8c">&#34;John&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;last_name&#34;</span>: <span style="color:#f1fa8c">&#34;Doe&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;gender&#34;</span>: <span style="color:#f1fa8c">&#34;M&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;postal_address&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;email&#34;</span>: <span style="color:#f1fa8c">&#34;johndoe@goodair.com&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;telephone&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;fax&#34;</span>: <span style="color:#f1fa8c">&#34;&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;mobile_phone&#34;</span>: <span style="color:#f1fa8c">&#34;+34787426623&#34;</span>,
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;legalRepresentative&#34;</span>: {
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;cn&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V Jesus Ruiz&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;serialNumber&#34;</span>: <span style="color:#f1fa8c">&#34;56565656V&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;organizationIdentifier&#34;</span>: <span style="color:#f1fa8c">&#34;VATES-12345678&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;o&#34;</span>: <span style="color:#f1fa8c">&#34;GoodAir&#34;</span>,
-</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&#34;c&#34;</span>: <span style="color:#f1fa8c">&#34;ES&#34;</span>
-</span></span><span style="display:flex;"><span>        },
-</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;rolesAndDuties&#34;</span>: [
-</span></span><span style="display:flex;"><span>            {
-</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&#34;type&#34;</span>: <span style="color:#f1fa8c">&#34;LEARCredential&#34;</span>,
-</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#f1fa8c">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>
-</span></span><span style="display:flex;"><span>            }
-</span></span><span style="display:flex;"><span>        ]
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre>
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;@context&#34;</span>: [
+        <span style="color:#d14">&#34;https://www.w3.org/2018/credentials/v1&#34;</span>,
+        <span style="color:#d14">&#34;https://dome-marketplace.eu//2022/credentials/learcredential/v1&#34;</span>
+    ],
+    <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;urn:did:elsi:25159389-8dd17b796ac0&#34;</span>,
+    <span style="color:#000080">&#34;type&#34;</span>: [<span style="color:#d14">&#34;VerifiableCredential&#34;</span>, <span style="color:#d14">&#34;LEARCredential&#34;</span>],
+    <span style="color:#000080">&#34;issuer&#34;</span>: {
+        <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;did:elsi:VATES-12345678&#34;</span>
+    },
+    <span style="color:#000080">&#34;issuanceDate&#34;</span>: <span style="color:#d14">&#34;2022-03-22T14:00:00Z&#34;</span>,
+    <span style="color:#000080">&#34;validFrom&#34;</span>: <span style="color:#d14">&#34;2022-03-22T14:00:00Z&#34;</span>,
+    <span style="color:#000080">&#34;expirationDate&#34;</span>: <span style="color:#d14">&#34;2023-03-22T14:00:00Z&#34;</span>,
+    <span style="color:#000080">&#34;credentialSubject&#34;</span>: {
+        <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
+        <span style="color:#000080">&#34;title&#34;</span>: <span style="color:#d14">&#34;Mr.&#34;</span>,
+        <span style="color:#000080">&#34;first_name&#34;</span>: <span style="color:#d14">&#34;John&#34;</span>,
+        <span style="color:#000080">&#34;last_name&#34;</span>: <span style="color:#d14">&#34;Doe&#34;</span>,
+        <span style="color:#000080">&#34;gender&#34;</span>: <span style="color:#d14">&#34;M&#34;</span>,
+        <span style="color:#000080">&#34;postal_address&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+        <span style="color:#000080">&#34;email&#34;</span>: <span style="color:#d14">&#34;johndoe@goodair.com&#34;</span>,
+        <span style="color:#000080">&#34;telephone&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+        <span style="color:#000080">&#34;fax&#34;</span>: <span style="color:#d14">&#34;&#34;</span>,
+        <span style="color:#000080">&#34;mobile_phone&#34;</span>: <span style="color:#d14">&#34;+34787426623&#34;</span>,
+        <span style="color:#000080">&#34;legalRepresentative&#34;</span>: {
+            <span style="color:#000080">&#34;cn&#34;</span>: <span style="color:#d14">&#34;56565656V Jesus Ruiz&#34;</span>,
+            <span style="color:#000080">&#34;serialNumber&#34;</span>: <span style="color:#d14">&#34;56565656V&#34;</span>,
+            <span style="color:#000080">&#34;organizationIdentifier&#34;</span>: <span style="color:#d14">&#34;VATES-12345678&#34;</span>,
+            <span style="color:#000080">&#34;o&#34;</span>: <span style="color:#d14">&#34;GoodAir&#34;</span>,
+            <span style="color:#000080">&#34;c&#34;</span>: <span style="color:#d14">&#34;ES&#34;</span>
+        },
+        <span style="color:#000080">&#34;rolesAndDuties&#34;</span>: [
+            {
+                <span style="color:#000080">&#34;type&#34;</span>: <span style="color:#d14">&#34;LEARCredential&#34;</span>,
+                <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;https://dome-marketplace.eu//lear/v1/6484994n4r9e990494&#34;</span>
+            }
+        ]
+    }
+}
+</pre></td></tr></table>
 
     <p>Environmental attributes, which depend on the availability of system sensors that can detect and report values, are somewhat different from subject and resource attributes, which are administratively created. Environmental attributes are not properties of the subject or resources, but are measurable characteristics that pertain to the operational or situational context in which access requests occur. These environmental characteristics are subject and resource independent, and may include the current time, day of the week, or threat level.
 
@@ -1458,47 +1547,47 @@
     </p>
     <ul>
 
-        <li id='1254.4'><a href='#1254.4' class='selfref'><b>4</b></a> Query policy rules applicable to this request.
+        <li id='1256.4'><a href='#1256.4' class='selfref'><b>4</b></a> Query policy rules applicable to this request.
 
 
         </li>
-        <li id='1255.5'><a href='#1255.5' class='selfref'><b>5</b></a> Reply with policy rules
+        <li id='1257.5'><a href='#1257.5' class='selfref'><b>5</b></a> Reply with policy rules
 
 
         </li>
-        <li id='1257.6'><a href='#1257.6' class='selfref'><b>6</b></a> The PDP performs an initial evaluation of the policy rules and if the attributes of the request are not sufficient for rule and policy evaluation, it determines the PIP stores to query, including the set of Trusted Issuers Lists to query.
+        <li id='1259.6'><a href='#1259.6' class='selfref'><b>6</b></a> The PDP performs an initial evaluation of the policy rules and if the attributes of the request are not sufficient for rule and policy evaluation, it determines the PIP stores to query, including the set of Trusted Issuers Lists to query.
 
 
         </li>
-        <li id='1259.7'><a href='#1259.7' class='selfref'><b>7</b></a> Query additional attributes
+        <li id='1261.7'><a href='#1261.7' class='selfref'><b>7</b></a> Query additional attributes
 
 
         </li>
-        <li id='1260.8'><a href='#1260.8' class='selfref'><b>8</b></a> Reply with attributes
+        <li id='1262.8'><a href='#1262.8' class='selfref'><b>8</b></a> Reply with attributes
 
 
         </li>
-        <li id='1262.9'><a href='#1262.9' class='selfref'><b>9</b></a> The PDP performs a final evaluation of the policy rules, taking into consideration the attributes received from the PEP and also the attributes received from the PIP, and computes a decision.
+        <li id='1264.9'><a href='#1264.9' class='selfref'><b>9</b></a> The PDP performs a final evaluation of the policy rules, taking into consideration the attributes received from the PEP and also the attributes received from the PIP, and computes a decision.
 
 
         </li>
-        <li id='1264.10'><a href='#1264.10' class='selfref'><b>10</b></a> The PDP returns the decision to the PEP, which will enforce it.
+        <li id='1266.10'><a href='#1266.10' class='selfref'><b>10</b></a> The PDP returns the decision to the PEP, which will enforce it.
 
 
         </li>
-        <li id='1266.11'><a href='#1266.11' class='selfref'><b>11</b></a> If the decision from the PDP is Reject, the PEP returns an error to the browser in the laptop of the user. Otherwise, it forwards the original request to the Resource.
+        <li id='1268.11'><a href='#1268.11' class='selfref'><b>11</b></a> If the decision from the PDP is Reject, the PEP returns an error to the browser in the laptop of the user. Otherwise, it forwards the original request to the Resource.
 
 
         </li>
-        <li id='1268.12'><a href='#1268.12' class='selfref'><b>12</b></a> The resource executes the request and returns the result
+        <li id='1270.12'><a href='#1270.12' class='selfref'><b>12</b></a> The resource executes the request and returns the result
 
 
         </li>
-        <li id='1270.13'><a href='#1270.13' class='selfref'><b>13</b></a> The PEP returns the result to the laptop of the user.
+        <li id='1272.13'><a href='#1272.13' class='selfref'><b>13</b></a> The PEP returns the result to the laptop of the user.
 
 
         </li>
-        <li id='1272.14'><a href='#1272.14' class='selfref'><b>14</b></a> The laptop displays the result to the user.
+        <li id='1274.14'><a href='#1274.14' class='selfref'><b>14</b></a> The laptop displays the result to the user.
 
 
         </li>

@@ -29,7 +29,7 @@ og_description: >
     Authentication and Authorization with Verifiable Credentials using using did:elsi
 og_site_name: Authn with Verifiable Credentials
 rite:
-    codeStyle: dracula
+    codeStyle: github
 
 localBiblio:
     "ETSI-CERTOVERVIEW":
@@ -521,13 +521,13 @@ localBiblio:
                 }
             ]
 
-        Where the last part of the url can correspond to the hash of the external linked document to ensure that any modification or tampering can be detected. The contents of that object ata that url could be:
+        Where the last part of the url can correspond to the hash of the external linked document to ensure that any modification or tampering can be detected. The contents of that object at that url could be:
 
         <x-code .json>
             [
                 {
                     "id": "https://dome-marketplace.eu//lear/v1/6484994n4r9e990494",
-                    "target:"https://bae.dome-marketplace.eu/"
+                    "target": "https://bae.dome-marketplace.eu/",
                     "roleNames": ["seller", "customer"]
                 }
             ]
@@ -536,9 +536,11 @@ localBiblio:
 
         If `target` is omitted, the roles would apply to any target organisation. If we need to specify more than one target organisation, the array should include as many objects as required.
 
-        <x-note>
+        <x-warning>About the roles
             The way we have specified the roles is just an example. There is work ongoing to define the detailed mechanism formally (e.g. with ODRL), and it is expected to change. This example is intended only to describe the concepts in detail.
 
+        <x-note>About the roles
+            The way we have specified the roles is just an example. There is work ongoing to define the detailed mechanism formally (e.g. with ODRL), and it is expected to change. This example is intended only to describe the concepts in detail.
 
     <section>Assembling the pieces together
 

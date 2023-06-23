@@ -16,11 +16,11 @@ import (
 	"strconv"
 	"strings"
 
-	hlhtml "github.com/alecthomas/chroma/formatters/html"
+	hlhtml "github.com/alecthomas/chroma/v2/formatters/html"
 
-	"github.com/alecthomas/chroma"
-	"github.com/alecthomas/chroma/lexers"
-	"github.com/alecthomas/chroma/styles"
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/lexers"
+	"github.com/alecthomas/chroma/v2/styles"
 	"oss.terrastruct.com/d2/d2graph"
 	"oss.terrastruct.com/d2/d2layouts/d2dagrelayout"
 	"oss.terrastruct.com/d2/d2lib"
@@ -261,15 +261,20 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		startTag = fmt.Appendf(startTag, "<pre")
 		endTag = fmt.Appendf(endTag, "</code></pre>")
 
+		// case "x-note":
+		// 	// Handle the 'x-note' special tag
+		// 	startTag = fmt.Appendf(startTag, "<aside class='note'")
+		// 	endTag = fmt.Appendf(endTag, "</aside>")
+
 	case "x-note":
 		// Handle the 'x-note' special tag
-		startTag = fmt.Appendf(startTag, "<aside class='note'")
-		endTag = fmt.Appendf(endTag, "</aside>")
+		startTag = fmt.Appendf(startTag, "<table style='width:%s;'><tr><td class='xnotet'><aside class='xnotea'", "100%")
+		endTag = fmt.Appendf(endTag, "</aside></td></tr></table>")
 
 	case "x-warning":
 		// Handle the 'x-note' special tag
-		startTag = fmt.Appendf(startTag, "<aside class='warning'")
-		endTag = fmt.Appendf(endTag, "</aside>")
+		startTag = fmt.Appendf(startTag, "<table style='width:%s;'><tr><td class='xwarnt'><aside class='xwarna'", "100%")
+		endTag = fmt.Appendf(endTag, "</aside></td></tr></table>")
 
 	case "x-img":
 		// Handle the 'x-img' special tag
@@ -310,11 +315,25 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		}
 		restLine = nil
 
-	case "x-note", "x-warning":
+		// case "x-note", "x-warning":
+		// 	if len(n.RestLine) > 0 {
+		// 		startTag = fmt.Appendf(startTag, " title='%s'", n.RestLine)
+		// 	}
+		// 	startTag = fmt.Appendf(startTag, ">")
+		// 	restLine = nil
+	case "x-note":
 		if len(n.RestLine) > 0 {
-			startTag = fmt.Appendf(startTag, " title='%s'", n.RestLine)
+			startTag = fmt.Appendf(startTag, "><p class='xnotep'>NOTE: %s</p>", bytes.TrimSpace(n.RestLine))
+		} else {
+			startTag = fmt.Appendf(startTag, ">\n")
 		}
-		startTag = fmt.Appendf(startTag, ">")
+		restLine = nil
+	case "x-warning":
+		if len(n.RestLine) > 0 {
+			startTag = fmt.Appendf(startTag, "><p class='xnotep'>WARNING! %s</p>", bytes.TrimSpace(n.RestLine))
+		} else {
+			startTag = fmt.Appendf(startTag, ">\n")
+		}
 		restLine = nil
 
 	case "x-code":
@@ -342,14 +361,14 @@ func (p preWrapper) Start(code bool, styleAttr string) string {
 	// <pre tabindex="0" style="background-color:#fff;">
 	if code {
 		//		return fmt.Sprintf(`<pre class="nohighlight"%s><div style="padding:0.5em;"><code>`, styleAttr)
-		return fmt.Sprintf(`<pre class="nohighlight"%s><code>`, styleAttr)
+		return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
 	}
 	return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
 }
 
 func (p preWrapper) End(code bool) string {
 	if code {
-		return `</code></pre>`
+		return `</pre>`
 	}
 	return `</pre>`
 }
@@ -374,24 +393,33 @@ func (n *Node) RenderCode(br *ByteRenderer) {
 		styleName := config.String("rite.codeStyle", "swapoff")
 		s := styles.Get(styleName)
 
-		pr := preWrapper{s}
+		// fore := s.Get(chroma.Text).Colour.String()
+		// bckg := s.Get(chroma.Background).Background.String()
+
+		// pr := preWrapper{s}
 
 		// Get the HTML formatter
-		f := hlhtml.New(hlhtml.Standalone(false), hlhtml.WithPreWrapper(pr))
+		// f := hlhtml.New(hlhtml.Standalone(false), hlhtml.WithPreWrapper(pr))
+		f := hlhtml.New(hlhtml.Standalone(false), hlhtml.PreventSurroundingPre(true))
 
 		it, err := l.Tokenise(nil, contentLines)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		br.Render('\n')
+		br.Renderln()
+		// br.Renderln(`<table style="width:100%;"><tr><td style=color:`, fore, `;background-color:`, bckg, `;">`)
+		br.Renderln(`<table style="width:100%;"><tr><td class="codecolor">`)
+		br.Renderln("<pre class='nohighlight precolor'>")
 		rb := &bytes.Buffer{}
 		err = f.Format(rb, s, it)
 		if err != nil {
 			log.Fatal(err)
 		}
 		br.Render(rb.Bytes())
-		br.Render("\n\n")
+		br.Render("</pre>")
+		br.Renderln(`</td></tr></table>`)
+		br.Renderln()
 
 	}
 
