@@ -14,6 +14,7 @@ import (
 )
 
 var config *yaml.YAML
+var logOutput bytes.Buffer
 
 const blank byte = ' '
 
@@ -351,11 +352,6 @@ func (p *Parser) NewNode(text *Text) *Node {
 		n.Name = "p"
 		n.RestLine = text.Content
 		return n
-	}
-
-	// DEBUG
-	if n.LineNumber == 132 {
-		fmt.Println("line", n.LineNumber)
 	}
 
 	// Extract the whole tag string between the start and end tags
