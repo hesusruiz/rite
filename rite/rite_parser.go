@@ -264,6 +264,9 @@ func (p *Parser) ReadParagraph(min_indentation int) *Text {
 		// Get the accumulated contents of all lines
 		para.Content = br.Bytes()
 
+		// Trim the paragraph to make sure we do not have spurious carriage returns at the end
+		para.Content = bytes.TrimSpace(para.Content)
+
 		// Preprocess the paragraph
 		para = p.PreprocesLine(para)
 	}

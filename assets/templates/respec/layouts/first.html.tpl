@@ -133,13 +133,13 @@
         ul.plain {
             list-style: none;
         }
-        ul.plain li {
+        ul.plain>li {
             text-indent: -1em;
         }
-        ul.plain li>div {
+        ul.plain>li>div {
             text-indent:0;
         }
-        ul.plain li>p {
+        ul.plain>li>p {
             text-indent:0;
         }
     </style>
