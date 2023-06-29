@@ -459,7 +459,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 	var body []byte
 
 	// Check if the file already exists
-	if _, err := os.Stat(fileName); err != nil || diagType == "plantuml" {
+	if _, err := os.Stat(fileName); err != nil {
 		// File does not exist, generate the image
 
 		if diagType == "d2" {

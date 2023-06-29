@@ -2189,18 +2189,19 @@ func NewParseAndRender(fileName string) string {
 		panic(err)
 	}
 
-	// Initialise the template system
+	// Initialise the template system. Use the templates specified in the document header,
+	// or the default if not specified ("assets/templates/respec")
 	templateDir := p.Config.String("template", "assets/templates/respec")
 	fmt.Println("Using template dir:", templateDir)
 
-	// Parse all templates in the following directories
+	// Parse all templates in the following directories. Any error stops processing.
 	t := template.Must(template.ParseFS(assets, templateDir+"/layouts/*"))
 	t = template.Must(t.ParseFS(assets, templateDir+"/partials/*"))
 	t = template.Must(t.ParseFS(assets, templateDir+"/pages/*"))
 
-	// Get the bibliography for the references.
-	// It can be specified in the YAML header or in a separate file.
-	// The bibliography in the header has precedence if it exists.
+	// Get the bibliography for the references, in the tag "localBiblio"
+	// It can be specified in the YAML header or in a separate file in the "localBiblioFile" tag.
+	// If both "localBiblio" and "localBiblioFile" exuis in the header, only "localBiblio" is used.
 	bibData := p.Config.Map("localBiblio", nil)
 	if bibData == nil {
 
