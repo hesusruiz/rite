@@ -29,48 +29,12 @@ import (
 	"oss.terrastruct.com/d2/lib/textmeasure"
 )
 
-// The indentation string
-var aBigIndentationString = bytes.Repeat([]byte(" "), 200)
-
-func indent(n int) []byte {
-	return aBigIndentationString[:n]
-}
-
-// A NodeType is the type of a Node.
-type NodeType uint32
-
-const (
-	ErrorNode NodeType = iota
-	DocumentNode
-	SectionNode
-	DiagramNode
-	ExplanationNode
-	VerbatimNode
-)
-
-// String returns a string representation of the TokenType.
-func (n NodeType) String() string {
-	switch n {
-	case ErrorNode:
-		return "Error"
-	case DocumentNode:
-		return "Document"
-	case SectionNode:
-		return "Section"
-	case DiagramNode:
-		return "Diagram"
-	case VerbatimNode:
-		return "Verbatim"
-	case ExplanationNode:
-		return "Explanations"
-	}
-	return "Invalid(" + strconv.Itoa(int(n)) + ")"
-}
-
 type Node struct {
 	Parent, FirstChild, LastChild, PrevSibling, NextSibling *Node
 
 	Type        NodeType
+	Level       int
+	Outline     string
 	p           *Parser
 	RawText     *Text
 	InnerText   []byte
@@ -86,6 +50,47 @@ type Node struct {
 	StdFields   []byte
 	Attr        []Attribute
 	RestLine    []byte
+}
+
+// The indentation string
+var aBigIndentationString = bytes.Repeat([]byte(" "), 200)
+
+func indent(n int) []byte {
+	return aBigIndentationString[:n]
+}
+
+// A NodeType is the type of a Node.
+type NodeType uint32
+
+const (
+	ErrorNode NodeType = iota
+	DocumentNode
+	SectionNode
+	BlockNode
+	DiagramNode
+	ExplanationNode
+	VerbatimNode
+)
+
+// String returns a string representation of the TokenType.
+func (n NodeType) String() string {
+	switch n {
+	case ErrorNode:
+		return "Error"
+	case DocumentNode:
+		return "Document"
+	case SectionNode:
+		return "Section"
+	case BlockNode:
+		return "Block"
+	case DiagramNode:
+		return "Diagram"
+	case VerbatimNode:
+		return "Verbatim"
+	case ExplanationNode:
+		return "Explanations"
+	}
+	return "Invalid(" + strconv.Itoa(int(n)) + ")"
 }
 
 // tagString returns a string representation of a tag Token's Data and Attr.
@@ -120,65 +125,56 @@ func (n Node) tagString() string {
 		buf.WriteByte(' ')
 		buf.WriteString(a.Key)
 		buf.WriteString(`="`)
-		escape(buf, string(a.Val))
+		buf.Write(a.Val)
 		buf.WriteByte('"')
 	}
 	return buf.String()
 }
 
-// String returns a string representation of the Token.
+// String returns a string representation of the Node.
 func (n Node) String() string {
 	switch n.Type {
 	case ErrorNode:
 		return ""
 	case DocumentNode:
 		return "TopLevelDocument"
-	case SectionNode, VerbatimNode, DiagramNode, ExplanationNode:
+	case BlockNode, VerbatimNode, DiagramNode, ExplanationNode:
 		return "<" + n.tagString() + ">"
 	}
 	return "Invalid(" + strconv.Itoa(int(n.Type)) + ")"
 }
 
-func (n Node) renderTagString(buf *ByteRenderer) {
-	buf.Render('<', n.Name)
-	if n.Id != nil {
-		buf.Render(` id="`, n.Id, `"`)
-	}
-	if n.Class != nil {
-		buf.Render(` class="`, n.Class, `"`)
-	}
-	if n.Src != nil {
-		buf.Render(` src="`, n.Src, `"`)
-	}
-	if n.Href != nil {
-		buf.Render(` href="`, n.Href, `"`)
-	}
+func (n *Node) AddClass(newClass []byte) {
 
-	for _, a := range n.Attr {
-		buf.Render(' ', a.Key, `="`)
-		escape(buf, string(a.Val))
-		buf.Render('"')
+	// More than one class can be specified and all are accumulated, separated by a spece
+	if len(n.Class) > 0 {
+		n.Class = append(n.Class, ' ')
 	}
-	buf.Render('>')
+	n.Class = append(n.Class, newClass...)
+
 }
 
-func (n *Node) String2() string {
-	br := &ByteRenderer{}
-	n.RenderHTML(br)
-	s := br.String()
-	return s
+func (n *Node) AddClassString(newClass string) {
+
+	// More than one class can be specified and all are accumulated, separated by a spece
+	if len(n.Class) > 0 {
+		n.Class = append(n.Class, ' ')
+	}
+	n.Class = append(n.Class, newClass...)
+
 }
 
+// RenderHTML renders recursively to HTML this node and its children (if any)
 func (n *Node) RenderHTML(br *ByteRenderer) {
 
 	indentStr := indent(n.Indentation)
 
 	switch n.Type {
 	case DiagramNode:
-		n.RenderDiagram(br)
+		n.RenderDiagramNode(br)
 
 	case VerbatimNode:
-		n.RenderCode(br)
+		n.RenderCodeNode(br)
 
 	case ExplanationNode:
 		// Render the start tag of this node
@@ -201,46 +197,131 @@ func (n *Node) RenderHTML(br *ByteRenderer) {
 
 }
 
-var reXRef = regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
+// var reXRef = regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
+var reXRef = regexp.MustCompile(`<x-ref +"(.+?)" *>`)
 
 func (n *Node) RenderNormalNode(br *ByteRenderer) {
 
+	// A slice with as many blanks as indented
 	indentStr := indent(n.Indentation)
 
+	// Get the rendered components of the tag
 	_, startTag, endTag, rest := n.preRenderTheTag()
 
-	// Preprocess the special <x-ref> tag inside the text of the line
-	if bytes.Contains(rest, []byte("<x-ref")) {
+	if allsubmatchs := reXRef.FindAllSubmatch(rest, -1); len(allsubmatchs) > 0 {
+		if len(allsubmatchs) > 1 {
+			fmt.Println("XREF match in line", n.LineNumber)
 
-		if submatchs := reXRef.FindSubmatch(rest); len(submatchs) > 1 {
-			description := n.p.xref[string(submatchs[1])]
+		}
 
+		for _, submatchs := range allsubmatchs {
+
+			// Convert blanks to underscores blanks
+			sub1 := string(encodeWithUnderscore(bytes.Clone(submatchs[1])))
+
+			// If the referenced node has a description, we will use it for the text of the link.
+			// Otherwise we will use the plain ID of the referenced node
+			description := n.p.xref[sub1]
+
+			var replacement []byte
 			if len(description) > 0 {
-				rest = reXRef.ReplaceAll(rest, []byte("<a href=\"#${1}\" class=\"xref\">"+string(description)+"</a>"))
+				replacement = []byte("<a href=\"#" + sub1 + "\" class=\"xref\">" + string(description) + "</a>")
 			} else {
-				rest = reXRef.ReplaceAll(rest, []byte("<a href=\"#${1}\" class=\"xref\">[${1}]</a>"))
+				replacement = []byte("<a href=\"#" + sub1 + "\" class=\"xref\">[${1}]</a>")
+
 			}
+			original := submatchs[0]
+			rest = bytes.ReplaceAll(rest, original, replacement)
 		}
 	}
+
+	// // Preprocess the special <x-ref> tag inside the text of the line
+	// if bytes.Contains(rest, []byte("<x-ref")) {
+
+	// 	if allsubmatchs := reXRef.FindAllSubmatch(rest, -1); len(allsubmatchs) > 0 {
+
+	// 		// DEBUG
+	// 		if n.LineNumber > 249 {
+	// 			fmt.Println("More than 2 matches in line", n.LineNumber)
+	// 		}
+
+	// 		for _, submatchs := range allsubmatchs {
+
+	// 		}
+
+	// 		// Convert blanks to underscores blanks
+	// 		sub1 := string(encodeWithUnderscore(submatchs[1]))
+
+	// 		// If the referenced node has a description, we will use it for the text of the link.
+	// 		// Otherwise we will use the plain ID of the referenced node
+	// 		description := n.p.xref[sub1]
+
+	// 		if len(description) > 0 {
+	// 			rest = reXRef.ReplaceAll(rest, []byte("<a href=\"#"+sub1+"\" class=\"xref\">"+string(description)+"</a>"))
+	// 		} else {
+	// 			rest = reXRef.ReplaceAll(rest, []byte("<a href=\"#"+sub1+"\" class=\"xref\">[${1}]</a>"))
+	// 		}
+	// 	}
+	// }
 
 	// Render the start tag of this node
 	br.Renderln(indentStr, startTag, rest)
 
-	// We visit depth-first the children of the
+	// We visit depth-first the children of the node
 	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
 		indentChild := indent(theNode.Indentation)
 
 		if n.Name == "li" {
-			br.Render(indentChild, "<div>\n")
+			br.Renderln(indentChild, "<div>")
 		}
+		if theNode == n.FirstChild {
+			if n.Name != "ul" && n.Name != "ol" {
+				if theNode.Name == "li" {
+					br.Renderln("<ul>")
+				}
+			}
+		}
+
 		theNode.RenderHTML(br)
+
+		if theNode == n.LastChild {
+			if n.Name != "ul" && n.Name != "ol" {
+				if theNode.Name == "li" {
+					br.Renderln("</ul>")
+				}
+			}
+		}
+
 		if n.Name == "li" {
-			br.Render(indentChild, "</div>\n")
+			br.Renderln(indentChild, "</div>")
 		}
 	}
 
 	// Render the end tag of the node
 	br.Renderln(strings.Repeat(" ", n.Indentation), endTag)
+
+}
+
+func (n *Node) addAttributes(startTag []byte) []byte {
+
+	if len(n.Id) > 0 {
+		startTag = fmt.Appendf(startTag, " id='%s'", n.Id)
+	}
+	if len(n.Class) > 0 {
+		startTag = fmt.Appendf(startTag, " class='%s'", n.Class)
+	}
+	if len(n.Src) > 0 {
+		startTag = fmt.Appendf(startTag, " src='%s'", n.Src)
+	}
+	if len(n.Href) > 0 {
+		startTag = fmt.Appendf(startTag, " href='%s'", n.Href)
+	}
+
+	for _, a := range n.Attr {
+		startTag = fmt.Appendf(startTag, " %s='%s'", a.Key, a.Val)
+	}
+
+	return startTag
 
 }
 
@@ -256,18 +337,30 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		}
 		endTag = fmt.Appendf(endTag, "</pre>")
 
+	case "x-dl":
+		n.AddClassString("deftable")
+		startTag = fmt.Appendf(startTag, "<table")
+		startTag = n.addAttributes(startTag)
+		startTag = fmt.Appendf(startTag, ">")
+
+		endTag = fmt.Appendf(endTag, "</table>")
+
+		return n.Name, startTag, endTag, nil
+
+	case "x-dt":
+		startTag = fmt.Appendf(startTag,
+			"<tr><td style='padding-left: 0px;'><b>%s</b></td></tr><tr><td style='padding-left: 20px;'>",
+			bytes.TrimSpace(n.RestLine))
+
+		endTag = fmt.Appendf(endTag, "</td></tr>")
+
+		return n.Name, startTag, endTag, nil
+
 	case "x-code":
-		// Handle the 'x-code' special tag
 		startTag = fmt.Appendf(startTag, "<pre")
 		endTag = fmt.Appendf(endTag, "</code></pre>")
 
-		// case "x-note":
-		// 	// Handle the 'x-note' special tag
-		// 	startTag = fmt.Appendf(startTag, "<aside class='note'")
-		// 	endTag = fmt.Appendf(endTag, "</aside>")
-
 	case "x-note":
-		// Handle the 'x-note' special tag
 		startTag = fmt.Appendf(startTag, "<table style='width:%s;'><tr><td class='xnotet'><aside class='xnotea'", "100%")
 		endTag = fmt.Appendf(endTag, "</aside></td></tr></table>")
 
@@ -311,16 +404,14 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 	case "section":
 		startTag = fmt.Appendf(startTag, ">")
 		if len(n.RestLine) > 0 {
-			startTag = fmt.Appendf(startTag, "<h2>%s</h2>\n", n.RestLine)
+			if n.p.Config.Bool("rite.noReSpec") {
+				startTag = fmt.Appendf(startTag, "<h2>%s %s</h2>\n", n.Outline, n.RestLine)
+			} else {
+				startTag = fmt.Appendf(startTag, "<h2>%s</h2>\n", n.RestLine)
+			}
 		}
 		restLine = nil
 
-		// case "x-note", "x-warning":
-		// 	if len(n.RestLine) > 0 {
-		// 		startTag = fmt.Appendf(startTag, " title='%s'", n.RestLine)
-		// 	}
-		// 	startTag = fmt.Appendf(startTag, ">")
-		// 	restLine = nil
 	case "x-note":
 		if len(n.RestLine) > 0 {
 			startTag = fmt.Appendf(startTag, "><p class='xnotep'>NOTE: %s</p>", bytes.TrimSpace(n.RestLine))
@@ -353,27 +444,27 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 
 }
 
-type preWrapper struct {
-	s *chroma.Style
-}
+// type preWrapper struct {
+// 	s *chroma.Style
+// }
 
-func (p preWrapper) Start(code bool, styleAttr string) string {
-	// <pre tabindex="0" style="background-color:#fff;">
-	if code {
-		//		return fmt.Sprintf(`<pre class="nohighlight"%s><div style="padding:0.5em;"><code>`, styleAttr)
-		return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
-	}
-	return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
-}
+// func (p preWrapper) Start(code bool, styleAttr string) string {
+// 	// <pre tabindex="0" style="background-color:#fff;">
+// 	if code {
+// 		//		return fmt.Sprintf(`<pre class="nohighlight"%s><div style="padding:0.5em;"><code>`, styleAttr)
+// 		return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
+// 	}
+// 	return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
+// }
 
-func (p preWrapper) End(code bool) string {
-	if code {
-		return `</pre>`
-	}
-	return `</pre>`
-}
+// func (p preWrapper) End(code bool) string {
+// 	if code {
+// 		return `</pre>`
+// 	}
+// 	return `</pre>`
+// }
 
-func (n *Node) RenderCode(br *ByteRenderer) {
+func (n *Node) RenderCodeNode(br *ByteRenderer) {
 
 	contentLines := string(n.InnerText)
 
@@ -425,7 +516,7 @@ func (n *Node) RenderCode(br *ByteRenderer) {
 
 }
 
-func (n *Node) RenderDiagram(br *ByteRenderer) {
+func (n *Node) RenderDiagramNode(br *ByteRenderer) {
 
 	// Check if the class of diagram has been set
 	if len(n.Class) == 0 {
@@ -446,7 +537,7 @@ func (n *Node) RenderDiagram(br *ByteRenderer) {
 	hhString := fmt.Sprintf("%x", hh)
 
 	// The file will be in the 'builtassets' directory
-	fileName := "builtassets/diagram_" + string(hhString) + "." + imageType
+	fileName := "builtassets/" + diagType + "_" + string(hhString) + "." + imageType
 
 	skinParams := []byte(`
 skinparam shadowing true
@@ -454,13 +545,16 @@ skinparam ParticipantBorderColor black
 skinparam arrowcolor black
 skinparam SequenceLifeLineBorderColor black
 skinparam SequenceLifeLineBackgroundColor PapayaWhip
-	`)
+`)
 
 	var body []byte
 
-	// Check if the file already exists
+	// Check if the file already exists. Because the hash of the diagram is in the file name, a modification
+	// in the source diagram will cause a new file to be generated.
+	// Eventually, spurious files should be deleted.
 	if _, err := os.Stat(fileName); err != nil {
 		// File does not exist, generate the image
+		fmt.Println("Generating", fileName)
 
 		if diagType == "d2" {
 			// Special processing for D2 diagrams, which are generated by the embedded D2 processor
@@ -491,9 +585,6 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 			}
 
 		} else if diagType == "plantuml" {
-
-			// fmt.Println("Calling PlantUML locally:", fileName)
-			fileName = "builtassets/plantuml_" + string(hhString) + "." + imageType
 
 			input := bytes.NewBuffer(skinParams)
 			input.Write(n.InnerText)
@@ -558,7 +649,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 			// fmt.Printf("calling the Kroki server, line: %d, file name: %s\n", n.LineNumber, fileName)
 
 			// Build the url
-			krokiURL := "https://kroki.io/" + string(diagType) + "/" + imageType
+			krokiURL := "https://kroki.io/" + diagType + "/" + imageType
 
 			// Create the request to Kroki server
 			in := bytes.NewReader(n.InnerText)
@@ -598,10 +689,6 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 			panic(err)
 		}
 
-		// fmt.Println("File written successfuly:", fileName)
-
-	} else {
-		// fmt.Println("Skipping generating image:", fileName)
 	}
 
 	// // Write the diagram as an HTML comment to enhance readability
@@ -700,8 +787,8 @@ func (n *Node) RemoveChild(c *Node) {
 	c.NextSibling = nil
 }
 
-// reparentChildren reparents all of src's child nodes to dst.
-func reparentChildren(dst, src *Node) {
+// ReparentChildren reparents all of src's child nodes to dst.
+func ReparentChildren(dst, src *Node) {
 	for {
 		child := src.FirstChild
 		if child == nil {
@@ -712,9 +799,9 @@ func reparentChildren(dst, src *Node) {
 	}
 }
 
-// clone returns a new node with the same type, data and attributes.
-// The clone has no parent, no siblings and no children.
-func (n *Node) clone() *Node {
+// Clone returns a new node with the same type, data and attributes.
+// The Clone has no parent, no siblings and no children.
+func (n *Node) Clone() *Node {
 	m := &Node{
 		Type: n.Type,
 		Name: n.Name,
@@ -727,16 +814,16 @@ func (n *Node) clone() *Node {
 // ErrBufferExceeded means that the buffering limit was exceeded.
 var ErrBufferExceeded = errors.New("max buffer exceeded")
 
-const startHTMLTag = '<'
-const endHTMLTag = '>'
+const StartHTMLTag = '<'
+const EndHTMLTag = '>'
 
-var voidElements = []string{
+var VoidElements = []string{
 	"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr",
 }
-var noSectionElements = []string{
-	"code", "b", "i", "hr", "em", "strong", "small", "s",
+var NoBlockElements = []string{
+	"p", "code", "b", "i", "hr", "em", "strong", "small", "s",
 }
-var headingElements = []string{"h1", "h2", "h3", "h4", "h5", "h6"}
+var HeadingElements = []string{"h1", "h2", "h3", "h4", "h5", "h6"}
 
 func contains(set []string, tagName []byte) bool {
 	for _, el := range set {
@@ -747,41 +834,10 @@ func contains(set []string, tagName []byte) bool {
 	return false
 }
 
-// isVoidElement returns true if the tag is in the set of 'void' tags
-func isVoidElement(tagName []byte) bool {
-	for _, el := range voidElements {
-		if string(tagName) == el {
-			return true
-		}
-	}
-	return false
-}
-
-// isNoSectionElement returns true if the tag is in the set of 'noSectionElements' tags
-func isNoSectionElement(tagName []byte) bool {
-	for _, el := range noSectionElements {
-		if string(tagName) == el {
-			return true
-		}
-	}
-	return false
-}
-
-// An Attribute is an attribute namespace-key-value triple. Namespace is
-// non-empty for foreign attributes like xlink, Key is alphabetic (and hence
+// An Attribute is an attribute key-value pair. Key is alphabetic (and hence
 // does not contain escapable characters like '&', '<' or '>'), and Val is
 // unescaped (it looks like "a<b" rather than "a&lt;b").
-//
-// Namespace is only used by the parser, not the tokenizer.
 type Attribute struct {
-	Namespace, Key string
-	Val            []byte
+	Key string
+	Val []byte
 }
-
-var (
-	nul         = []byte("\x00")
-	replacement = []byte("\ufffd")
-)
-
-// This regex detects the <x-ref REFERENCE> tags that need special processing
-var reCodeBackticks = regexp.MustCompile(`\x60([0-9a-zA-Z-_\.]+)\x60`)

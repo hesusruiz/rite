@@ -6,7 +6,6 @@ require (
 	github.com/alecthomas/chroma/v2 v2.7.0
 	github.com/hesusruiz/vcutils v0.0.0-20221229125622-5087da808041
 	github.com/urfave/cli/v2 v2.25.7
-	go.uber.org/zap v1.24.0
 	oss.terrastruct.com/d2 v0.5.1
 	rsc.io/edit v1.0.0
 )
@@ -35,13 +34,11 @@ require (
 	github.com/mazznoer/csscolorparser v0.1.3 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.1 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/yuin/goldmark v1.5.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect

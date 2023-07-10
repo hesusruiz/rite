@@ -9,17 +9,6 @@ func HasPrefix(line []byte, pre string) bool {
 	return bytes.HasPrefix(line, []byte(pre))
 }
 
-func trimLef2(input []byte, c byte) []byte {
-	offset := 0
-	for len(input) > 0 && input[0] == c {
-		input = input[1:]
-	}
-	if len(input) == 0 {
-		return nil
-	}
-	return input[offset:]
-}
-
 func trimLeft(line []byte, s byte) []byte {
 	for i, c := range line {
 		if c != s {
@@ -27,6 +16,15 @@ func trimLeft(line []byte, s byte) []byte {
 		}
 	}
 	return nil
+}
+
+func encodeWithUnderscore(line []byte) []byte {
+	for i, c := range line {
+		if c == ' ' || c == ':' {
+			line[i] = '_'
+		}
+	}
+	return line
 }
 
 func skipWhiteSpace(line []byte) []byte {
@@ -59,6 +57,23 @@ func readWord(line []byte) (word []byte, rest []byte) {
 
 func readTagName(tagSpec []byte) (tagName []byte, rest []byte) {
 	return readWord(tagSpec)
+}
+
+func readQuotedWords(workingTagSpec []byte) (word []byte, rest []byte) {
+
+	// The first character must be the quotation mark
+	quote := workingTagSpec[0]
+
+	workingTagSpec = workingTagSpec[1:]
+	for i, c := range workingTagSpec {
+		if c == quote {
+			return workingTagSpec[:i], workingTagSpec[i+1:]
+		}
+	}
+
+	fmt.Printf("malformed tag: %s\n", workingTagSpec)
+	panic("malformed tag")
+
 }
 
 func readTagAttrKey(tagSpec []byte) (Attribute, []byte) {
@@ -113,36 +128,4 @@ func readTagAttrKey(tagSpec []byte) (Attribute, []byte) {
 
 	}
 	return attr, workingTagSpec
-}
-
-// convertNewlines converts "\r" and "\r\n" in s to "\n".
-// The conversion happens in place, but the resulting slice may be shorter.
-func convertNewlines(s []byte) []byte {
-	for i, c := range s {
-		if c != '\r' {
-			continue
-		}
-
-		src := i + 1
-		if src >= len(s) || s[src] != '\n' {
-			s[i] = '\n'
-			continue
-		}
-
-		dst := i
-		for src < len(s) {
-			if s[src] == '\r' {
-				if src+1 < len(s) && s[src+1] == '\n' {
-					src++
-				}
-				s[dst] = '\n'
-			} else {
-				s[dst] = s[src]
-			}
-			src++
-			dst++
-		}
-		return s[:dst]
-	}
-	return s
 }
