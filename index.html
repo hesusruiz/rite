@@ -25,73 +25,7 @@
             ],
         };
     </script>
-    <style>
-        .xnotet {
-            width:100%;
-            display: inline-block;
-            margin: 0;
-            border-left: 0.5em solid #52e052;
-            border-right: 6px solid #e9fbe9;
-            border-top: 6px solid #e9fbe9;
-            border-bottom: 6px solid #e9fbe9;
-        
-            overflow: auto;
-            page-break-inside: avoid;
-        }
-        .xnotea {
-            padding-left: 0.5em;
-            padding-right: 0.5em;
-        }
-        .xwarnt {
-            width:100%;
-            display: inline-block;
-            margin: 0;
-            border-left: 0.5em solid #f11;
-            border-right: 6px solid #fbe9e9;
-            border-top: 6px solid #fbe9e9;
-            border-bottom: 6px solid #fbe9e9;
-        
-            overflow: auto;
-            page-break-inside: avoid;
-        }
-        .xwarna {
-            padding-left: 0.5em;
-            padding-right: 0.5em;
-        }
-        .xnotep {
-            font-weight: bold;
-        }
-        code {
-            color: red;
-        }
-        pre.nohighlight {
-            padding: 0.5em;
-            margin: 0;
-        }
-        .codecolor {
-            width:100%;
-            display: inline-block;
-            margin: 0;
-            box-shadow: 5px 5px 5px rgba(68, 68, 68, 0.6);
-            border-radius: 7px;
-            border: 1px solid black;
-        }
-        div.nohighlight {
-            padding: 0.5em
-        }
-        ul.plain {
-            list-style: none;
-        }
-        ul.plain>li {
-            text-indent: -1em;
-        }
-        ul.plain>li>div {
-            text-indent:0;
-        }
-        ul.plain>li>p {
-            text-indent:0;
-        }
-    </style>
+    <link rel="stylesheet" href="./assets/templates/respec/additional.css">
 </head>
 
 <body>
@@ -112,7 +46,7 @@
     <p>This document is itself written in <code>rite</code> and you can see the source in <a href="https://github.com/hesusruiz/rite/blob/main/index.rite">index.rite</a>
     </p>
 </section>
-<section><h2>Structure</h2>
+<section id='Structure'><h2>Structure</h2>
 
     <p><code>rite</code> documents are documents which rely on HTML structural elements as in ReSpec, in particular <code>section</code>, <code>aside</code>, <code>h2-h6</code>, <code>dl</code>, <code>ol</code> etc. By default, <code>rite</code> converts the source document into an HTML ReSpec file.
     </p>
@@ -268,7 +202,7 @@ function someJavaScript(){}&lt;/<span style="font-weight:bold">code</span>&gt;&l
 &lt;/<span style="font-weight:bold">html</span>&gt;
 </pre></td></tr></table>
 
-    <section><h2>Header of a document</h2>
+    <section id='Header_of_a_document'><h2>Header of a document</h2>
 
         <p>A <code>rite</code> document may start with a metadata header in YAML format, started by a line of minimum three dashes and ended by another line of minimum three dashes. The <code>title</code> item is compulsory, like this:
         </p>
@@ -317,10 +251,10 @@ function someJavaScript(){}&lt;/<span style="font-weight:bold">code</span>&gt;&l
 </pre></td></tr></table>
 
     </section>
-    <section><h2>Title of the document</h2>
+    <section id='Title_of_the_document'><h2>Title of the document</h2>
 
-        <p>The <code>title</code> in the header of the document is converted to the `&lttitle&gt` tag in the `&lthead&gt` section of the generated HTML ReSpec document. ReSpec will reuse it for the resulting document's h1, so they are always in sync and you need not worry about specifying it twice.
-As in ReSpec, if you need to add additional markup to the title, you can use a `&lth1&gt` with `id="title"` at the beginning of the document and after the metadata.
+        <p>The <code>title</code> in the header of the document is converted to the <code>&lttitle&gt</code> tag in the <code>&lthead&gt</code> section of the generated HTML ReSpec document. ReSpec will reuse it for the resulting document's h1, so they are always in sync and you need not worry about specifying it twice.
+As in ReSpec, if you need to add additional markup to the title, you can use a <code>&lth1&gt</code> with <code>id="title"</code> at the beginning of the document and after the metadata.
         </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -329,14 +263,14 @@ As in ReSpec, if you need to add additional markup to the title, you can use a `
 </pre></td></tr></table>
 
     </section>
-    <section><h2>Editors & Authors</h2>
+    <section id='Editors_&_Authors'><h2>Editors & Authors</h2>
 
         <p>As any ReSpec document, a <code>rite</code> document can specify editors (at least one) and/or authors as part of the metadata. See the Person objects in ReSpec for the full list of properties you can assign.
         </p>
     </section>
-    <section><h2>Sections</h2>
+    <section id='Sections'><h2>Sections</h2>
 
-        <p>Like in ReSpec, your content should be wrapped in `&ltsection&gt` elements. Sections, subsections, appendices, and whatever other structural items are marked up using `&ltsection&gt` elements.
+        <p>Like in ReSpec, your content should be wrapped in <code>&ltsection&gt</code> elements. Sections, subsections, appendices, and whatever other structural items are marked up using <code>&ltsection&gt</code> elements.
         </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -348,30 +282,24 @@ As in ReSpec, if you need to add additional markup to the title, you can use a `
     Sub-section text
 </pre></td></tr></table>
 
-        <p>You can specify any standard HTML attribute inside the `&ltsection&gt` element or any other HTML tag, whith the semantics exactly as defined in ReSpec. To simplify writing, <code>rite</code> defines a small set of shorthands for some of the more common attributes:
+        <p>You can specify any standard HTML attribute inside the <code>&ltsection&gt</code> element or any other HTML tag, whith the semantics exactly as defined in ReSpec. To simplify writing, <code>rite</code> defines a small set of shorthands for some of the more common attributes:
         </p>
         <ul>
-            <li id='246.class'><a href='#246.class' class='selfref'><b>class</b></a> The <code>class</code> attribute `class="a_class"` can be shortened to <code>.a_class</code> where the <code>class</code> is specified without quotes and so it can be only one word. For several classes you can use the shorthand several times, or just use the standard HTML syntax.
-
+            <li id='class'><a href='#class' class='selfref'><b>class</b></a> The <code>class</code> attribute <code>class="a_class"</code> can be shortened to <code>.a_class</code> where the <code>class</code> is specified without quotes and so it can be only one word. For several classes you can use the shorthand several times, or just use the standard HTML syntax.
             </li>
-            <li id='248.id'><a href='#248.id' class='selfref'><b>id</b></a> The <code>id</code> attribute `id="an_ID"` can be shortened to `#an_ID` where the <code>id</code> is specified without quotes and so it can be only one word.
-
+            <li id='id'><a href='#id' class='selfref'><b>id</b></a> The <code>id</code> attribute <code>id="an_ID"</code> can be shortened to <code>#an_ID</code> where the <code>id</code> is specified without quotes and so it can be only one word.
             </li>
-            <li id='250.src'><a href='#250.src' class='selfref'><b>src</b></a> The <code>src</code> attribute `src="an_src"` can be shortened to `@an_src` where the <code>src</code> is specified without quotes and so it can be only one word.
-
+            <li id='src'><a href='#src' class='selfref'><b>src</b></a> The <code>src</code> attribute <code>src="an_src"</code> can be shortened to <code>@an_src</code> where the <code>src</code> is specified without quotes and so it can be only one word.
             </li>
-            <li id='252.href'><a href='#252.href' class='selfref'><b>href</b></a> The <code>href</code> attribute `src="an_href"` can be shortened to `@an_href` where the <code>href</code> is specified without quotes and so it can be only one word.
-
+            <li id='href'><a href='#href' class='selfref'><b>href</b></a> The <code>href</code> attribute <code>src="an_href"</code> can be shortened to <code>@an_href</code> where the <code>href</code> is specified without quotes and so it can be only one word.
             </li>
         </ul>
         <p>In addition to the above shorthands, <code>rite</code> provides two additional shorthands that do not correspond to standard HTML attributes but that can be useful in many circumstances:
         </p>
         <ul>
-            <li id='258.type'><a href='#258.type' class='selfref'><b>type</b></a> The shorthand is the prefix `:` and is useful for item classification and counters, for example for figures and tables.
-
+            <li id='type'><a href='#type' class='selfref'><b>type</b></a> The shorthand is the prefix <code>:</code> and is useful for item classification and counters, for example for figures and tables.
             </li>
-            <li id='260.number'><a href='#260.number' class='selfref'><b>number</b></a> The shorthand is the prefix `=` and it is useful for lists in order to assign a bullet text to each item in the list.
-
+            <li id='number'><a href='#number' class='selfref'><b>number</b></a> The shorthand is the prefix <code>=</code> and it is useful for lists in order to assign a bullet text to each item in the list.
             </li>
         </ul>
         <p>An example using the classes "example" and "html" for a <code>code</code> section in HTML from ReSpec would be:
@@ -396,13 +324,13 @@ As in ReSpec, if you need to add additional markup to the title, you can use a `
 </pre></td></tr></table>
 
     </section>
-    <section><h2>Examples</h2>
+    <section id='Examples'><h2>Examples</h2>
 
-        <p>Any `&ltx-code .example&gt` `&ltpre .example&gt` or `&ltaside .example&gt` gets the additional example header and style. Content inside `&ltpre&gt/&ltcode&gt` elements is syntax highlighted. You can specify the language in the class attribute, for example `&ltx-code .example .js&gt`.
+        <p>Any <code>&ltx-code .example&gt</code> <code>&ltpre .example&gt</code> or <code>&ltaside .example&gt</code> gets the additional example header and style. Content inside <code>&ltpre&gt/&ltcode&gt</code> elements is syntax highlighted. You can specify the language in the class attribute, for example <code>&ltx-code .example .js&gt</code>.
         </p>
     </section>
 </section>
-<section><h2>(Documentation in progress)</h2>
+<section id='(Documentation_in_progress)'><h2>(Documentation in progress)</h2>
 
 </section>
 

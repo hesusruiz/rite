@@ -1,5 +1,5 @@
 ---
-title: Authentication and Authorization of Legal Persons with Verifiable Credentials
+title: Authentication and authorization of entities acting on behalf of legal persons with Verifiable Credentials under eIDAS framework
 
 editors:
     - name: "Jesus Ruiz"
@@ -12,14 +12,12 @@ copyright: >
    <a rel="license" href="https://creativecommons.org/licenses/by/4.0/legalcode">
    Creative Commons Attribution 4.0 International Public License</a>
 
-latestVersion: "https://alastria.github.io/did-method-elsi/authzn.html"
-edDraftURI: "https://alastria.github.io/did-method-elsi/authzn.html"
-github: "https://github.com/alastria/did-method-elsi/blob/main/authzn.html"
+latestVersion: "https://alastria.github.io/did-method-elsi/authn.html"
+edDraftURI: "https://alastria.github.io/did-method-elsi/authn.html"
+github: "https://github.com/alastria/did-method-elsi/blob/main/authn.html"
 og_description: >
-    Authentication and Authorization of Legal Persons with Verifiable Credentials
+    Authentication and authorization of entities acting on behalf of legal persons with Verifiable Credentials under eIDAS framework
 og_site_name: Authn with Verifiable Credentials
-rite:
-    codeStyle: github
 
 localBiblio:
     "ETSI-CERTOVERVIEW":
@@ -123,6 +121,10 @@ localBiblio:
         title: "REPORT on the proposal for a regulation of the European Parliament and of the Council amending Regulation (EU) No 910/2014 as regards establishing a framework for a European Digital Identity"
         href: "https://www.europarl.europa.eu/doceo/document/A-9-2023-0038_EN.html"
         date: "March 2023"
+    "eIDAS-SAML_V1.2":
+        title: "eIDAS SAML Attribute Profile. Version 1.2"
+        href: "https://ec.europa.eu/digital-building-blocks/wikis/download/attachments/467109280/eIDAS%20SAML%20Attribute%20Profile%20v1.2%20Final.pdf"
+        date: "August 2019"
     "Cryptographic Hyperlinks":
         title: "Cryptographic Hyperlinks"
         href: "https://w3c-ccg.github.io/hashlink/"
@@ -134,18 +136,36 @@ localBiblio:
     "EU_Trusted_Lists":
         title: "EU Trusted Lists"
         href: "https://digital-strategy.ec.europa.eu/en/policies/eu-trusted-lists"
+    "Actor-DataSpaces":
+        title: "Extending Actor Models in Data Spaces"
+        href: "https://dl.acm.org/doi/pdf/10.1145/3543873.3587645"
+        date: "April 2023"
+
+    "STORK2.MandateReport":
+        title: "STORK 2.0: D.3.3 – Mandate/Attribute Management Report"
+        href: "https://ec.europa.eu/digital-building-blocks/wikis/display/EIDCOMMUNITY/STORK+2.0+WP3+-+Legal+and+Trust+Analysis?preview=/84415420/84415378/STORK_2_0_D3_3_MandateAttribute_Management_Report_v_1_0.pdf"
+        date: "2012"
+
 ---
 
 <section #abstract>
 
-        We describe here a mechanism to perform authentication and access control of legal persons using Verifiable Credentials by:
+        We describe a mechanism which combines eIDAS X.509 certificates issued by QTSPs, advanced or qualified signatures and seals, and Verifiable Credentials to enable Decentralised Identity and Access Management (DIAM) in B2B ecosystems where it is required a high level of legal certainty, reduced manual processes and reduced dependency in third parties for the operation of the ecosystem.
+
+        The mechanism enables authentication and access control of **entities acting on behalf of a legal person** with much more descriptive power and flexibility than trying to use just X.509 certificates of representation, and in a more efficient and automated way than using just signed PDFs.
+
+        The mechanism is aligned with the upcoming EDIW (European Digital Identity Wallet) and its supporting eIDAS2 regulation, but it advances the state of the art by focusing entirely on legal persons. The mechanism can **not** be used for natural persons, but for legal persons there is no need to wait for future regulation and it can be implemented today.
+        
+        The mechanism leverages Verifiable Credentials and the existing eIDAS framework by:
         
         <ul>
-            - making the credential a `legally binding document` under the [[eIDAS]] framework, by signing the credential with an advanced or qualified seal/signature;
-            - making the credential a `VerifiableID`, by binding the identities of the subject and holder of the credential so it can be used for authentication;
-            - making the credential a `Verifiable Authorisation`, by embedding authorisation information in the credential and binding it to the identities of the issuer and subject.
+            - making the credential a **machine-readable e-mandate** by embedding authorisation information in the credential using a formal language and binding it to the identities of the issuer and subject.
+            - making the credential a **legally binding document** under the [[eIDAS]] framework, by signing the credential with an advanced or qualified seal/signature.
+            - making the credential an **authentication mechanism**, by binding the identities of the subject and holder of the credential so it can be used for authentication.
         
-        The credential is a **legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential**. The subject can then **use the credential to authenticate to a Relying Party** because the identities of holder and subject are bound.
+        In this way, the credential is a **legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential**.
+        
+        The subject can then **use the credential to authenticate to a Relying Party** because the identities of holder and subject are bound.
 
         This mechanism leverages the eIDAS trust framework using advanced or qualified signatures and seals to provide a **high level of legal certainty and enjoying the presumption of non-repudiation in the courts**, something that does not happen when using other types of basic signatures.
 
@@ -153,23 +173,60 @@ localBiblio:
 
 <section>Authentication and Authorization with Verifiable Credentials
 
-    <section>Introduction
+    <section>Problem Statement 
 
-        We describe here a mechanism to perform authentication and access control of legal persons using Verifiable Credentials by:
+        Representation powers and mandates are an essential element for businesses establishing relationships with other businesses, governments and customers, because in many cases natural persons act on behalf of legal persons and depending on the sensitivity of the involved data/processes the Relying Party wants to enforce a high level of compliance and reduce associated legal risks.
+
+        The "traditional" way to solve this is by using manual processes and paper/PDF documents associated to onboarding and Know-Your-Customer (KYC) processes, that the Relying Party verifies until it is satisfied with the level of legal risk assumed when allowing a Principal to access some services on behalf of the Participant. Those setup processes are normally cumbersome, slow and people-intensive, creating a lot of friction in the initial stages of using a service, especially when strong identification is required by the nature of the service.
+
+        Verifiable Credentials can become a good instrument to migrate those paper/PDF documents to a machine-readable and legally-binding format and streamline and automate most of the tasks in this area, making the whole process more efficient while maintaining the same level of compliance and legal risk than with traditional processes.
+
+        Electronic powers of representation and mandates are an **explicit objective of the European Digital Identity Wallet** (EDIW) and the proposed amendment to eIDAS to support it:
+
+        <blockquote>
+            To achieve simplification and cost reduction benefits to persons and businesses across the Union, including by enabling **powers of representation and e-mandates**, Member States should issue EDIWs relying on common standards and technical specifications to ensure seamless interoperability and to adequately increase the IT security, strengthen robustness against cyber-attacks and thus significantly reduce the potential risks of ongoing digitalisation for citizens and businesses.
+
+            <figcaption>—[[[eIDAS2.Regulation]]]
+
+        However, currently there are important barriers that hinder the adoption of an EU wide solution for cross-border transfer of representation information, being one of the most relevant the **lack of a common semantic framework**. 
         
+        Representation is complex, and electronic mandates schemes and policies are basically national and usually do not contemplate the possibility to use those mandates in cross-border scenarios. The problem of mandates when accessing services from a Public Administration is extremely complex, so we will focus here on the private sector: when both the Relying Party and the Participant are legal persons from the private sector.
+
+        In order to have a usable mechanism using Verifiable Credentials, the main requirements are the following:
+
         <ul>
-            - making the credential a `legally binding document` under the [[eIDAS]] framework, by signing the credential with an advanced or qualified seal/signature;
-            - making the credential a `VerifiableID`, by binding the identities of the subject and holder of the credential so it can be used for authentication;
-            - making the credential a `Verifiable Authorisation`, by embedding authorisation information in the credential and binding it to the identities of the issuer and subject.
-        
-        The credential is a **legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential**. The subject can then **use the credential to authenticate to a Relying Party** because the identities of holder and subject are bound.
+
+            -(REQ-01): **The credential is an e-mandate**, by embedding authorisation information in the credential and binding it to the identities of the issuer and subject. We call such a credential a `Verifiable Authorisation`.
+
+                We need to define a controlled vocabulary that can be used to express in a formal language (e.g. ODRL) the semantics of the powers delegated to a Principal by the Participant.
+
+            -(REQ-02): **The Relying Party does not have to know in advance the Principal** accessing its services on behalf of a Participant.
+
+                However, the Relying Party should have an easy authentication mechanism based on Verifiable Credentials to ensure that the entity accessing the services is the same entity identified in the e-mandate, and so that it has the required powers to access.
+
+                Ideally, to simplify the authentication and authorisation process for the Relying Party, the same credential that is a mandate (we call it a Verifiable Authorisation) can enable authentication (we call it a VerifiableID). Of course, we could use different credentials and even a "traditional" authentication mechanism, but having a single credential that can be used both for authentication and authorisation (using the powers specified in the mandate) is what we describe here.
+
+            -(REQ-03): There may be several Principals accessing the services of a Relying Party on behalf of the same Participant, and each Principal may have different powers that enable them to access different (possibly overlapping) sets of services.
+
+                The Relying Party specifies the powers that need to be validated for each service (the scope the access is requested on and the type of representation that the Service provider allows). Each individual service may require different sets of powers, at the sole discretion of the Relying Partly (of course always in synch with the agreement formalised with the Participant).
+                
+                The Participant grants the authorisations to the Principals at its own discretion. Only the Principals that have the powers required by an individual service can access that service. The Participant may have more powers than strictly required (for example, full representation of the legal entity).
+
+            -(REQ-04): The Relying Party can **reduce the legal risks and associated costs of litigation** in court by leveraging the **presumption of non-repudiation** associated to the use of an eIDAS advanced/qualified seal/signature for the Verifiable Credential.
+            
+                Of course, the Relying Party is free to request from Participants other types of signatures, if it is willing to assume the higher level of legal risk. We define here a mechanism which can have the same level as a document with a handwritten signature (when using qualified electronic signatures/seals).
+
+                In this way the credential is a **legally binding machine-readable document where the issuer (Participant) attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential (Principal)**.
+
+            -(REQ-05): The Relying Party can verify that the issuer of the credential corresponds to a **real-world identity which is fully accountable** for the contents of the credential, without needing any additional third-party, trust framework or participant list associated to a given Data Space or Federation.
+            
+                Because we use an eIDAS signature/seal for the credential, the current EU legal and trust framework in place since 2016 is enough for the Relying Party to verify that the Participant has issued a legally-binding mandate to the Principal.
+
+        With all these properties, the credential is a **legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential**. The subject can then **use the credential to authenticate to a Relying Party** because the identities of holder and subject are bound.
 
         This mechanism leverages the eIDAS trust framework using advanced or qualified signatures and seals to provide a **high level of legal certainty and enjoying the presumption of non-repudiation in the courts**, something that does not happen when using other types of basic signatures.
 
-        <x-warning>
-            We focus here on `legal persons` and not on `natural persons` (except when acting as representatives of the legal person, see below).            
-            
-            Whenever the EDIW (European Digital Identity Wallet) and its supporting eIDAS2 regulation are ready, we will support that mechanism for identification and access control of natural persons, as a natural extension to the mechanism described here.
+    <section>Introduction
 
         In a typical B2B ecosystem, the agreements between a product/service provider and the consumer are formalised among legal persons (also known in this document as 'organisations').
 
@@ -180,6 +237,8 @@ localBiblio:
         In the context of authentication and access management, the legal entity acting as consumer organisation will be named `Participant`. The digital representation of a natural person, acting on behalf of a Participant, is referred to as a `Principal`. However, when the context is clear and we need to refer to eIDAS legal terms, we will use the term `user` (defined in the Glossary) to denote a natural or legal person, or a natural person representing a legal person using a wallet to authenticate.
 
         The legal entity acting as service provider and performing authentication and access management will be called `Relying Party`.
+
+        The approach is similar to the on-behalf-of actor model described in [[Actor-DataSpaces]] but our focus is on the compliance with the eIDAS legal framework to enable not only Data Spaces but any type of ecosystem to leverage the eIDAS trust framework and achieve a high level of legal certainty with the presumption of non-repudiation in the courts.
 
         The mechanism described here allows a Relying Party receiving a Verifiable Credential from a principal engaging in an authentication process to perform the following verifications:
 
@@ -199,7 +258,7 @@ localBiblio:
 
                         In the mechanism described here, the verification is enabled by embedding inside the credential a public key corresponding to a private key that was generated by the principal during the issuance process. See below for the details, including an optional mechanism by embedding an existing eIDAS certificate issued by a QTSP when the principal is a natural person or a legal person (different from the Participant).
 
-                    - ** Binding of issuer with a real-world identity**. The Relying Party can verify that the credential was issued by somebody controlling a private key associated to a given real-world identity.
+                    - **Binding of issuer with a real-world identity**. The Relying Party can verify that the credential was issued by somebody controlling a private key associated to a given real-world identity.
 
                         The verification is enabled because the Verifiable Credential is sealed with an eIDAS <x-ref "qualified certificate for electronic seal"> issued to the Participant by a <x-ref "qualified trust service provider"> (QTSP) in the [[[EU_Trusted_Lists]]], and the signature of the credential is an advanced or qualified electronic signature using the [[JAdES]] format (JSON Advanced Electronic Signature) as defined in the eIDAS regulation.
 
@@ -250,7 +309,7 @@ localBiblio:
 
             We use a <x-ref "qualified certificate for electronic seal"> provided by an eIDAS <x-ref "qualified trust service provider"> (QTSP) to seal credentials with an <x-ref "advanced electronic seal"> (AdESeal) or <x-ref "qualified electronic seal"> (QESeal) with the JSON Advanced Electronic Signature format ([[JAdES]]).
 
-            We also use `qualified certificates for electronic signatures` issued by a QTSP to authorised representatives of the legal person, to sign credentials with advanced electronic signatures (AdES) or with qualified electronic signatures (QES) with the JSON Advanced Electronic Signature format (JAdES).
+            We also use a <x-ref "qualified certificate for electronic signature"> issued by a QTSP to authorised representatives of the legal person, to sign credentials with an <x-ref "advanced electronic signature"> (AdES) or with a <x-ref "qualified electronic signature"> (QES) with the JSON Advanced Electronic Signature format (JAdES).
 
             This mechanism for sealing/signing the Verifiable Credentials has the following properties:
 
@@ -360,7 +419,7 @@ localBiblio:
 
         <section>Combining VerifiableID and Verifiable Authorisation in the LEARCredential
 
-            In many use cases, it is possible to simplify the authentication and access control by combining in a single credential both a VerifiableID (authentication) and a Verifiable Authorisation (for access control).
+            In many use cases, it is possible to simplify the authentication and access control by combining in a single credential both a VerifiableID (for authentication) and a Verifiable Authorisation (for access control).
 
             We call the resulting credential a LEARCredential and it is very useful when the holder/subject wants to use a decentralised IAM mechanisms implemented by Relying Parties which are federated in a decentralised way using a common Trust Anchor Framework.
 
@@ -412,29 +471,29 @@ localBiblio:
                 - signed or sealed with an eIDAS certificate which is either:
 
                     <ul>
-                        - a <b>certificate for electronic seals</b> issued to a legal person by a <x-ref "qualified trust service provider"> Qualified Trust Service Provider, or
-                        - a <b>certificate for electronic signatures</b>, issued to a <b>legal representative of the legal person</b> by a Qualified Trust Service Provider.
+                        - a <b>certificate for electronic seals</b> issued to a legal person by a <x-ref "qualified trust service provider">, or
+                        - a <b>certificate for electronic signatures</b>, issued to a <b>legal representative of the legal person</b> by a qualified trust service provider.
                 - signed using the <b>JSON Advanced Electronic Signature</b> format described in [[[JAdES]]]
 
-            The LEARCredential includes claims identifying the employee and a description of the concrete powers that have been delegated by the legal representative of the organisation.
+            The LEARCredential includes claims identifying the subject of the credential and a description of the concrete powers that have been delegated by the legal representative of the organisation.
 
-            By signing/sealing the credential with an eIDAS certificate, the legal representative attests that the powers described in the credential have been delegated to the employee (maybe under some conditions, also described in the credential).
+            By signing/sealing the credential with an eIDAS certificate, the legal representative attests that the powers described in the credential have been delegated to the subject (maybe under some conditions, also described in the credential).
 
             In this way, the LEARCredential has the same legal status as any other document in other formats (e.g., PDF) signed in an eIDAS-compliant way, but with all the advantages provided by the Verifiable Credential format.
 
-            In addition, the LEARCredential includes cryptographic material that allows the appointed employee to <b>use the credential as an online authentication mechanism</b> in a portal, by proving that the holder of the credential is the same person identified in the credential.
+            In addition, the LEARCredential includes cryptographic material that allows the subject of the credential to <b>use the credential as an online authentication mechanism</b> in a portal or API, by proving that the holder of the credential is the same entity identified in the credential.
 
             Any Verifier that trusts the eIDAS Trust Framework will be able to verify that:
 
             <ul>
-                - <b>The person presenting the LEARCredential is the same as the one identified in the credential</b>
-                - <b>A legal representative of the organisation has attested that the person has the powers described in the credential</b>
+                - <b>The entity presenting the LEARCredential (the holder) is the same as the one identified in the subject of the credential</b>
+                - <b>A legal representative of the organisation has attested that the subject has the powers described in the credential</b>
 
-            This enables the person presenting the LEARCredential to start the process and to provide any additional required documentation, preferably as additional Verifiable Credentials to enable automatic verification of compliance with the process requirements (including Gaia-X credentials issued by the Compliance Service of Gaia-X). 
+            This enables the entity presenting the LEARCredential to start the process and to provide any additional required documentation as additional Verifiable Credentials to enable automatic verification of compliance with the process requirements (including Gaia-X credentials issued by the Compliance Service of Gaia-X). 
 
             Both types of eIDAS certificates mentioned above are an electronic attestation <b>that links electronic seal/signature validation data to a legal person and confirms the name of that person</b>. This way, the certificate, usually linked to the sealed/signed document, can be used to verify the identity of the creator of the seal/signature and whether the document has been sealed/signed using the corresponding private key.
 
-            Before issuing a certificate like the above, the Qualified Trust Service Provider (QTSP) performs validations against `Authentic Sources` to authenticate the identity of the organisation:
+            Before issuing a certificate like the above, the qualified trust service provider (QTSP) performs validations against `Authentic Sources` to authenticate the identity of the organisation under the eIDAS framework:
 
             <ul>
                 - The data concerning the business name or corporate name of the organisation.
@@ -442,19 +501,18 @@ localBiblio:
                 - The data concerning the extent and validity of the powers of representation of the applicant.
                 - The data concerning the tax identification code of the organisation or equivalent code used in the country to whose legislation the subscriber is subject.
 
-            The person controlling the above certificates will appoint a legal entity representative (LEAR) by generating and signing a Verifiable Credential which:
+            The person controlling the above certificates can authorise a subject to perform some operations on behalf of the organisation (LEAR) by generating and signing a Verifiable Credential which:
 
             <ul>
-                - Includes identification data of an employee of the organisation
+                - Includes identification data of a subject
                 - Includes claims stating the delegation of specific powers to perform a set of specific processes on behalf of the organisation
-                - Includes a public key where the corresponding private key is controlled by the employee, enabling him to prove that he is the holder of the credential when it is being used in an authentication process like the ones used as examples in this document.
+                - Includes a public key where the corresponding private key is controlled by the subject, enabling the subject to prove that she/he/it is the holder of the credential when it is being used in an authentication process like the ones used as examples in this document.
 
-            The LEARCredential uses the `did:elsi` method for the identifiers of legal persons involved in the process, to facilitate the DID resolution and linkage with the eIDAS certificates. The `did:elsi` method is specified in [[[DID-ELSI]]].    
+            The LEARCredential uses the `did:elsi` method for the identifiers of legal persons involved in the process, to facilitate the DID resolution and linkage with the eIDAS certificates. The `did:elsi` method is specified in [[[DID-ELSI]]]. But any other suitable DID method can be used is desired.
             
-            The high-level view of the process is described in the following diagram, when a COO (Chief Operating Officer) appoints an employee to perform some processes:
+            The high-level view of the process is described in the following diagram, using as an example a COO (Chief Operating Officer) acting a legal entity representative and appointing an employee to perform some processes:
 
-
-            <x-diagram .plantuml>High level view of issuance of LEARCredential
+            <x-diagram .plantuml>High level view of issuance of LEARCredential to an employee
                 box "Company" #WhiteSmoke
                     actor "Employee of company" as employee
                     participant "COO of company" as COO
@@ -469,17 +527,6 @@ localBiblio:
                 TSP -> COO --: Provide certificate for signature
 
                 COO -> employee: Issue LEARCredential
-
-
-        <section>The LEARCredential for some identification processes
-
-            But <b>any entity can issue VerifiableIDs</b>, though the acceptance by Relying Parties can not be ensured because it is the Relying Party the only one deciding if it trusts on the issuer and its process for generating the VerifiableID.
-            
-            DOME will make use of the future eIDAS2 VerifiableIDs when they are available and when they make sense in the context of DOME. But DOME defines some specific types of VerifiableIDs that are derived from eIDAS certificates for signatures/seals using the regulated standards for signatures, achieving a level of assurance that provides an acceptable level of legal certainty and reduced risk of repudiation.
-            
-            An example is the LEARCredential described in a section above, which has the same level of legal certainty as any document signed with the same certificates (like a contract or an invoice).
-
-            Similarly, a Product provider (like GoodAir) who decides to use the DOME Trust and IAM framework or a compatible one for managing access to associated services by customers of their products will typically define specific types of VerifiableIDs if the standard ones in DOME or the existing and widely accepted ones are not suitable for the provider. In general, if a provider can use an existing and already used VerifiableID then it will facilitate potential customers access to its product because issuers of the VerifiableID do not have to modify or adapt their existing issuing processes.
 
 
     <section>The LEARCredential through an example
@@ -583,7 +630,7 @@ localBiblio:
                     "mobile_phone": "+34787426623"
                 }
 
-        <section>`legalRepresentative`
+        <section>legalRepresentative
 
             This section identifies the natural person (the COO) who is a legal representative of the legal person (GoodAir) and that is nominating the employee identified in the credential.
 
@@ -606,7 +653,7 @@ localBiblio:
                 In the case of natural persons refer to the <a href="https://joinup.ec.europa.eu/asset/core_person/asset_release/core-person-vocabulary">Core Person Vocabulary</a> and in the case of legal persons refer to definitions for <a href="https://joinup.ec.europa.eu/asset/core_business/asset_release/core-business-vocabulary">Core Business Vocabulary</a>.
 
 
-        <section>`rolesAndDuties` of the LEAR
+        <section>Roles and Duties of the LEAR
 
             The LEARCredential should include a formal description with the roles and duties of the LEAR. This is the digital equivalent to the analog description in our example, which uses natural language:
 
@@ -2010,68 +2057,68 @@ localBiblio:
 
     This is the reason why in some definitions below the description refers to an article or section that does not exist in this document. We have decided to keep the definitions like in the original, as we think it does not limit the understanding of the concept.
 
-    <dl>
+    <ul .plain>
 
-        <dt>electronic identification
-        <dd>means the process of using person identification data in electronic form uniquely representing either a natural or legal person, or a natural person representing a legal person;
+        -(electronic identification): 
+            means the process of using person identification data in electronic form uniquely representing either a natural or legal person, or a natural person representing a legal person;
 
-        <dt>electronic identification means
-        <dd>means a material and/or immaterial unit, including European Digital Identity Wallets or ID cards following Regulation 2019/1157, containing person identification data and which is used for authentication for an online or offline service:
+        -(electronic identification means): 
+            means a material and/or immaterial unit, including European Digital Identity Wallets or ID cards following Regulation 2019/1157, containing person identification data and which is used for authentication for an online or offline service:
 
-        <dt>person identification data
-        <dd>means a set of data, issued in accordance with national law, enabling the identity of a natural or legal person, or a natural person representing a legal person to be established;
+        -(person identification data): 
+            means a set of data, issued in accordance with national law, enabling the identity of a natural or legal person, or a natural person representing a legal person to be established;
 
-        <dt>electronic identification scheme
-        <dd>means a system for electronic identification under which electronic identification means, are issued to natural or legal persons or natural persons representing legal or natural persons;
+        -(electronic identification scheme): 
+            means a system for electronic identification under which electronic identification means, are issued to natural or legal persons or natural persons representing legal or natural persons;
 
-        <dt>user
-        <dd>means a natural or legal person, or a natural person representing a legal person using trust services, notified electronic identification means or European Digital Identity Wallets;
+        -(user): 
+            means a natural or legal person, or a natural person representing a legal person using trust services, notified electronic identification means or European Digital Identity Wallets;
 
-        <dt>authentication
-        <dd>means an electronic process that enables the verification of the origin and integrity of data in electronic form;
+        -(authentication): 
+            means an electronic process that enables the verification of the origin and integrity of data in electronic form;
 
-        <dt>identification
-        <dd>means an electronic process that establish an unequivocal relationship between a set of data and a natural or legal person;
+        -(identification): 
+            means an electronic process that establish an unequivocal relationship between a set of data and a natural or legal person;
 
-        <dt>validation
-        <dd>means the process of verifying that an electronic signature, an electronic seal, a European Digital Identity Wallet, an electronic identification mean, a relying party authorisation, person identification data, an electronic attestation of attributes or any electronic certificates for trust services is valid and has not been revoked;
+        -(validation): 
+            means the process of verifying that an electronic signature, an electronic seal, a European Digital Identity Wallet, an electronic identification mean, a relying party authorisation, person identification data, an electronic attestation of attributes or any electronic certificates for trust services is valid and has not been revoked;
 
-        <dt>zero knowledge proof
-        <dd>means cryptographic methods by which a relying party can validate that a given statement based on the electronic attestation of attributes held in a user's European Digital Identity Wallet is true, without conveying any data related to those electronic attestation of attributes to the relying party;
+        -(zero knowledge proof): 
+            means cryptographic methods by which a relying party can validate that a given statement based on the electronic attestation of attributes held in a user's European Digital Identity Wallet is true, without conveying any data related to those electronic attestation of attributes to the relying party;
 
-        <dt>relying party
-        <dd>means a natural or legal person that relies upon an electronic identification means, including European Digital Identity Wallets, or a trust service, directly or through an intermediary, in order to provide services;
+        -(relying party): 
+            means a natural or legal person that relies upon an electronic identification means, including European Digital Identity Wallets, or a trust service, directly or through an intermediary, in order to provide services;
 
-        <dt>public sector body
-        <dd>means a state, regional or local authority, a body governed by public law or an association formed by one or several such authorities or one or several such bodies governed by public law, or  private entity mandated by at least one of those authorities, bodies or associations to provide public services, when acting under such a mandate;
+        -(public sector body): 
+            means a state, regional or local authority, a body governed by public law or an association formed by one or several such authorities or one or several such bodies governed by public law, or  private entity mandated by at least one of those authorities, bodies or associations to provide public services, when acting under such a mandate;
 
-        <dt>body governed by public law
-        <dd>means a body defined in point (4) of Article 2(1) of Directive 2014/24/EU of the European Parliament and of the Council (1);
+        -(body governed by public law): 
+            means a body defined in point (4) of Article 2(1) of Directive 2014/24/EU of the European Parliament and of the Council (1);
 
-        <dt>signatory
-        <dd>means a natural person who creates an electronic signature;
+        -(signatory): 
+            means a natural person who creates an electronic signature;
 
-        <dt>electronic signature
-        <dd>means data in electronic form which is attached to or logically associated with other data in electronic form and which is used by the signatory to sign;
+        -(electronic signature): 
+            means data in electronic form which is attached to or logically associated with other data in electronic form and which is used by the signatory to sign;
 
-        <dt>advanced electronic signature
-        <dd>means an electronic signature which meets the requirements set out in Article 26;
+        -(advanced electronic signature): 
+            means an electronic signature which meets the requirements set out in Article 26;
 
-        <dt>qualified electronic signature
-        <dd>means an advanced electronic signature that is created by a qualified electronic signature creation device, and which is based on a qualified certificate for electronic signatures;
+        -(qualified electronic signature): 
+            means an advanced electronic signature that is created by a qualified electronic signature creation device, and which is based on a qualified certificate for electronic signatures;
 
-        <dt>electronic signature creation data
-        <dd>means unique data which is used by the signatory to create an electronic signature;
+        -(electronic signature creation data): 
+            means unique data which is used by the signatory to create an electronic signature;
 
-        <dt>certificate for electronic signature
-        <dd>means an electronic attestation which links electronic signature validation data to a natural person and confirms at least the name or the pseudonym of that person;
+        -(certificate for electronic signature): 
+            means an electronic attestation which links electronic signature validation data to a natural person and confirms at least the name or the pseudonym of that person;
 
-        <dt>qualified certificate for electronic signature
-        <dd>means a certificate for electronic signatures, that is issued by a qualified trust service provider and meets the requirements laid down in Annex I;
+        -(qualified certificate for electronic signature): 
+            means a certificate for electronic signatures, that is issued by a qualified trust service provider and meets the requirements laid down in Annex I;
 
         // (16) ‘trust service’ from eIDAS2
-        <dt>trust service
-        <dd>means an electronic service normally provided against payment which consists of:
+        -(trust service): 
+            means an electronic service normally provided against payment which consists of:
             <ul>
                 - (a) the creation, verification, and validation of electronic signatures, electronic seals or electronic time stamps, electronic registered delivery services, electronic attestation of attributes and certificates related to those services;
 
@@ -2084,114 +2131,113 @@ localBiblio:
                 - (e) the management of remote electronic signature and seal creation devices;
 
         // (17) ‘qualified trust service’ from eIDAS1
-        <dt>qualified trust service
-        <dd>means a trust service that meets the applicable requirements laid down in this Regulation;
+        -(qualified trust service): 
+            means a trust service that meets the applicable requirements laid down in this Regulation;
 
         // (18) ‘conformity assessment body’ from eIDAS1
-        <dt> conformity assessment body
-        <dd>means a body defined in point 13 of Article 2 of Regulation (EC) No 765/2008, which is accredited in accordance with that Regulation as competent to carry out conformity assessment of a qualified trust service provider and the qualified trust services it provides;
+        -(conformity assessment body): 
+            means a body defined in point 13 of Article 2 of Regulation (EC) No 765/2008, which is accredited in accordance with that Regulation as competent to carry out conformity assessment of a qualified trust service provider and the qualified trust services it provides;
 
         // (19) ‘trust service provider’ from eIDAS1
-        <dt>trust service provider
-        <dd>means a natural or a legal person who provides one or more trust services either as a qualified or as a non-qualified trust service provider;
+        -(trust service provider): 
+            means a natural or a legal person who provides one or more trust services either as a qualified or as a non-qualified trust service provider;
 
         // (20) ‘qualified trust service provider’ from eIDAS1
-        <dt>qualified trust service provider
-        <dd>means a trust service provider who provides one or more qualified trust services and is granted the qualified status by the supervisory body;
-
+        -(qualified trust service provider): 
+            means a trust service provider who provides one or more qualified trust services and is granted the qualified status by the supervisory body;
 
         // (25) ‘electronic seal’ from eIDAS1
-        <dt>electronic seal
-        <dd>means data in electronic form, which is attached to or logically associated with other data in electronic form to ensure the latter’s origin and integrity;
+        -(electronic seal): 
+            means data in electronic form, which is attached to or logically associated with other data in electronic form to ensure the latter’s origin and integrity;
 
         // (26) ‘advanced electronic seal’ from eIDAS1
-        <dt>advanced electronic seal
-        <dd>means an electronic seal, which meets the requirements set out in Article 36;
+        -(advanced electronic seal): 
+            means an electronic seal, which meets the requirements set out in Article 36;
 
         // (27) ‘qualified electronic seal’ from eIDAS1
-        <dt>qualified electronic seal
-        <dd>means an advanced electronic seal, which is created by a qualified electronic seal creation device, and that is based on a qualified certificate for electronic seal;
+        -(qualified electronic seal): 
+            means an advanced electronic seal, which is created by a qualified electronic seal creation device, and that is based on a qualified certificate for electronic seal;
 
         // (28) ‘electronic seal creation data’ from eIDAS1
-        <dt>electronic seal creation data
-        <dd>means unique data, which is used by the creator of the electronic seal to create an electronic seal;
+        -(electronic seal creation data): 
+            means unique data, which is used by the creator of the electronic seal to create an electronic seal;
 
         // (29) ‘certificate for electronic seal’ from eIDAS2
-        <dt>certificate for electronic seal
-        <dd>means an electronic attestation or set of attestations that links electronic seal validation data to a legal person and confirms the name of that person;
+        -(certificate for electronic seal): 
+            means an electronic attestation or set of attestations that links electronic seal validation data to a legal person and confirms the name of that person;
 
         // (30) ‘qualified certificate for electronic seal’ from eIDAS1
-        <dt>qualified certificate for electronic seal
-        <dd>means a certificate for an electronic seal, that is issued by a qualified trust service provider and meets the requirements laid down in Annex III;
+        -(qualified certificate for electronic seal): 
+            means a certificate for an electronic seal, that is issued by a qualified trust service provider and meets the requirements laid down in Annex III;
 
         // (31) ‘electronic seal creation device’ from eIDAS1
-        <dt>electronic seal creation device
-        <dd>means configured software or hardware used to create an electronic seal;
+        -(electronic seal creation device): 
+            means configured software or hardware used to create an electronic seal;
 
         // (32) ‘qualified electronic seal creation device’ from eIDAS1
-        <dt>qualified electronic seal creation device
-        <dd>means an electronic seal creation device that meets mutatis mutandis the requirements laid down in Annex II;
+        -(qualified electronic seal creation device): 
+            means an electronic seal creation device that meets mutatis mutandis the requirements laid down in Annex II;
 
         // (33) ‘electronic time stamp’ from eIDAS1
-        <dt>electronic time stamp
-        <dd>means data in electronic form which binds other data in electronic form to a particular time establishing evidence that the latter data existed at that time;
+        -(electronic time stamp): 
+            means data in electronic form which binds other data in electronic form to a particular time establishing evidence that the latter data existed at that time;
 
         // (34) ‘qualified electronic time stamp’ from eIDAS1
-        <dt>qualified electronic time stamp
-        <dd>means an electronic time stamp which meets the requirements laid down in Article 42;
+        -(qualified electronic time stamp): 
+            means an electronic time stamp which meets the requirements laid down in Article 42;
 
         // (35) ‘electronic document’ from eIDAS1
-        <dt>electronic document
-        <dd>means any content stored in electronic form, in particular text or sound, visual or audiovisual recording;
+        -(electronic document): 
+            means any content stored in electronic form, in particular text or sound, visual or audiovisual recording;
 
         // (36) ‘electronic registered delivery service’ from eIDAS1
-        <dt>electronic registered delivery service
-        <dd>means a service that makes it possible to transmit data between third parties by electronic means and provides evidence relating to the handling of the transmitted data, including proof of sending and receiving the data, and that protects transmitted data against the risk of loss, theft, damage or any unauthorised alterations;
+        -(electronic registered delivery service): 
+            means a service that makes it possible to transmit data between third parties by electronic means and provides evidence relating to the handling of the transmitted data, including proof of sending and receiving the data, and that protects transmitted data against the risk of loss, theft, damage or any unauthorised alterations;
 
         // (37) ‘qualified electronic registered delivery service’ from eIDAS1
-        <dt>qualified electronic registered delivery service
-        <dd>means an electronic registered delivery service which meets the requirements laid down in Article 44;
+        -(qualified electronic registered delivery service): 
+            means an electronic registered delivery service which meets the requirements laid down in Article 44;
 
         // (42) ‘European Digital Identity Wallet’ from eIDAS2
-        <dt>European Digital Identity Wallet
-        <dd>means an electronic identification means which securely stores, manages and validates identity data and electronic attestations of attributes, to provide them to relying parties and other users of European Digital Identity Wallets on request, and which enables the creation of qualified electronic signatures and seals;
+        -(European Digital Identity Wallet): 
+            means an electronic identification means which securely stores, manages and validates identity data and electronic attestations of attributes, to provide them to relying parties and other users of European Digital Identity Wallets on request, and which enables the creation of qualified electronic signatures and seals;
 
         // (43) ‘attribute’ from eIDAS2
-        <dt>attribute
-        <dd>is a feature, characteristic or quality of a natural or legal person or of an entity;
+        -(attribute): 
+            is a feature, characteristic or quality of a natural or legal person or of an entity;
 
-        <dt>electronic attestation of attributes
-        <dd>means an attestation in electronic form that allows the presentation and authentication of attributes;
+        -(electronic attestation of attributes): 
+            means an attestation in electronic form that allows the presentation and authentication of attributes;
 
-        <dt>qualified electronic attestation of attributes
-        <dd>means an electronic attestation of attributes, which is issued by a qualified trust service provider and meets the requirements laid down in Annex V;
+        -(qualified electronic attestation of attributes): 
+            means an electronic attestation of attributes, which is issued by a qualified trust service provider and meets the requirements laid down in Annex V;
 
-        <dt>authentic source
-        <dd>is a repository or system, held under the responsibility of a public sector body or private entity, that contains attributes about a natural or legal person and is considered to be the primary source of that information or recognised as authentic in Union or national law;
+        -(authentic source): 
+            is a repository or system, held under the responsibility of a public sector body or private entity, that contains attributes about a natural or legal person and is considered to be the primary source of that information or recognised as authentic in Union or national law;
 
-        <dt>electronic archiving
-        <dd>means a service ensuring preservation of electronic data or documents in order to guarantee their integrity, the accuracy of their origin and legal features throughout the conservation period;
+        -(electronic archiving): 
+            means a service ensuring preservation of electronic data or documents in order to guarantee their integrity, the accuracy of their origin and legal features throughout the conservation period;
 
-        <dt>qualified electronic archiving service
-        <dd>means a service that meets the requirements laid down in Article 45g;
+        -(qualified electronic archiving service): 
+            means a service that meets the requirements laid down in Article 45g;
 
-        <dt>EU Digital Identity Wallet Trust Mark
-        <dd>means an indication in a simple, recognisable and clear manner that a Digital Identity Wallet has been issued in accordance with this Regulation;
+        -(EU Digital Identity Wallet Trust Mark): 
+            means an indication in a simple, recognisable and clear manner that a Digital Identity Wallet has been issued in accordance with this Regulation;
 
-        <dt>strong user authentication
-        <dd>means an authentication based on the use of at least two authentication factors categorised as user knowledge , possession and inherence that are independent, in such a way that the breach of one does not compromise the reliability of the others, and is designed in such a way to protect the confidentiality of the authentication data;
+        -(strong user authentication): 
+            means an authentication based on the use of at least two authentication factors categorised as user knowledge , possession and inherence that are independent, in such a way that the breach of one does not compromise the reliability of the others, and is designed in such a way to protect the confidentiality of the authentication data;
 
-        <dt>user account
-        <dd>means a mechanism that allows a user to access public or private services on the terms and conditions established by the service provider;
+        -(user account): 
+            means a mechanism that allows a user to access public or private services on the terms and conditions established by the service provider;
 
-        <dt>personal data
-        <dd>means any information as defined in point 1 of Article 4 of Regulation (EU) 2016/679;
+        -(personal data): 
+            means any information as defined in point 1 of Article 4 of Regulation (EU) 2016/679;
 
-        <dt>identity matching
-        <dd>means a process where person identification data or person identification means are matched with or linked to an existing account belonging to the same person;
+        -(identity matching): 
+            means a process where person identification data or person identification means are matched with or linked to an existing account belonging to the same person;
 
-        <dt>offline service
-        <dd>means the capability of a user to electronically identify and authenticate with a third party with close proximity technologies irrespective of whether the device is connected to the internet or not in order to access a wide range of public and private services;
+        -(offline service): 
+            means the capability of a user to electronically identify and authenticate with a third party with close proximity technologies irrespective of whether the device is connected to the internet or not in order to access a wide range of public and private services;
 
 
 

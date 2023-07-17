@@ -47,7 +47,7 @@ type Node struct {
 	Href        []byte
 	Bucket      []byte
 	Number      []byte
-	StdFields   []byte
+	BulletText  []byte
 	Attr        []Attribute
 	RestLine    []byte
 }
@@ -211,17 +211,23 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) {
 	if allsubmatchs := reXRef.FindAllSubmatch(rest, -1); len(allsubmatchs) > 0 {
 		if len(allsubmatchs) > 1 {
 			fmt.Println("XREF match in line", n.LineNumber)
-
 		}
 
 		for _, submatchs := range allsubmatchs {
 
 			// Convert blanks to underscores blanks
-			sub1 := string(encodeWithUnderscore(bytes.Clone(submatchs[1])))
+			// sub1 := string(encodeOnPlaceWithUnderscore(bytes.Clone(submatchs[1])))
+			sub1 := string(bytes.Clone(submatchs[1]))
 
 			// If the referenced node has a description, we will use it for the text of the link.
 			// Otherwise we will use the plain ID of the referenced node
-			description := n.p.xref[sub1]
+			referencedNode := n.p.xref[sub1]
+			var description string
+			if referencedNode.Name == "x-li" {
+				description = string(referencedNode.Id)
+			} else {
+				description = string(referencedNode.RestLine)
+			}
 
 			var replacement []byte
 			if len(description) > 0 {
@@ -231,38 +237,10 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) {
 
 			}
 			original := submatchs[0]
+			fmt.Println("  replacing", string(original), "-->", string(replacement))
 			rest = bytes.ReplaceAll(rest, original, replacement)
 		}
 	}
-
-	// // Preprocess the special <x-ref> tag inside the text of the line
-	// if bytes.Contains(rest, []byte("<x-ref")) {
-
-	// 	if allsubmatchs := reXRef.FindAllSubmatch(rest, -1); len(allsubmatchs) > 0 {
-
-	// 		// DEBUG
-	// 		if n.LineNumber > 249 {
-	// 			fmt.Println("More than 2 matches in line", n.LineNumber)
-	// 		}
-
-	// 		for _, submatchs := range allsubmatchs {
-
-	// 		}
-
-	// 		// Convert blanks to underscores blanks
-	// 		sub1 := string(encodeWithUnderscore(submatchs[1]))
-
-	// 		// If the referenced node has a description, we will use it for the text of the link.
-	// 		// Otherwise we will use the plain ID of the referenced node
-	// 		description := n.p.xref[sub1]
-
-	// 		if len(description) > 0 {
-	// 			rest = reXRef.ReplaceAll(rest, []byte("<a href=\"#"+sub1+"\" class=\"xref\">"+string(description)+"</a>"))
-	// 		} else {
-	// 			rest = reXRef.ReplaceAll(rest, []byte("<a href=\"#"+sub1+"\" class=\"xref\">[${1}]</a>"))
-	// 		}
-	// 	}
-	// }
 
 	// Render the start tag of this node
 	br.Renderln(indentStr, startTag, rest)
@@ -337,6 +315,19 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		}
 		endTag = fmt.Appendf(endTag, "</pre>")
 
+	case "x-li":
+		startTag = fmt.Appendf(startTag, "<li")
+		startTag = n.addAttributes(startTag)
+		startTag = fmt.Appendf(startTag, ">")
+
+		endTag = fmt.Appendf(endTag, "</li>")
+		if len(n.Id) > 0 {
+			rest = fmt.Appendf(rest, "<b>%s</b>", n.Id)
+		}
+		rest = fmt.Appendf(rest, "%s", n.RestLine)
+
+		return n.Name, startTag, endTag, rest
+
 	case "x-dl":
 		n.AddClassString("deftable")
 		startTag = fmt.Appendf(startTag, "<table")
@@ -397,7 +388,7 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		startTag = fmt.Appendf(startTag, " %s='%s'", a.Key, a.Val)
 	}
 
-	restLine := n.RestLine
+	restLine := bytes.Clone(n.RestLine)
 
 	// Handle the special cases
 	switch string(n.Name) {
@@ -481,7 +472,7 @@ func (n *Node) RenderCodeNode(br *ByteRenderer) {
 		l = chroma.Coalesce(l)
 
 		// Determine style from the config data, with "dracula" as default
-		styleName := config.String("rite.codeStyle", "swapoff")
+		styleName := config.String("rite.codeStyle", "github")
 		s := styles.Get(styleName)
 
 		// fore := s.Get(chroma.Text).Colour.String()

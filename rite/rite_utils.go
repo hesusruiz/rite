@@ -18,7 +18,7 @@ func trimLeft(line []byte, s byte) []byte {
 	return nil
 }
 
-func encodeWithUnderscore(line []byte) []byte {
+func encodeOnPlaceWithUnderscore(line []byte) []byte {
 	for i, c := range line {
 		if c == ' ' || c == ':' {
 			line[i] = '_'

@@ -99,7 +99,7 @@ type Parser struct {
 
 	Ids  map[string]int // To provide numbering of different entity classes
 	figs map[string]int // To provide numbering of figs of different types in the document
-	xref map[string][]byte
+	xref map[string]*Node
 
 	Config *yaml.YAML
 
@@ -299,9 +299,10 @@ func (p *Parser) UnreadParagraph(para *Text) {
 	p.bufferedPara = para
 }
 
-// This regex detects the <x-ref REFERENCE> tags that need special processing
+// This regex detects the Markdown backticks and double asterisks that need special processing
 var reCodeBackticks = regexp.MustCompile(`\x60(.+?)\x60`)
 var reMarkdownBold = regexp.MustCompile(`\*\*(.+?)\*\*`)
+var reMarkdownItalics = regexp.MustCompile(`__(.+?)__`)
 
 // PreprocesLine applies some preprocessing to the raw line that was just read from the stream.
 // Only preprocessing which is local to the current line can be applied.
@@ -325,6 +326,11 @@ func (p *Parser) PreprocesLine(lineSt *Text) *Text {
 	// Convert the MD '**' to 'b' markup
 	if bytes.Contains(lineSt.Content, []byte("*")) {
 		lineSt.Content = reMarkdownBold.ReplaceAll(lineSt.Content, []byte("<b>${1}</b>"))
+	}
+
+	// Convert the MD '__' to 'i' markup
+	if bytes.Contains(lineSt.Content, []byte("_")) {
+		lineSt.Content = reMarkdownItalics.ReplaceAll(lineSt.Content, []byte("<i>${1}</i>"))
 	}
 
 	// Preprocesslines starting with Markdown headers ('#') and convert to h1, h2, ...
@@ -473,7 +479,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 				attrVal, tagSpec = readWord(tagSpec[1:])
 			} else {
 				attrVal, tagSpec = readQuotedWords(tagSpec[1:])
-				attrVal = encodeWithUnderscore(bytes.Clone(attrVal))
+				// attrVal = encodeOnPlaceWithUnderscore(bytes.Clone(attrVal))
 			}
 
 			// Only the first id attribute is used, others are ignored
@@ -546,7 +552,8 @@ func (p *Parser) NewNode(text *Text) *Node {
 				case "id":
 					// Set the special Id field if it is not already set
 					if len(n.Id) == 0 {
-						n.Id = encodeWithUnderscore(bytes.Clone(attr.Val))
+						// n.Id = encodeOnPlaceWithUnderscore(bytes.Clone(attr.Val))
+						n.Id = bytes.Clone(attr.Val)
 					}
 				case "class":
 					// More than one class can be specified and and all are accumulated, separated by a spece
@@ -576,25 +583,26 @@ func (p *Parser) NewNode(text *Text) *Node {
 	// For special types of nodes we generate automatically the id if the user did not specify it
 	if len(n.Id) == 0 {
 		if n.Name == "dt" || n.Name == "section" {
-			n.Id = encodeWithUnderscore(bytes.Clone(n.RestLine))
+			// n.Id = encodeOnPlaceWithUnderscore(bytes.Clone(n.RestLine))
+			n.Id = bytes.Clone(n.RestLine)
 			// If the id already exists, make it unique
-			if len(p.xref[string(n.Id)]) > 0 {
+			if p.xref[string(n.Id)] != nil {
 				n.Id = strconv.AppendInt(n.Id, int64(n.LineNumber), 10)
 			}
 
 		}
 	}
 
-	// Update the table for cross-references using Ids in the x-ref tag.
+	// Update the table for cross-references using Ids in the tag.
 	// If this tag has an 'id'
 	if len(n.Id) > 0 {
 
 		// We enforce uniqueness of ids
-		if len(p.xref[string(n.Id)]) > 0 {
+		if p.xref[string(n.Id)] != nil {
 			stdlog.Panicf("id already used, processing line %d\n", n.LineNumber)
 		}
 		// Include the 'id' in the table and also the text for references
-		p.xref[string(n.Id)] = n.RestLine
+		p.xref[string(n.Id)] = n
 	}
 
 	return n
@@ -690,7 +698,7 @@ func (p *Parser) parseMdList(lineSt *Text) *Text {
 	const additionalPrefix = "-+"
 	var r ByteRenderer
 
-	// We receive a list item in Markdown format and we converto to proper HTML
+	// We receive a list item in Markdown format and we convert to proper HTML
 
 	lineNum := lineSt.LineNumber
 	line := lineSt.Content
@@ -732,15 +740,15 @@ func (p *Parser) parseMdList(lineSt *Text) *Text {
 
 		// Extract the whole bullet text, replacing embedded blanks
 		bulletText := line[len(bulletPrefix):indexRightBracket]
-		bulletTextEncoded := bytes.ReplaceAll(bulletText, []byte(" "), []byte("_"))
+		// bulletTextEncoded := bytes.ReplaceAll(bulletText, []byte(" "), []byte("_"))
 
 		// And the remaining text in the line
 		restLine := line[indexRightBracket+1:]
 
 		// Build the line
-		r.Render("<li id='", lineNum, ".", bulletTextEncoded, "'>")
-		r.Render("<a href='#", lineNum, ".", bulletTextEncoded, "' class='selfref'>")
-		r.Render("<b>", bulletText, "</b></a>", restLine, '\n')
+		// r.Render("<x-li id='", bulletTextEncoded, "'>", "<a href='#", bulletTextEncoded, "' class='selfref'>")
+		// r.Render("<b>", bulletText, "</b></a>", restLine)
+		r.Render("<x-li id='", bulletText, "'>", restLine)
 
 	}
 
@@ -934,7 +942,7 @@ func ParseFromFileSimple(fileName string) (*Parser, error) {
 			Type: DocumentNode,
 		},
 	}
-	p.xref = make(map[string][]byte)
+	p.xref = make(map[string]*Node)
 
 	if err := p.ParseSimple(); err != nil {
 		panic(err)
@@ -964,7 +972,7 @@ func ParseFromFile(fileName string) (*Parser, []byte, error) {
 			Type: DocumentNode,
 		},
 	}
-	p.xref = make(map[string][]byte)
+	p.xref = make(map[string]*Node)
 
 	fragmentHTML, err := p.Parse()
 	if err != nil {
