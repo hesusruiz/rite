@@ -195,12 +195,23 @@ func NewParseAndRender(fileName string) string {
 		defaultTemplate = "assets/templates/standard"
 	}
 	templateDir := p.Config.String("template", defaultTemplate)
-	fmt.Println("Using template dir:", templateDir)
 
-	// Parse all templates in the following directories. Any error stops processing.
-	t := template.Must(template.ParseFS(assets, templateDir+"/layouts/*"))
-	t = template.Must(t.ParseFS(assets, templateDir+"/partials/*"))
-	t = template.Must(t.ParseFS(assets, templateDir+"/pages/*"))
+	// First check if the user has a local template, otherwise use the embedded onw
+	var t *template.Template
+	_, err = os.Stat(templateDir)
+	if err != nil {
+		fmt.Println("Using embedded template dir:", templateDir)
+		// Parse the embedded templates. Any error stops processing.
+		t = template.Must(template.ParseFS(assets, templateDir+"/layouts/*"))
+		t = template.Must(t.ParseFS(assets, templateDir+"/partials/*"))
+		t = template.Must(t.ParseFS(assets, templateDir+"/pages/*"))
+	} else {
+		fmt.Println("Using local template dir:", templateDir)
+		// Parse all templates in the following directories. Any error stops processing.
+		t = template.Must(template.ParseGlob(templateDir + "/layouts/*"))
+		t = template.Must(t.ParseGlob(templateDir + "/partials/*"))
+		t = template.Must(t.ParseGlob(templateDir + "/pages/*"))
+	}
 
 	// Get the bibliography for the references, in the tag "localBiblio"
 	// It can be specified in the YAML header or in a separate file in the "localBiblioFile" tag.
