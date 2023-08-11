@@ -3,13 +3,64 @@ package rite
 import (
 	"bytes"
 	"fmt"
+	"strconv"
+	"strings"
 )
+
+type ByteRenderer struct {
+	bytes.Buffer
+}
+
+func (r *ByteRenderer) Render(inputs ...any) {
+	for _, s := range inputs {
+		switch v := s.(type) {
+		case string:
+			r.WriteString(v)
+		case []byte:
+			r.Write(v)
+		case int:
+			r.WriteString(strconv.FormatInt(int64(v), 10))
+		case byte:
+			r.WriteByte(v)
+		case rune:
+			r.WriteRune(v)
+		default:
+			stdlog.Panicf("attemping to write something not a string, int, rune, []byte or byte: %T", s)
+		}
+	}
+}
+
+func (r *ByteRenderer) Renderln(inputs ...any) {
+	r.Render(inputs...)
+	r.Render('\n')
+}
+
+type Text struct {
+	Indentation int
+	LineNumber  int
+	Content     []byte
+}
+
+// String represents the Text with the 10 first characters
+func (para *Text) String() string {
+	// This is helpful for debugging
+	if para == nil {
+		return "<nil>"
+	}
+
+	numChars := 10
+	if len(para.Content) < numChars {
+		numChars = len(para.Content)
+	}
+
+	return strings.Repeat(" ", para.Indentation) + string(para.Content[:numChars])
+}
 
 func HasPrefix(line []byte, pre string) bool {
 	return bytes.HasPrefix(line, []byte(pre))
 }
 
-func trimLeft(line []byte, s byte) []byte {
+func TrimLeft(line []byte, s byte) []byte {
 	for i, c := range line {
 		if c != s {
 			return line[i:]
@@ -18,7 +69,7 @@ func trimLeft(line []byte, s byte) []byte {
 	return nil
 }
 
-func encodeOnPlaceWithUnderscore(line []byte) []byte {
+func EncodeOnPlaceWithUnderscore(line []byte) []byte {
 	for i, c := range line {
 		if c == ' ' || c == ':' {
 			line[i] = '_'
@@ -27,7 +78,7 @@ func encodeOnPlaceWithUnderscore(line []byte) []byte {
 	return line
 }
 
-func skipWhiteSpace(line []byte) []byte {
+func SkipWhiteSpace(line []byte) []byte {
 	for i, c := range line {
 		if c != ' ' && c != '\t' {
 			return line[i:]
@@ -36,7 +87,7 @@ func skipWhiteSpace(line []byte) []byte {
 	return nil
 }
 
-func readWord(line []byte) (word []byte, rest []byte) {
+func ReadWord(line []byte) (word []byte, rest []byte) {
 
 	// If no blank space found, return the whole tagSpec
 	indexSpace := bytes.IndexByte(line, ' ')
@@ -50,16 +101,16 @@ func readWord(line []byte) (word []byte, rest []byte) {
 	// And the remaining text in the line
 	line = line[indexSpace+1:]
 
-	line = skipWhiteSpace(line)
+	line = SkipWhiteSpace(line)
 	return word, line
 
 }
 
-func readTagName(tagSpec []byte) (tagName []byte, rest []byte) {
-	return readWord(tagSpec)
+func ReadTagName(tagSpec []byte) (tagName []byte, rest []byte) {
+	return ReadWord(tagSpec)
 }
 
-func readQuotedWords(workingTagSpec []byte) (word []byte, rest []byte) {
+func ReadQuotedWords(workingTagSpec []byte) (word []byte, rest []byte) {
 
 	// The first character must be the quotation mark
 	quote := workingTagSpec[0]
@@ -76,7 +127,7 @@ func readQuotedWords(workingTagSpec []byte) (word []byte, rest []byte) {
 
 }
 
-func readTagAttrKey(tagSpec []byte) (Attribute, []byte) {
+func ReadTagAttrKey(tagSpec []byte) (Attribute, []byte) {
 	attr := Attribute{}
 
 	if len(tagSpec) == 0 {
@@ -99,13 +150,13 @@ func readTagAttrKey(tagSpec []byte) (Attribute, []byte) {
 	}
 
 	// Return if next character is not the '=' sign
-	workingTagSpec = skipWhiteSpace(workingTagSpec)
+	workingTagSpec = SkipWhiteSpace(workingTagSpec)
 	if len(workingTagSpec) == 0 || workingTagSpec[0] != '=' {
 		return attr, workingTagSpec
 	}
 
 	// Skip whitespace after the '=' sign
-	workingTagSpec = skipWhiteSpace(workingTagSpec[1:])
+	workingTagSpec = SkipWhiteSpace(workingTagSpec[1:])
 
 	// This must be the quotation mark, or the end
 	quote := workingTagSpec[0]

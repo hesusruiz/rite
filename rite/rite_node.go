@@ -165,16 +165,20 @@ func (n *Node) AddClassString(newClass string) {
 }
 
 // RenderHTML renders recursively to HTML this node and its children (if any)
-func (n *Node) RenderHTML(br *ByteRenderer) {
+func (n *Node) RenderHTML(br *ByteRenderer) error {
 
 	indentStr := indent(n.Indentation)
 
 	switch n.Type {
 	case DiagramNode:
-		n.RenderDiagramNode(br)
+		if err := n.RenderDiagramNode(br); err != nil {
+			return err
+		}
 
 	case VerbatimNode:
-		n.RenderCodeNode(br)
+		if err := n.RenderCodeNode(br); err != nil {
+			return err
+		}
 
 	case ExplanationNode:
 		// Render the start tag of this node
@@ -183,7 +187,9 @@ func (n *Node) RenderHTML(br *ByteRenderer) {
 
 		// We visit depth-first the children of the
 		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-			theNode.RenderHTML(br)
+			if err := theNode.RenderHTML(br); err != nil {
+				return err
+			}
 		}
 		br.Render("</div>\n")
 
@@ -191,16 +197,19 @@ func (n *Node) RenderHTML(br *ByteRenderer) {
 		br.Renderln(indentStr, "</li>")
 
 	default:
-		n.RenderNormalNode(br)
+		if err := n.RenderNormalNode(br); err != nil {
+			return err
+		}
 
 	}
 
+	return nil
 }
 
 // var reXRef = regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
 var reXRef = regexp.MustCompile(`<x-ref +"(.+?)" *>`)
 
-func (n *Node) RenderNormalNode(br *ByteRenderer) {
+func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 
 	// A slice with as many blanks as indented
 	indentStr := indent(n.Indentation)
@@ -209,9 +218,6 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) {
 	_, startTag, endTag, rest := n.preRenderTheTag()
 
 	if allsubmatchs := reXRef.FindAllSubmatch(rest, -1); len(allsubmatchs) > 0 {
-		if len(allsubmatchs) > 1 {
-			fmt.Println("XREF match in line", n.LineNumber)
-		}
 
 		for _, submatchs := range allsubmatchs {
 
@@ -237,7 +243,6 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) {
 
 			}
 			original := submatchs[0]
-			fmt.Println("  replacing", string(original), "-->", string(replacement))
 			rest = bytes.ReplaceAll(rest, original, replacement)
 		}
 	}
@@ -260,7 +265,9 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) {
 			}
 		}
 
-		theNode.RenderHTML(br)
+		if err := theNode.RenderHTML(br); err != nil {
+			return err
+		}
 
 		if theNode == n.LastChild {
 			if n.Name != "ul" && n.Name != "ol" {
@@ -277,6 +284,8 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) {
 
 	// Render the end tag of the node
 	br.Renderln(strings.Repeat(" ", n.Indentation), endTag)
+
+	return nil
 
 }
 
@@ -455,7 +464,7 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 // 	return `</pre>`
 // }
 
-func (n *Node) RenderCodeNode(br *ByteRenderer) {
+func (n *Node) RenderCodeNode(br *ByteRenderer) error {
 
 	contentLines := string(n.InnerText)
 
@@ -505,9 +514,11 @@ func (n *Node) RenderCodeNode(br *ByteRenderer) {
 
 	}
 
+	return nil
+
 }
 
-func (n *Node) RenderDiagramNode(br *ByteRenderer) {
+func (n *Node) RenderDiagramNode(br *ByteRenderer) error {
 
 	// Check if the class of diagram has been set
 	if len(n.Class) == 0 {
@@ -703,6 +714,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 		br.Render(bytes.Repeat([]byte(" "), n.Indentation), "</ul>\n")
 	}
 
+	return nil
 }
 
 // InsertBefore inserts newChild as a child of n, immediately before oldChild

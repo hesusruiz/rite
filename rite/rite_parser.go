@@ -19,55 +19,6 @@ var config *yaml.YAML
 
 const blank byte = ' '
 
-type ByteRenderer struct {
-	bytes.Buffer
-}
-
-func (r *ByteRenderer) Render(inputs ...any) {
-	for _, s := range inputs {
-		switch v := s.(type) {
-		case string:
-			r.WriteString(v)
-		case []byte:
-			r.Write(v)
-		case int:
-			r.WriteString(strconv.FormatInt(int64(v), 10))
-		case byte:
-			r.WriteByte(v)
-		case rune:
-			r.WriteRune(v)
-		default:
-			stdlog.Panicf("attemping to write something not a string, int, rune, []byte or byte: %T", s)
-		}
-	}
-}
-
-func (r *ByteRenderer) Renderln(inputs ...any) {
-	r.Render(inputs...)
-	r.Render('\n')
-}
-
-type Text struct {
-	Indentation int
-	LineNumber  int
-	Content     []byte
-}
-
-// String represents the Text with the 10 first characters
-func (para *Text) String() string {
-	// This is helpful for debugging
-	if para == nil {
-		return "<nil>"
-	}
-
-	numChars := 10
-	if len(para.Content) < numChars {
-		numChars = len(para.Content)
-	}
-
-	return strings.Repeat(" ", para.Indentation) + string(para.Content[:numChars])
-}
-
 type Parser struct {
 	// The source of the document for scanning
 	s *bufio.Scanner
@@ -163,7 +114,7 @@ func (p *Parser) ReadLine() *Text {
 		// Strip blanks at the beginning of the line and calculate indentation based on the difference in length
 		// We do not support other whitespace like tabs
 		// p.line = bytes.TrimLeft(rawLine, " ")
-		p.currentLine = trimLeft(rawLine, blank)
+		p.currentLine = TrimLeft(rawLine, blank)
 		if len(p.currentLine) == 0 {
 			return nil
 		}
@@ -338,12 +289,12 @@ func (p *Parser) PreprocesLine(lineSt *Text) *Text {
 	if lineSt.Content[0] == '#' {
 
 		// Trim and count the number of '#'
-		plainLine := trimLeft(lineSt.Content, '#')
+		plainLine := TrimLeft(lineSt.Content, '#')
 		lenPrefix := len(lineSt.Content) - len(plainLine)
 		hnum := byte('0' + lenPrefix)
 
 		// Trim the possible whitespace between the '#'s and the text
-		plainLine = trimLeft(plainLine, ' ')
+		plainLine = TrimLeft(plainLine, ' ')
 
 		// Build the new line and store it
 		lineSt.Content = append([]byte("<h"), hnum, '>')
@@ -385,7 +336,7 @@ func getStartSectionTagName(text *Text) []byte {
 	}
 
 	// Extract the name of the tag from the tagSpec
-	name, _ := readTagName(tagSpec)
+	name, _ := ReadTagName(tagSpec)
 
 	return name
 
@@ -434,7 +385,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 	}
 
 	// Extract the name of the tag from the tagSpec
-	name, tagSpec := readTagName(tagSpec)
+	name, tagSpec := ReadTagName(tagSpec)
 
 	// Set the name of the node with the tag name
 	n.Name = string(name)
@@ -476,9 +427,9 @@ func (p *Parser) NewNode(text *Text) *Node {
 			}
 			// Shortcut for id="xxxx"
 			if tagSpec[1] != '"' && tagSpec[1] != '\'' {
-				attrVal, tagSpec = readWord(tagSpec[1:])
+				attrVal, tagSpec = ReadWord(tagSpec[1:])
 			} else {
-				attrVal, tagSpec = readQuotedWords(tagSpec[1:])
+				attrVal, tagSpec = ReadQuotedWords(tagSpec[1:])
 				// attrVal = encodeOnPlaceWithUnderscore(bytes.Clone(attrVal))
 			}
 
@@ -493,7 +444,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 			}
 			// Shortcut for class="xxxx"
 			// The tag may specify more than one class and all are accumulated
-			attrVal, tagSpec = readWord(tagSpec[1:])
+			attrVal, tagSpec = ReadWord(tagSpec[1:])
 			if len(n.Class) > 0 {
 				n.Class = append(n.Class, ' ')
 			}
@@ -504,7 +455,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 			}
 			// Shortcut for src="xxxx"
 			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
+			attrVal, tagSpec = ReadWord(tagSpec[1:])
 			if len(n.Src) == 0 {
 				n.Src = attrVal
 			}
@@ -515,7 +466,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 			}
 			// Shortcut for href="xxxx"
 			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
+			attrVal, tagSpec = ReadWord(tagSpec[1:])
 			if len(n.Href) == 0 {
 				n.Href = attrVal
 			}
@@ -525,7 +476,7 @@ func (p *Parser) NewNode(text *Text) *Node {
 			}
 			// Special attribute "type" for item classification and counters
 			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
+			attrVal, tagSpec = ReadWord(tagSpec[1:])
 			if len(n.Bucket) == 0 {
 				n.Bucket = attrVal
 			}
@@ -535,14 +486,14 @@ func (p *Parser) NewNode(text *Text) *Node {
 			}
 			// Special attribute "number" for list items
 			// Only the first attribute is used
-			attrVal, tagSpec = readWord(tagSpec[1:])
+			attrVal, tagSpec = ReadWord(tagSpec[1:])
 			if len(n.Number) == 0 {
 				n.Number = attrVal
 			}
 		default:
 			// This should be a standard HTML attribute
 			var attr Attribute
-			attr, tagSpec = readTagAttrKey(tagSpec)
+			attr, tagSpec = ReadTagAttrKey(tagSpec)
 			if len(attr.Key) == 0 {
 				tagSpec = nil
 			} else {
@@ -887,7 +838,7 @@ func (p *Parser) ParseSimple() error {
 
 }
 
-func (p *Parser) Parse() ([]byte, error) {
+func (p *Parser) Parse() error {
 
 	// Initialize the document structure
 	if p.doc.Type == DocumentNode {
@@ -900,24 +851,30 @@ func (p *Parser) Parse() ([]byte, error) {
 	// Process the YAML header if there is one. It should be at the beginning of the file
 	err := p.preprocessYAMLHeader()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Parse document and generate AST
 	p.ParseBlock(p.doc)
 
-	// DEBUG: travel the tree
-	theHTML := p.RenderHTML(p.doc)
-
-	return theHTML, nil
+	return nil
 
 }
 
-func (p *Parser) RenderHTML(n *Node) []byte {
+func (p *Parser) RenderHTML() []byte {
+
+	// Get the root node of the document
+	n := p.doc
+
+	// Prepare a buffer to receive the rendered bytes
 	br := &ByteRenderer{}
+
+	// Travel the parse tree rendering each node
 	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
 		theNode.RenderHTML(br)
 	}
+
+	// Return the underlying byte slice
 	theHTML := br.Bytes()
 	return theHTML
 }
@@ -974,10 +931,11 @@ func ParseFromFile(fileName string) (*Parser, []byte, error) {
 	}
 	p.xref = make(map[string]*Node)
 
-	fragmentHTML, err := p.Parse()
-	if err != nil {
+	if err := p.Parse(); err != nil {
 		panic(err)
 	}
+
+	fragmentHTML := p.RenderHTML()
 
 	return p, fragmentHTML, nil
 
