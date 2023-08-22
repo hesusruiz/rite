@@ -57,6 +57,10 @@ type Node struct {
 var aBigIndentationString = bytes.Repeat([]byte(" "), 200)
 
 func indent(n int) []byte {
+	if n < 0 {
+		fmt.Println("indent less than zero")
+	}
+
 	return aBigIndentationString[:n]
 }
 
@@ -66,6 +70,7 @@ type NodeType uint32
 const (
 	ErrorNode NodeType = iota
 	DocumentNode
+	IncludeNode
 	SectionNode
 	BlockNode
 	DiagramNode
@@ -205,6 +210,8 @@ func NewNormalNode(p *Parser, fileName string, text *Text) *Node {
 		n.Type = DiagramNode
 	case "x-code", "pre":
 		n.Type = VerbatimNode
+	case "x-include":
+		n.Type = IncludeNode
 	default:
 		n.Type = BlockNode
 	}
@@ -465,22 +472,10 @@ func (n *Node) RenderHTML(br *ByteRenderer) error {
 		if err := n.RenderCodeNode(br); err != nil {
 			return err
 		}
-
-	// case ExplanationNode:
-	// 	// Render the start tag of this node
-	// 	br.Renderln(indentStr, n.RawText.Content)
-	// 	br.Render("<div>\n")
-
-	// 	// We visit depth-first the children of the
-	// 	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-	// 		if err := theNode.RenderHTML(br); err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// 	br.Render("</div>\n")
-
-	// 	// Render the end tag of the node
-	// 	br.Renderln(indentStr, "</li>")
+	case DocumentNode, IncludeNode:
+		if err := n.RenderDocumentNode(br); err != nil {
+			return err
+		}
 
 	default:
 		if err := n.RenderNormalNode(br); err != nil {
@@ -490,6 +485,17 @@ func (n *Node) RenderHTML(br *ByteRenderer) error {
 	}
 
 	return nil
+}
+
+func (n *Node) RenderDocumentNode(br *ByteRenderer) error {
+
+	// Travel the parse tree rendering each node
+	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+		theNode.RenderHTML(br)
+	}
+
+	return nil
+
 }
 
 // var reXRef = regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
@@ -776,7 +782,7 @@ func (n *Node) RenderCodeNode(br *ByteRenderer) error {
 		l = chroma.Coalesce(l)
 
 		// Determine style from the config data, with "dracula" as default
-		styleName := config.String("rite.codeStyle", "github")
+		styleName := n.p.Config.String("rite.codeStyle", "github")
 		s := styles.Get(styleName)
 
 		// fore := s.Get(chroma.Text).Colour.String()

@@ -14,8 +14,6 @@ import (
 
 var stdlog = log.New(os.Stdout, "", 0)
 
-var config *yaml.YAML
-
 const blank byte = ' '
 
 type Parser struct {
@@ -390,6 +388,14 @@ func (p *Parser) ParseBlock(parent *Node) {
 
 			}
 
+			if child.Type == IncludeNode {
+				includeParser, error := ParseIncludeFile(string(child.RestLine), p)
+				if error != nil {
+					stdlog.Fatalf("%s (line %d) error %v", parent.p.fileName, child.LineNumber, error)
+				}
+				child = includeParser.doc
+			}
+
 			parent.AppendChild(child)
 
 			if child.Type == DiagramNode {
@@ -577,29 +583,6 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 	return true
 }
 
-func (p *Parser) ParseSimple() error {
-
-	// Initialize the document structure
-	if p.doc.Type == DocumentNode {
-		p.Ids = make(map[string]int)
-		p.Figs = make(map[string]int)
-	}
-
-	p.doc.Indentation = -1
-
-	// Process the YAML header if there is one. It should be at the beginning of the file
-	err := p.preprocessYAMLHeader()
-	if err != nil {
-		return err
-	}
-
-	// Parse document and generate AST
-	p.ParseBlock(p.doc)
-
-	return nil
-
-}
-
 func (p *Parser) Parse() error {
 
 	// Initialize the document structure
@@ -611,9 +594,14 @@ func (p *Parser) Parse() error {
 	p.doc.Indentation = -1
 
 	// Process the YAML header if there is one. It should be at the beginning of the file
-	err := p.preprocessYAMLHeader()
-	if err != nil {
-		return err
+	config, err := p.preprocessYAMLHeader()
+
+	// We use the results only if the current parser is not configured already
+	if p.Config == nil {
+		if err != nil {
+			stdlog.Fatalf("malformed YAML metadata: %v\n", err)
+		}
+		p.Config = config
 	}
 
 	// Parse document and generate AST
@@ -631,44 +619,12 @@ func (p *Parser) RenderHTML() []byte {
 	// Prepare a buffer to receive the rendered bytes
 	br := &ByteRenderer{}
 
-	// Travel the parse tree rendering each node
-	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-		theNode.RenderHTML(br)
-	}
+	// Render the document node
+	n.RenderHTML(br)
 
 	// Return the underlying byte slice
 	theHTML := br.Bytes()
 	return theHTML
-}
-
-func ParseFromFileSimple(fileName string) (*Parser, error) {
-
-	// Read the whole file into memory
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	// Process the file one line at a time, creating a Document object in memory
-	linescanner := bufio.NewScanner(file)
-
-	// Create a new Parser struct
-	p := &Parser{
-		fileName: fileName,
-		s:        linescanner,
-		doc: &Node{
-			Type: DocumentNode,
-		},
-	}
-	p.Xref = make(map[string]*Node)
-
-	if err := p.ParseSimple(); err != nil {
-		panic(err)
-	}
-
-	return p, nil
-
 }
 
 // NewDocumentFromFile reads a file and preprocesses it in memory
@@ -703,8 +659,8 @@ func ParseAndRenderFromFile(fileName string) (*Parser, []byte, error) {
 
 }
 
-// ParseIncludedFile reads the file specified and returns the Parser object containing the AST
-func ParseIncludedFile(fileName string, parentParser *Parser) (*Parser, error) {
+// ParseIncludeFile reads the file specified and returns the Parser object containing the AST
+func ParseIncludeFile(fileName string, parentParser *Parser) (*Parser, error) {
 
 	// Read the whole file into memory
 	file, err := os.Open(fileName)
@@ -740,20 +696,22 @@ func ParseIncludedFile(fileName string, parentParser *Parser) (*Parser, error) {
 	parentParser.Ids = p.Ids
 	parentParser.Figs = p.Figs
 
-	// And add the nodes to the parent tree
+	// Mutate the type of root node
+	p.doc.Type = IncludeNode
+	p.doc.Indentation = 0
 
 	return p, nil
 
 }
 
-func (p *Parser) preprocessYAMLHeader() error {
+func (p *Parser) preprocessYAMLHeader() (*yaml.YAML, error) {
 	var err error
 
 	s := p.s
 
 	// We need at least one line
 	if !s.Scan() {
-		return fmt.Errorf("no YAML metadata found")
+		return nil, fmt.Errorf("no YAML metadata found")
 	}
 
 	// Get a line from the file
@@ -761,7 +719,7 @@ func (p *Parser) preprocessYAMLHeader() error {
 
 	// We accept YAML data only at the beginning of the file
 	if !bytes.HasPrefix(p.currentLine, []byte("---")) {
-		return fmt.Errorf("no YAML metadata found")
+		return nil, fmt.Errorf("no YAML metadata found")
 	}
 
 	p.currentLineCounter++
@@ -789,16 +747,14 @@ func (p *Parser) preprocessYAMLHeader() error {
 	}
 
 	if !endYamlFound {
-		return fmt.Errorf("end of file reached but no end of YAML section found")
+		return nil, fmt.Errorf("end of file reached but no end of YAML section found")
 	}
 
 	// Parse the string that was built as YAML data
-	p.Config, err = yaml.ParseYaml(yamlString.String())
+	config, err := yaml.ParseYaml(yamlString.String())
 	if err != nil {
 		stdlog.Fatalf("malformed YAML metadata: %v\n", err)
 	}
 
-	config = p.Config
-
-	return nil
+	return config, nil
 }

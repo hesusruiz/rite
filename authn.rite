@@ -187,7 +187,7 @@ localBiblio:
 
             <figcaption>—[[[eIDAS2.Regulation]]]
 
-        However, currently there are important barriers that hinder the adoption of an EU wide solution for cross-border transfer of representation information, being one of the most relevant the **lack of a common semantic framework**. 
+        However, currently there are important barriers that hinder the adoption of an EU wide solution for cross-border transfer of representation information, being one of the most relevant the **lack of a common semantic framework**.
         
         Representation is complex, and electronic mandates schemes and policies are basically national and usually do not contemplate the possibility to use those mandates in cross-border scenarios. The problem of mandates when accessing services from a Public Administration is extremely complex, so we will focus here on the private sector: when both the Relying Party and the Participant are legal persons from the private sector.
 
@@ -222,6 +222,9 @@ localBiblio:
         With all these properties, the credential is a **legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential**. The subject can then **use the credential to authenticate to a Relying Party** because the identities of holder and subject are bound.
 
         This mechanism leverages the eIDAS trust framework using advanced or qualified signatures and seals to provide a **high level of legal certainty and enjoying the presumption of non-repudiation in the courts**, something that does not happen when using other types of basic signatures.
+
+    <x-include>./authninclude.rite
+
 
     <section>Introduction
 

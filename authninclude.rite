@@ -1,0 +1,133 @@
+
+<section>This section is included
+
+    <section>Problem Statement 
+
+        Representation powers and mandates are an essential element for businesses establishing relationships with other businesses, governments and customers, because in many cases natural persons act on behalf of legal persons and depending on the sensitivity of the involved data/processes the Relying Party wants to enforce a high level of compliance and reduce associated legal risks.
+
+        The "traditional" way to solve this is by using manual processes and paper/PDF documents associated to onboarding and Know-Your-Customer (KYC) processes, that the Relying Party verifies until it is satisfied with the level of legal risk assumed when allowing a Principal to access some services on behalf of the Participant. Those setup processes are normally cumbersome, slow and people-intensive, creating a lot of friction in the initial stages of using a service, especially when strong identification is required by the nature of the service.
+
+        Verifiable Credentials can become a good instrument to migrate those paper/PDF documents to a machine-readable and legally-binding format and streamline and automate most of the tasks in this area, making the whole process more efficient while maintaining the same level of compliance and legal risk than with traditional processes.
+
+        Electronic powers of representation and mandates are an **explicit objective of the European Digital Identity Wallet** (EDIW) and the proposed amendment to eIDAS to support it:
+
+        <blockquote>
+            To achieve simplification and cost reduction benefits to persons and businesses across the Union, including by enabling **powers of representation and e-mandates**, Member States should issue EDIWs relying on common standards and technical specifications to ensure seamless interoperability and to adequately increase the IT security, strengthen robustness against cyber-attacks and thus significantly reduce the potential risks of ongoing digitalisation for citizens and businesses.
+
+            <figcaption>—[[[eIDAS2.Regulation]]]
+
+        However, currently there are important barriers that hinder the adoption of an EU wide solution for cross-border transfer of representation information, being one of the most relevant the **lack of a common semantic framework**. 
+        
+        Representation is complex, and electronic mandates schemes and policies are basically national and usually do not contemplate the possibility to use those mandates in cross-border scenarios. The problem of mandates when accessing services from a Public Administration is extremely complex, so we will focus here on the private sector: when both the Relying Party and the Participant are legal persons from the private sector.
+
+        In order to have a usable mechanism using Verifiable Credentials, the main requirements are the following:
+
+            -(iREQ-01): **The credential is an e-mandate**, by embedding authorisation information in the credential and binding it to the identities of the issuer and subject. We call such a credential a `Verifiable Authorisation`.
+
+                We need to define a controlled vocabulary that can be used to express in a formal language (e.g. ODRL) the semantics of the powers delegated to a Principal by the Participant.
+
+            -(iREQ-02): **The Relying Party does not have to know in advance the Principal** accessing its services on behalf of a Participant.
+
+                However, the Relying Party should have an easy authentication mechanism based on Verifiable Credentials to ensure that the entity accessing the services is the same entity identified in the e-mandate, and so that it has the required powers to access.
+
+                Ideally, to simplify the authentication and authorisation process for the Relying Party, the same credential that is a mandate (we call it a Verifiable Authorisation) can enable authentication (we call it a VerifiableID). Of course, we could use different credentials and even a "traditional" authentication mechanism, but having a single credential that can be used both for authentication and authorisation (using the powers specified in the mandate) is what we describe here.
+
+            -(iREQ-03): There may be several Principals accessing the services of a Relying Party on behalf of the same Participant, and each Principal may have different powers that enable them to access different (possibly overlapping) sets of services.
+
+                The Relying Party specifies the powers that need to be validated for each service (the scope the access is requested on and the type of representation that the Service provider allows). Each individual service may require different sets of powers, at the sole discretion of the Relying Partly (of course always in synch with the agreement formalised with the Participant).
+                
+                The Participant grants the authorisations to the Principals at its own discretion. Only the Principals that have the powers required by an individual service can access that service. The Participant may have more powers than strictly required (for example, full representation of the legal entity).
+
+            -(iREQ-04): The Relying Party can **reduce the legal risks and associated costs of litigation** in court by leveraging the **presumption of non-repudiation** associated to the use of an eIDAS advanced/qualified seal/signature for the Verifiable Credential.
+            
+                Of course, the Relying Party is free to request from Participants other types of signatures, if it is willing to assume the higher level of legal risk. We define here a mechanism which can have the same level as a document with a handwritten signature (when using qualified electronic signatures/seals).
+
+                In this way the credential is a **legally binding machine-readable document where the issuer (Participant) attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential (Principal)**.
+
+            -(iREQ-05): The Relying Party can verify that the issuer of the credential corresponds to a **real-world identity which is fully accountable** for the contents of the credential, without needing any additional third-party, trust framework or participant list associated to a given Data Space or Federation.
+            
+                Because we use an eIDAS signature/seal for the credential, the current EU legal and trust framework in place since 2016 is enough for the Relying Party to verify that the Participant has issued a legally-binding mandate to the Principal.
+
+        With all these properties, the credential is a **legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential**. The subject can then **use the credential to authenticate to a Relying Party** because the identities of holder and subject are bound.
+
+        This mechanism leverages the eIDAS trust framework using advanced or qualified signatures and seals to provide a **high level of legal certainty and enjoying the presumption of non-repudiation in the courts**, something that does not happen when using other types of basic signatures.
+
+    <section>Introduction
+
+        In a typical B2B ecosystem, the agreements between a product/service provider and the consumer are formalised among legal persons (also known in this document as 'organisations').
+
+        However, when interacting in the context of execution of the agreement, typically other entities are acting on behalf of the legal persons both for the consumer organisation and for the service provider organisation.
+
+        For example, an employee of the consumer organisation may start on behalf of his employer an interaction with the provider organisation to perform a process needed for the provision of a service. In this case, the provider organisation should authenticate the natural person and apply appropriate access control policies to ensure that the natural person is really entitled by the consumer organisation to perform the intended process.
+
+        In the context of authentication and access management, the legal entity acting as consumer organisation will be named `Participant`. The digital representation of a natural person, acting on behalf of a Participant, is referred to as a `Principal`. However, when the context is clear and we need to refer to eIDAS legal terms, we will use the term `user` (defined in the Glossary) to denote a natural or legal person, or a natural person representing a legal person using a wallet to authenticate.
+
+        The legal entity acting as service provider and performing authentication and access management will be called `Relying Party`.
+
+        The approach is similar to the on-behalf-of actor model described in [[Actor-DataSpaces]] but our focus is on the compliance with the eIDAS legal framework to enable not only Data Spaces but any type of ecosystem to leverage the eIDAS trust framework and achieve a high level of legal certainty with the presumption of non-repudiation in the courts.
+
+        The mechanism described here allows a Relying Party receiving a Verifiable Credential from a principal engaging in an authentication process to perform the following verifications:
+
+        <x-dl>
+
+            <x-dt>Authentication
+                <ul>
+                    - **Non-tampering**. The Relying Party can verify that the credential was not tampered with since it was generated, thanks to the digital signature of the credential.
+
+                    - **Binding the Principal with the subject inside the credential**. The Relying Party can verify that the principal presenting the credential is the same principal identified as the subject inside the credential by using the cryptographic material inside the credential that was embedded in a secure and private way during the credential issuance process. See section <x-ref "verifiable_id"> for more details.
+                    
+                        The degree of trust in this verification depends on the degree of trust that the Relying Party puts on the processes that the Participant uses to issue the credentials.
+
+                        However, as described below, the usage of eIDAS signatures to sign the credential makes the Participant legally liable for any problems in the binding of the identities of the holder and subject of the credential. Specifically, compliance to the eIDAS specifications and regulation for electronic seals and signatures provides **presumption of non-repudiation and the burden of disputing it in the courts rests on the Participant, not on the Relying Party**.
+
+                        This is important because it provides the incentives in the proper places: the Participant is incentivised to create the credential in the proper way, and the Relying Party is incentivised to perform its due diligence in verifying the credential. By using the eIDAS signatures, no party has to assume the burden if the technical validity of the signature is disputed in court. Only the contents of the credential can be under discussion. See section <x-ref "signature_benefits"> for more details.
+
+                        In the mechanism described here, the verification is enabled by embedding inside the credential a public key corresponding to a private key that was generated by the principal during the issuance process. See below for the details, including an optional mechanism by embedding an existing eIDAS certificate issued by a QTSP when the principal is a natural person or a legal person (different from the Participant).
+
+                    - **Binding of issuer with a real-world identity**. The Relying Party can verify that the credential was issued by somebody controlling a private key associated to a given real-world identity.
+
+                        The verification is enabled because the Verifiable Credential is sealed with an eIDAS <x-ref "qualified certificate for electronic seal"> issued to the Participant by a <x-ref "qualified trust service provider"> (QTSP) in the [[[EU_Trusted_Lists]]], and the signature of the credential is an advanced or qualified electronic signature using the [[JAdES]] format (JSON Advanced Electronic Signature) as defined in the eIDAS regulation.
+
+                        Of course, we also support electronic signatures with qualified certificates for electronic signatures issued by QTSPs to **natural persons acting as representatives of legal persons**.
+
+                        This verification ensures that an organisation with a real-world legal identity under the eIDAS Trust Framework has signed the credential being presented by a natural person identified as the subject of the credential.
+
+                        This verification **does not say anything about whether the organisation is a participant** in a given Data Space or not. See next point for such verification.
+
+                    - **Verify that the real-world identity is a Participant**. The Relying Party, using the unique identifier in the eIDAS certificate used to sign the credential, can check if the issuer of the credential is a participant in a given ecosystem by looking for that unique identifier in the Trusted Participant List managed by that ecosystem.
+
+                        This unique identifier is the unique `organizationIdentifier` defined in [[[ETSI-LEGALPERSON]]], which is inside the certificates for legal persons and certificates for natural persons acting as representatives of legal persons.
+
+                        Any legal person that can already engage in electronic transactions in the internal market can have an eIDAS certificate including such a unique identifier, which is used in all types of legally-binding signatures like invoices, contracts, etc.
+
+                        We assume here that the onboarding process of each ecosystem does not invent a new "local-only" identifier but uses the one that is already valid for electronic transactions in the internal market. Or at least, that the global eIDAS unique identifier is associated with whatever private identifier is invented by the ecosystem.
+                        
+                        We assume that the eIDAS unique identifier is used during onboarding to update a given Trusted Participant List with the identity of the new participant. That identity is composed of the unique identifier in the eIDAS framework and any additional attributes that may be relevant for the ecosystem. See below for the structure of the unique eIDAS identifier.
+
+            <x-dt>Access Control
+                <ul>
+                    - **Binding the Participant to the delegated powers to the Principal**. The Relying Party can verify that the legal person (the Participant) or a representative of the legal person (in eIDAS terms) has delegated a specific set of powers to the subject identified inside the credential (who is the same person holding and presenting the credential, as described above in 'authentication').
+
+                        This is enabled because the credential includes a **set of claims that state in a formal language the delegated powers**, and the credential has been sealed/signed using an eIDAS certificate using the eIDAS advanced/qualified electronic signature format, described in more detail later in this document.
+
+                        Alternatively, the credential can include a pointer to an external document (which could be another credential) describing in detail the delegated powers. In this case, the linking mechanism should provide a tamper-evident mechanism to avoid undetected modifications to the original external document, for example using [[Cryptographic Hyperlinks]].
+                        
+                        Thanks to the usage of eIDAS signatures, the credential is effectively a legal document with the same legal validity as any other document in any format supported by the eIDAS signature scheme. The Relying Party can verify (and prove in court if needed) with a high level of legal certainty that the legal person issuing the credential (the Participant) has declared that the holder/subject of the credential has the powers stated inside the credential (or linked by the credential).
+
+                        Actually, the entity identified as a subject in the credential, and that is receiving the delegated powers, is not restricted to be a natural person and can be of different types. Anything that can be expressed in paper or PDF format can be also expressed in the Verifiable Credential format. For example, it can be an employee, a customer or a machine or device under the responsibility of the legal person signing the credential.
+
+                    - The Relying Party can use the claims mentioned above, expressed as a formal language (e.g. [[ODRL]]), to perform access control. The specific mechanism is not in the scope of this document.
+
+                        For example, the credential can just specify the role(s) of the entity identified in the credential (e.g. 'finance administrator' for an employee, 'gold customer' for a customer, 'humidity sensor' for a machine) and the Relying Party can evaluate a set of arbitrarily complex policy rules associated to the role(s) for access control.
+
+                        Alternatively, the credential could specify more complex rules which the Relying Party can combine if needed with additional policy rules to make the final decision.
+
+        To achieve all of the above, we define specific types of Verifiable Credentials with a format and a mechanism which specify:
+        
+        <ol>
+            - a way to sign the credentials;
+            - a way to bind the identity of the holder of a credential to the identity of the subject inside the credential;
+            - and a way to embed authorisation information in the credential describing the powers that the legal entity has delegated to the subject inside the credential.
+            
+        The mechanisms described here can be used to generate credentials to employees, contractors, customers and even to machines and devices acting on behalf of an organisation. The schema is identical, except the issuance process is probably a little bit different and the roles and duties embedded in the credentials have different legal implications (but always in line with the legal framework, for example with the <a href="https://commission.europa.eu/law/law-topic/consumer-protection-law/consumer-contract-law/consumer-rights-directive_en#:~:text=About%20the%20directive,-The%20Consumer%20Rights&text=It%20aligns%20and%20harmonises%20national,they%20shop%20in%20the%20EU.">Consumer rights directive</a>).
+
