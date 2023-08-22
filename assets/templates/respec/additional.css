@@ -51,6 +51,10 @@ pre.nohighlight {
 div.nohighlight {
     padding: 0.5em
 }
+ul {
+    list-style: initial;
+    text-indent: 0;
+}
 ul.plain {
     list-style: none;
 }

@@ -199,14 +199,14 @@
         </p>
         <p>The mechanism leverages Verifiable Credentials and the existing eIDAS framework by:
         </p>
-        <ul>
+            <ul>
             <li>making the credential a <b>machine-readable e-mandate</b> by embedding authorisation information in the credential using a formal language and binding it to the identities of the issuer and subject.
             </li>
             <li>making the credential a <b>legally binding document</b> under the [[eIDAS]] framework, by signing the credential with an advanced or qualified seal/signature.
             </li>
             <li>making the credential an <b>authentication mechanism</b>, by binding the identities of the subject and holder of the credential so it can be used for authentication.
             </li>
-        </ul>
+            </ul>
         <p>In this way, the credential is a <b>legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential</b>.
         </p>
         <p>The subject can then <b>use the credential to authenticate to a Relying Party</b> because the identities of holder and subject are bound.
@@ -240,7 +240,7 @@
         </p>
         <p>In order to have a usable mechanism using Verifiable Credentials, the main requirements are the following:
         </p>
-        <ul>
+            <ul>
             <li id='REQ-01'><b>REQ-01</b>: <b>The credential is an e-mandate</b>, by embedding authorisation information in the credential and binding it to the identities of the issuer and subject. We call such a credential a <code>Verifiable Authorisation</code>.
                 <p>We need to define a controlled vocabulary that can be used to express in a formal language (e.g. ODRL) the semantics of the powers delegated to a Principal by the Participant.
                 </p>
@@ -267,7 +267,7 @@
                 <p>Because we use an eIDAS signature/seal for the credential, the current EU legal and trust framework in place since 2016 is enough for the Relying Party to verify that the Participant has issued a legally-binding mandate to the Principal.
                 </p>
             </li>
-        </ul>
+            </ul>
         <p>With all these properties, the credential is a <b>legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential</b>. The subject can then <b>use the credential to authenticate to a Relying Party</b> because the identities of holder and subject are bound.
         </p>
         <p>This mechanism leverages the eIDAS trust framework using advanced or qualified signatures and seals to provide a <b>high level of legal certainty and enjoying the presumption of non-repudiation in the courts</b>, something that does not happen when using other types of basic signatures.
@@ -570,7 +570,7 @@
         </p>
         <p>The essential components of a LEARCredential are the following:
         </p>
-        <ul>
+            <ul>
             <li><b>Claims identifying the employee</b>
             </li>
             <li><b>DID of the employee to enable authentication</b>
@@ -581,7 +581,7 @@
             </li>
             <li><b>Advanced/Qualified signature of the credential</b>
             </li>
-        </ul>
+            </ul>
         <p>These concepts are elaborated in the following sections.
         </p>
         <section id='Claims identifying the employee'><h2>Claims identifying the employee</h2>
@@ -795,7 +795,7 @@
     </section>
     <section id='Issuing the LEARCredential'><h2>Issuing the LEARCredential</h2>
 
-        <section id='Overview'><h2>Overview</h2>
+        <section id='lear_overview'><h2>Overview</h2>
 
             <p>In this example we use what we call a <i>profile</i> of the [[OpenID.VCI]] protocol. The standard is very flexible, and we restrict the different options available in the standard and implement a set of the options with given values that are adequate for our use case, without impacting flexibility in practice.
             </p>
@@ -1251,7 +1251,7 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
     </section>
     <section id='Authenticating with Verifiable Credentials'><h2>Authenticating with Verifiable Credentials</h2>
 
-        <section id='Overview1135'><h2>Overview</h2>
+        <section id='Overview'><h2>Overview</h2>
 
             <p>Authentication requires a special type of Verifiable Credential called a VerifiableID. For the examples illustrating the mechanism we will use a LEARCredential, which is at the same time a VerifiableId and a Verifiable Authorization.
             </p>
@@ -1328,57 +1328,47 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='1'> The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
-<div>
+                <li><b>1</b> The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
+                    <div>
                     <p>We assume in this scenario a cross-device interaction, that is, the user accesses the portal services with a PC browser, but authentication is performed with a mobile using Verifiable Credentials, as in typical 2-factor authentication.
                     </p>
-</div>
+                    </div>
                 </li>
-                <x-li id='2'> The browser sends a request to the Packet Delivery portal server.
-<div>
-</div>
+                <li><b>2</b> The browser sends a request to the Packet Delivery portal server.
                 </li>
-                <x-li id='3'> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
-<div>
-</div>
+                <li><b>3</b> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
                 </li>
-                <x-li id='4'> The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
-<div>
+                <li><b>4</b> The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
+                    <div>
                     <p>A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
                     </p>
+                    </div>
+                    <div>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
 <span style="color:#008080">https://verifier.dome-marketplace.eu/authorization-requests?state</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">af0ifjsldkj</span>
 </pre></td></tr></table>
 
-</div>
+                    </div>
                 </li>
-                <x-li id='5'> The QR code is displayed in the user browser with instructions to scan it and go to the URL inside it.
-<div>
+                <li><b>5</b> The QR code is displayed in the user browser with instructions to scan it and go to the URL inside it.
+                    <div>
                     <figure id='qr_code_authreq'>
                         <p><img src="images/qrcode-authreq.png" alt="" />
                         </p>
                         <figcaption>QR code with the example Authorization Request endpoint inside
                         </figcaption>
                     </figure>
-</div>
+                    </div>
                 </li>
-                <x-li id='6'> The user scans the QR with his wallet and tells the wallet to go to the URL in the QR.
-<div>
-</div>
+                <li><b>6</b> The user scans the QR with his wallet and tells the wallet to go to the URL in the QR.
                 </li>
-                <x-li id='7'> After confirmation by the user, the wallet performs a `GET /authentication-requests` to the endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
-<div>
-</div>
+                <li><b>7</b> After confirmation by the user, the wallet performs a `GET /authentication-requests` to the endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
                 </li>
-                <x-li id='8'> The VC Verifier creates a SIOP Authentication Request. The parameters comprising a request for verifiable presentations are described in detail in the next section
-<div>
-</div>
+                <li><b>8</b> The VC Verifier creates a SIOP Authentication Request. The parameters comprising a request for verifiable presentations are described in detail in the next section
                 </li>
-                <x-li id='9'> The Verifier replies to the wallet with the Authorization Request
-<div>
-</div>
+                <li><b>9</b> The Verifier replies to the wallet with the Authorization Request
                 </li>
             </ul>
         </section>
@@ -1461,25 +1451,27 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='10'> Verification of the signature. As mentioned in the previous section, the Authorization Request is received as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service. This allows the wallet to verify that the signature corresponds to a real-world entity.
-<div>
-</div>
+                <li><b>10</b> Verification of the signature. As mentioned in the previous section, the Authorization Request is received as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service. This allows the wallet to verify that the signature corresponds to a real-world entity.
                 </li>
-                <x-li id='11'> Verification that the DID in the `client_id` field of the Authorization Request corresponds to the entity that signed the Authorization Request. This is easy in our case because we use the `did:elsi` method.
-<div>
-</div>
+                <li><b>11</b> Verification that the DID in the `client_id` field of the Authorization Request corresponds to the entity that signed the Authorization Request. This is easy in our case because we use the `did:elsi` method.
                 </li>
-                <x-li id='12'> Verification that the entity identified in the `client_id` field of the Authorization Request is a trusted entity belonging to the ecosystem, by resolving the DID in the `client_id` field.
-<div>
+                <li><b>12</b> Verification that the entity identified in the `client_id` field of the Authorization Request is a trusted entity belonging to the ecosystem, by resolving the DID in the `client_id` field.
+                    <div>
                     <p>The actual mechanism may vary depending on the DID method used and the ecosystem where the client wants to onboard.
                     </p>
+                    </div>
+                    <div>
                     <p>If the Relying Party is a well known entity (like the DOME onboarding service in the case of DOME), it is easy to verify that the DID corresponds to the Relying Party.
                     </p>
+                    </div>
+                    <div>
                     <p>In most other cases, for example when the Relying Party is a participant in the ecosystem, we assume that the ecosystem provides a Trusted Participants Registry with an API compatible with the EBSI Trusted Issuers Registry, and that the participants registry is managed in a trusted way by the onboarding service (meaning that the Wallet user trusts on the onboarding service, in the same way as all other participants).
                     </p>
+                    </div>
+                    <div>
                     <p>In this case, to check if the DID is a participant on the ecosystem, the wallet sends a <code>GET /api/did/v1/identifiers/{did-to-verify}</code> request to the endpoint of one of several trusted servers implementing the functionality to query the Trusted Participant Registry, where <code>{did-to-verify}</code> is the actual DID the Wallet wants to check (in our example it would be <code>did:elsi:VATFR-99999999</code>, corresponding to the RP) . The API returns a JSON document as a DID Document. The DID Document (as per W3C) contains relevant information about the entity owner of the DID. It contains its Public Key, used to verify the digital signature of the entity. It also contains the status of the entity in the ecosystem. It is extensible and can contain any public information which may be relevant for the use case. The API must be operated by a trusted entity for the Wallet user. There may be as many servers implementing the API as needed and operated by different entities. At least one of those trusted entities has to be configured in the Wallet of the user, to facilitate the use of the wallet.
                     </p>
-</div>
+                    </div>
                 </li>
             </ul>
         </section>
@@ -1493,12 +1485,16 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='13'> The wallet creates an Authorization Response to be posted in the `redirect_uri` specified by GoodAir in the Authorization Request that was sent to the wallet. The contents of the Authorization Response are described below.
-<div>
+                <li><b>13</b> The wallet creates an Authorization Response to be posted in the `redirect_uri` specified by GoodAir in the Authorization Request that was sent to the wallet. The contents of the Authorization Response are described below.
+                    <div>
                     <p>The response is constructed as defined in section 6.1 of [[OpenID.VP]]. In particular, because the Authorization Request included only <code>vp_token</code> as the <code>response_type</code>, the VP Token is provided directly in the Authorization Response and a separate <code>id_token</code> is not needed.
                     </p>
+                    </div>
+                    <div>
                     <p>The contents of the Authorization Response in our specific use case are:
                     </p>
+                    </div>
+                    <div>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1506,8 +1502,12 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 <span style="color:#008080">&amp;vp_token</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">[see definition below]</span>
 </pre></td></tr></table>
 
+                    </div>
+                    <div>
                     <p>The content of the <code>presentation_submission</code> parameter in the above Authorization Response is:
                     </p>
+                    </div>
+                    <div>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1528,12 +1528,14 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 }
 </pre></td></tr></table>
 
+                    </div>
+                    <div>
                     <p>Which complies with [[DIF.PresentationExchange]] and refers to the Verifiable Presentation in the <code>vp_token</code> parameter provided in the same response. In our example, the Verifiable Presentation includes the LEARCredential that was described in the previous sections.
                     </p>
-</div>
+                    </div>
                 </li>
-                <x-li id='14'> The wallet sends the Authorization Response to the endpoint received in the `redirect_uri` parameter of the Authorization Request, sending an HTTP `POST` request using the encoding `application/x-www-form-urlencoded`.
-<div>
+                <li><b>14</b> The wallet sends the Authorization Response to the endpoint received in the `redirect_uri` parameter of the Authorization Request, sending an HTTP `POST` request using the encoding `application/x-www-form-urlencoded`.
+                    <div>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1545,7 +1547,7 @@ presentation_submission=[see definition below]
 &amp;vp_token=[see definition below]
 </pre></td></tr></table>
 
-</div>
+                    </div>
                 </li>
             </ul>
         </section>
@@ -1561,28 +1563,32 @@ presentation_submission=[see definition below]
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='15 and 16'> The Verifier receives the Authorization Request and has to perform verifications, the standard ones being defined in [[DIF.PresentationExchange]]. In order to verify that the Verifiable Credential has been issued by a trusted entity, the Relying Party has to verify:
-<div>
+                <li><b>15 and 16</b> The Verifier receives the Authorization Request and has to perform verifications, the standard ones being defined in [[DIF.PresentationExchange]]. In order to verify that the Verifiable Credential has been issued by a trusted entity, the Relying Party has to verify:
+                    <div>
                     <ol>
                         <li>That the DID of the entity which is the issuer of the VC is a trusted entity.
                         </li>
                         <li>That the VC was signed by that participant.
                         </li>
                     </ol>
+                    </div>
+                    <div>
                     <p>Both verifications can be done by performing DID resolution, checking that the resulting DID Document contains the public key corresponding to the one specified in the Verifiable Credential, and by verifying the digital signature of the credential against that public key.
                     </p>
+                    </div>
+                    <div>
                     <p>In our case the LEARCredential was issued using the <code>did:elsi</code> method, so resolution is very simple and is specified in [[DID-ELSI]].
                     </p>
-</div>
+                    </div>
                 </li>
-                <x-li id='17'> After verifying the credential, the Relying Party can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the user and not by a malicious agent. To do so, it uses the public key associated to the `did:key` identifier `id` field inside the `credentialSubject` structure. That public key is cryptographically bound to the customer DID during the onboarding process that GoodAir performed with its employee.
-<div>
-</div>
+                <li><b>17</b> After verifying the credential, the Relying Party can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the user and not by a malicious agent. To do so, it uses the public key associated to the `did:key` identifier `id` field inside the `credentialSubject` structure. That public key is cryptographically bound to the customer DID during the onboarding process that GoodAir performed with its employee.
                 </li>
-                <x-li id='18'> The Verifier creates an Access Token for the user so it can be used later for access services provided by the Relying Party (in the case of onboarding, those services would be the ones related to the onboarding process implemented by the Onboarding portal). The Access Token is generated in JWT format and signed by the VC Verifier. The access token is intended for use as bearer token over HTTP [[RFC2616]] using Transport Layer Security (TLS) [[RFC5246]] to access protected resources, and it should use the JWT Profile profile described in [[RFC9068]].
-<div>
+                <li><b>18</b> The Verifier creates an Access Token for the user so it can be used later for access services provided by the Relying Party (in the case of onboarding, those services would be the ones related to the onboarding process implemented by the Onboarding portal). The Access Token is generated in JWT format and signed by the VC Verifier. The access token is intended for use as bearer token over HTTP [[RFC2616]] using Transport Layer Security (TLS) [[RFC5246]] to access protected resources, and it should use the JWT Profile profile described in [[RFC9068]].
+                    <div>
                     <p>For our use case, the payload of the JWT access token looks like:
                     </p>
+                    </div>
+                    <div>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1599,8 +1605,12 @@ presentation_submission=[see definition below]
 }
 </pre></td></tr></table>
 
+                    </div>
+                    <div>
                     <p>Where, according to [[RFC9068]]:
                     </p>
+                    </div>
+                    <div>
                     <ul>
                         <li><code>iss</code> and <code>client_id</code> have the same value because the access token has been generated by the Verifier component of the DOME onboarding service, acting as the DOME legal person.
                         </li>
@@ -1615,22 +1625,24 @@ presentation_submission=[see definition below]
                         <li><code>verifiableCredential</code> contains the Verifiable Credential that was received, specifically the value of the first element of the field <code>verifiableCredential</code> of the Verifiable Presentation.
                         </li>
                     </ul>
-</div>
+                    </div>
                 </li>
-                <x-li id='19'> The Verifier sends a successful response to the POST request from the wallet. The wallet receives the response to the POST indicating the success or failure of the process. The Verifier continues processing because the web portal of Packet Delivery has to be refreshed with the services that this specific user can access, based on the information received in the Verifiable Credential and the access control policies implemented by the DOME portal.
-<div>
-</div>
+                <li><b>19</b> The Verifier sends a successful response to the POST request from the wallet. The wallet receives the response to the POST indicating the success or failure of the process. The Verifier continues processing because the web portal of Packet Delivery has to be refreshed with the services that this specific user can access, based on the information received in the Verifiable Credential and the access control policies implemented by the DOME portal.
                 </li>
-                <x-li id='20'> The Verifier notifies the DOME portal to refresh the login page so it can present the services to the user. The notification includes the following:
-<div>
+                <li><b>20</b> The Verifier notifies the DOME portal to refresh the login page so it can present the services to the user. The notification includes the following:
+                    <div>
                     <ul>
                         <li>The <code>state</code> nonce that was generated by the portal when it generated the QR code. The portal uses the <code>state</code> nonce to know what login session is being notified.
                         </li>
                         <li>The access token generated before.
                         </li>
                     </ul>
+                    </div>
+                    <div>
                     <p>The notification is a simple POST request with both parameters in the body:
                     </p>
+                    </div>
+                    <div>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1642,20 +1654,20 @@ access_token=[the access token]
 &amp;state=af0ifjsldkj
 </pre></td></tr></table>
 
+                    </div>
+                    <div>
                     <p>The portal component replies immediately and continues processing.
                     </p>
-</div>
+                    </div>
                 </li>
-                <x-li id='21'> The portal of the Relying Party refreshes the screen and displays the services available to users, sending the Access Token to the browser of the user. The Access Token will be sent back by the browser to the portal whenever the user tries to access a protected resource of the portal, and so access control can be performed using the data inside the token, in the same way as with any other access token in other authentication mechanisms.
-<div>
-</div>
+                <li><b>21</b> The portal of the Relying Party refreshes the screen and displays the services available to users, sending the Access Token to the browser of the user. The Access Token will be sent back by the browser to the portal whenever the user tries to access a protected resource of the portal, and so access control can be performed using the data inside the token, in the same way as with any other access token in other authentication mechanisms.
                 </li>
             </ul>
         </section>
     </section>
     <section id='accesscontrol'><h2>Access control with Verifiable Credentials</h2>
 
-        <section id='Overview1523'><h2>Overview</h2>
+        <section id='Overview1519'><h2>Overview</h2>
 
             <p>This section assumes that authentication has already been performed and that the Relying Party receives a request to a protected resource, with a proper access token inside the request. If the request does not come with an access token, the request is rejected immediately (or the user is redirected to the Authentication service of the Relying Party, depending on the use case).
             </p>
@@ -1694,20 +1706,26 @@ access_token=[the access token]
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='1'> The user (natural person or machine) sends a request to access a protected resource, and the PEP (Policy Enforcement Point) component intercepts the call. The PEP is normally implemented as a reverse proxy or API gateway, so all calls to protected resources entering the organisation are intercepted and forwarded if they are accepted.
-<div>
-</div>
+                <li><b>1</b> The user (natural person or machine) sends a request to access a protected resource, and the PEP (Policy Enforcement Point) component intercepts the call. The PEP is normally implemented as a reverse proxy or API gateway, so all calls to protected resources entering the organisation are intercepted and forwarded if they are accepted.
                 </li>
-                <x-li id='2'> If the request is not authenticated it is rejected with an error. Depending on the use case, the error returned can contain additional information that enables the user agent to be redirected to perform authentication.
-<div>
+                <li><b>2</b> If the request is not authenticated it is rejected with an error. Depending on the use case, the error returned can contain additional information that enables the user agent to be redirected to perform authentication.
+                    <div>
                     <p>After inspecting the request, the PEP requests a decision from the PDP passing a series of attributes. In general, the request from the PEP to the PDP consists of <b>subject</b> attributes (typically for the user who issued the request), <b>resource</b> attributes (the resource for which access is sought), <b>action</b> attributes (the operations to be performed on the resource), and <b>environment</b> attributes.
                     </p>
+                    </div>
+                    <div>
                     <p>Some of the above attributes are obtained by the PEP from the original request received from the user. For example, the HTTP verb (GET, POST, PUT, PATCH, DELETE) and the URL and possibly the body of the request provide action attributes. Specifically, in the case of an NGSI-LD request those attributes are formally specified in the NGSI-LD standard.
                     </p>
+                    </div>
+                    <div>
                     <p>The subject attributes most relevant for access control are located in the access token received with the request. In particular, the access token includes the Verifiable Credentials that were employed for authentication, and the claims in those credentials can be used to evaluate access control policies. This includes (but is not limited to) the roles object that may be included in the VerifiableID credential used for authentication.
                     </p>
+                    </div>
+                    <div>
                     <p>An example access token would be:
                     </p>
+                    </div>
+                    <div>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1718,8 +1736,12 @@ access_token=[the access token]
 }
 </pre></td></tr></table>
 
+                    </div>
+                    <div>
                     <p>Decoding the <code>access_token</code> field we could see a Verifiable Presentation including the LEARCredential that the user presented when authenticating:
                     </p>
+                    </div>
+                    <div>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1764,27 +1786,35 @@ access_token=[the access token]
 }
 </pre></td></tr></table>
 
+                    </div>
+                    <div>
                     <p>Environmental attributes, which depend on the availability of system sensors that can detect and report values, are somewhat different from subject and resource attributes, which are administratively created. Environmental attributes are not properties of the subject or resources, but are measurable characteristics that pertain to the operational or situational context in which access requests occur. These environmental characteristics are subject and resource independent, and may include the current time, day of the week, or threat level.
                     </p>
+                    </div>
+                    <div>
                     <p>The PDP computes decisions to permit or deny subject requests to perform actions on resources. In computing a decision, the PDP queries policies stored in a PRP (Policy Retrieval Point).
                     </p>
+                    </div>
+                    <div>
                     <p>If the attributes of the request are not sufficient for rule and policy evaluation, the PDP may need to search the PIP for additional attributes. The PIP is shown as one logical store, but in fact may comprise multiple physical stores of different types.
                     </p>
+                    </div>
+                    <div>
                     <p>In addition to the PIP, the PDP uses one or more Trusted Issuers Lists (to check if the issuer of the credential is included in them as a trusted issuer of that type of credential), and also the Authorization Registry (AR), which can check for finer granularity authorisation records which may be very dynamic in nature (e.g. if some resource usage by employees and machines owned by the issuer have exceeded some quota this month).
                     </p>
+                    </div>
+                    <div>
                     <p>The actual Trusted Issuers Lists that the PDP needs to check is determined by the policy rules retrieved from the PRP. Those policy rules also determine the additional queries performed to the PIP data stores.
                     </p>
+                    </div>
+                    <div>
                     <p>The set of information and data stored in the PIP and PRP comprise the access control data and collectively define the current authorization state, which the PDP will use to compute its decision.
                     </p>
-</div>
+                    </div>
                 </li>
-                <x-li id='3'> The PDP asks the PRP for the policy rules applicable to this request. The policy rules may be specified using different policy languages, like ODRL, XACML or Rego. It is very difficult to make the interface between the PDP and the PRP completely transparent and independent from the concrete policy language used in an implementation. However, The PDP can be modularised in order to minimise the dependency and reduce the cost of migration to other policy language in the future.
-<div>
-</div>
+                <li><b>3</b> The PDP asks the PRP for the policy rules applicable to this request. The policy rules may be specified using different policy languages, like ODRL, XACML or Rego. It is very difficult to make the interface between the PDP and the PRP completely transparent and independent from the concrete policy language used in an implementation. However, The PDP can be modularised in order to minimise the dependency and reduce the cost of migration to other policy language in the future.
                 </li>
-                <x-li id='4'> The PDP receives the policy rules to apply for the current request.
-<div>
-</div>
+                <li><b>4</b> The PDP receives the policy rules to apply for the current request.
                 </li>
             </ul>
         </section>
@@ -1806,19 +1836,15 @@ access_token=[the access token]
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='4'> The PDP receives the policy rules to apply for the current request.
-<div>
-</div>
+                <li><b>4</b> The PDP receives the policy rules to apply for the current request.
                 </li>
-                <x-li id='5'> The PDP performs an initial evaluation of the policy rules and if the attributes of the request are not sufficient for rule and policy evaluation, it determines the PIP stores to query, and also the set of Trusted Issuers Lists to query. The concrete Trusted Lists to query are dynamic and depend on the specific policies associated to the request.
-<div>
-</div>
+                <li><b>5</b> The PDP performs an initial evaluation of the policy rules and if the attributes of the request are not sufficient for rule and policy evaluation, it determines the PIP stores to query, and also the set of Trusted Issuers Lists to query. The concrete Trusted Lists to query are dynamic and depend on the specific policies associated to the request.
                 </li>
-                <x-li id='6'> Based on the policies and the attributes of the request, the PDP queries the PIP for additional attributes needed for the policy evaluation.
-<div>
+                <li><b>6</b> Based on the policies and the attributes of the request, the PDP queries the PIP for additional attributes needed for the policy evaluation.
+                    <div>
                     <p>Now that the PDP has the policy rules to apply and the attributes from the request and the ones retrieved from the PIP, the PDP can determine the actual Trusted Lists that have to be queried in order to be able to evaluate the policies.
                     </p>
-</div>
+                    </div>
                 </li>
             </ul>
         </section>
@@ -1850,13 +1876,9 @@ access_token=[the access token]
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='6'> Based on the policies and the attributes of the request, the PDP queries the PIP for additional attributes needed for the policy evaluation.
-<div>
-</div>
+                <li><b>6</b> Based on the policies and the attributes of the request, the PDP queries the PIP for additional attributes needed for the policy evaluation.
                 </li>
-                <x-li id='7'> Based on the policies and the attributes of the request, the PDP queries one or more Trusted Issuer Lists to check that the credentials received comply with the requirements specified in the policies.
-<div>
-</div>
+                <li><b>7</b> Based on the policies and the attributes of the request, the PDP queries one or more Trusted Issuer Lists to check that the credentials received comply with the requirements specified in the policies.
                 </li>
             </ul>
         </section>
@@ -1870,25 +1892,15 @@ access_token=[the access token]
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='8'> The PDP performs a final evaluation of the policy rules, taking into consideration the attributes received from the PEP, the attributes received from the PIP, and the Trusted Issuers Lists queried. After the evaluation the PDP computes a decision, either to accept or to reject the request.
-<div>
-</div>
+                <li><b>8</b> The PDP performs a final evaluation of the policy rules, taking into consideration the attributes received from the PEP, the attributes received from the PIP, and the Trusted Issuers Lists queried. After the evaluation the PDP computes a decision, either to accept or to reject the request.
                 </li>
-                <x-li id='9'> The PDP returns the decision to the PEP, which will enforce it.
-<div>
-</div>
+                <li><b>9</b> The PDP returns the decision to the PEP, which will enforce it.
                 </li>
-                <x-li id='10'> If the decision from the PDP is to reject the request, the PEP returns an error to the user. Otherwise, it forwards the original request to the Resource for execution.
-<div>
-</div>
+                <li><b>10</b> If the decision from the PDP is to reject the request, the PEP returns an error to the user. Otherwise, it forwards the original request to the Resource for execution.
                 </li>
-                <x-li id='11'> The resource executes the request and returns the result.
-<div>
-</div>
+                <li><b>11</b> The resource executes the request and returns the result.
                 </li>
-                <x-li id='12'> The PEP returns the result to the user.
-<div>
-</div>
+                <li><b>12</b> The PEP returns the result to the user.
                 </li>
             </ul>
         </section>

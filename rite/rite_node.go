@@ -39,6 +39,7 @@ type Node struct {
 	RawText     *Text
 	InnerText   []byte
 	Indentation int
+	FileName    string
 	LineNumber  int
 	Name        string
 	Id          []byte
@@ -71,6 +72,291 @@ const (
 	ExplanationNode
 	VerbatimNode
 )
+
+func newNode(p *Parser, fileName string, text *Text) *Node {
+
+	n := &Node{}
+
+	// Set the basic fields
+	n.p = p
+	n.RawText = text
+	n.Indentation = text.Indentation
+	n.FileName = fileName
+	n.LineNumber = text.LineNumber
+
+	return n
+}
+
+func NewVerbatimExplanationNode(p *Parser, fileName string, text *Text) *Node {
+
+	// We receive in text the unparsed explanation paragraph
+	// We convert it into a list item with the proper markup
+	rawText := parseExplanationItem(text)
+
+	n := NewNormalNode(p, fileName, rawText)
+
+	// Parse the possible inner block
+	p.ParseBlock(n)
+
+	return n
+}
+
+func parseExplanationItem(lineSt *Text) *Text {
+	const bulletPrefix = "# -("
+	var r ByteRenderer
+
+	// We receive a list item in Markdown format and we convert to proper HTML
+
+	lineNum := lineSt.LineNumber
+	line := lineSt.Content
+
+	// Preprocess Markdown list markers
+	// They can start with plain dashes '-' but we support a special format '-(something)'.
+	// The 'something' inside parenthesis will be highlighted in the list item
+
+	if !bytes.HasPrefix(line, []byte(bulletPrefix)) {
+		stdlog.Panicf("parseExplanationItem, line %d: invalid prefix for line\n", lineNum)
+	}
+
+	// Get the end ')'
+	indexRightBracket := bytes.IndexByte(line, ')')
+	if indexRightBracket == -1 {
+		stdlog.Panicf("parseMdList, line %d: no closing ')' in list bullet\n", lineNum)
+	}
+
+	// Check that there is at least one character inside the '()'
+	if indexRightBracket == len(bulletPrefix) {
+		stdlog.Panicf("parseMdList, line %d: no content inside '()' in list bullet\n", lineNum)
+	}
+
+	// Extract the whole bullet text, replacing embedded blanks
+	bulletText := line[len(bulletPrefix):indexRightBracket]
+	// bulletTextEncoded := bytes.ReplaceAll(bulletText, []byte(" "), []byte("_"))
+
+	// And the remaining text in the line
+	restLine := line[indexRightBracket+1:]
+
+	// Build the line
+	// r.Render("<x-li id='", bulletTextEncoded, "'>", "<a href='#", bulletTextEncoded, "' class='selfref'>")
+	// r.Render("<b>", bulletText, "</b></a>", restLine)
+	r.Render("<li><b>", bulletText, "</b>", restLine)
+
+	l := r.Bytes()
+	lineSt.Content = l
+	return lineSt
+
+}
+
+// NewNormalNode creates a node from the text line that is passed.
+// The new node is set to the proper type and its attributes populated.
+// If the line starts with a proper tag, it is processed and the node is updated accordingly.
+func NewNormalNode(p *Parser, fileName string, text *Text) *Node {
+	var tagSpec []byte
+
+	n := newNode(p, p.fileName, text)
+
+	// Process the tag at the beginning of the line, if there is one
+
+	// If the tag is less than 3 chars or the node does not start with '<', mark it as a paragraph
+	// and do not process it further.
+	if len(text.Content) < 3 || text.Content[0] != StartHTMLTag {
+		n.Type = BlockNode
+		n.Name = "p"
+		n.RestLine = text.Content
+		return n
+	}
+
+	// Now we know the line starts with a tag '<'
+
+	// Extract the whole tag string between the start and end tags
+	// The end bracket is optional if there is no more text in the line after the tag attributes
+	indexRightBracket := bytes.IndexByte(text.Content, EndHTMLTag)
+	if indexRightBracket == -1 {
+		tagSpec = text.Content[1:]
+	} else {
+
+		// Extract the whole tag spec
+		tagSpec = text.Content[1:indexRightBracket]
+
+		// And the remaining text in the line
+		n.RestLine = text.Content[indexRightBracket+1:]
+
+	}
+
+	// Extract the name of the tag from the tagSpec
+	name, tagSpec := ReadTagName(tagSpec)
+
+	// Set the name of the node with the tag name
+	n.Name = string(name)
+
+	// Do not process the tag if it is not a section element or it is a void one
+	if contains(NoBlockElements, name) || contains(VoidElements, name) {
+		n.Type = BlockNode
+		n.Name = "p"
+		n.RestLine = text.Content
+		return n
+	}
+
+	// Determine type of node to create
+	switch n.Name {
+	case "section":
+		n.Type = SectionNode
+	case "x-diagram":
+		n.Type = DiagramNode
+	case "x-code", "pre":
+		n.Type = VerbatimNode
+	default:
+		n.Type = BlockNode
+	}
+
+	// Process all the attributes in the tag
+	for {
+
+		// We have finished the loop if there is no more data
+		if len(tagSpec) == 0 {
+			break
+		}
+
+		var attrVal []byte
+
+		switch tagSpec[0] {
+		case '#':
+			if len(tagSpec) < 2 {
+				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Shortcut for id="xxxx"
+			if tagSpec[1] != '"' && tagSpec[1] != '\'' {
+				attrVal, tagSpec = ReadWord(tagSpec[1:])
+			} else {
+				attrVal, tagSpec = ReadQuotedWords(tagSpec[1:])
+				// attrVal = encodeOnPlaceWithUnderscore(bytes.Clone(attrVal))
+			}
+
+			// Only the first id attribute is used, others are ignored
+			if len(n.Id) == 0 {
+				n.Id = attrVal
+			}
+
+		case '.':
+			if len(tagSpec) < 2 {
+				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Shortcut for class="xxxx"
+			// The tag may specify more than one class and all are accumulated
+			attrVal, tagSpec = ReadWord(tagSpec[1:])
+			if len(n.Class) > 0 {
+				n.Class = append(n.Class, ' ')
+			}
+			n.Class = append(n.Class, attrVal...)
+		case '@':
+			if len(tagSpec) < 2 {
+				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Shortcut for src="xxxx"
+			// Only the first attribute is used
+			attrVal, tagSpec = ReadWord(tagSpec[1:])
+			if len(n.Src) == 0 {
+				n.Src = attrVal
+			}
+
+		case '-':
+			if len(tagSpec) < 2 {
+				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Shortcut for href="xxxx"
+			// Only the first attribute is used
+			attrVal, tagSpec = ReadWord(tagSpec[1:])
+			if len(n.Href) == 0 {
+				n.Href = attrVal
+			}
+		case ':':
+			if len(tagSpec) < 2 {
+				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Special attribute "type" for item classification and counters
+			// Only the first attribute is used
+			attrVal, tagSpec = ReadWord(tagSpec[1:])
+			if len(n.Bucket) == 0 {
+				n.Bucket = attrVal
+			}
+		case '=':
+			if len(tagSpec) < 2 {
+				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
+			}
+			// Special attribute "number" for list items
+			// Only the first attribute is used
+			attrVal, tagSpec = ReadWord(tagSpec[1:])
+			if len(n.Number) == 0 {
+				n.Number = attrVal
+			}
+		default:
+			// This should be a standard HTML attribute
+			var attr Attribute
+			attr, tagSpec = ReadTagAttrKey(tagSpec)
+			if len(attr.Key) == 0 {
+				tagSpec = nil
+			} else {
+
+				// Treat the most important attributes specially
+				switch attr.Key {
+				case "id":
+					// Set the special Id field if it is not already set
+					if len(n.Id) == 0 {
+						// n.Id = encodeOnPlaceWithUnderscore(bytes.Clone(attr.Val))
+						n.Id = bytes.Clone(attr.Val)
+					}
+				case "class":
+					// More than one class can be specified and and all are accumulated, separated by a spece
+					if len(n.Class) > 0 {
+						n.Class = append(n.Class, ' ')
+					}
+					n.Class = append(n.Class, attr.Val...)
+				case "src":
+					// Only the first attribute is used
+					if len(n.Src) == 0 {
+						n.Src = attr.Val
+					}
+				case "href":
+					// Only the first attribute is used
+					if len(n.Href) == 0 {
+						n.Href = attr.Val
+					}
+				default:
+					n.Attr = append(n.Attr, attr)
+				}
+			}
+
+		}
+
+	}
+
+	// For special types of nodes we generate automatically the id if the user did not specify it
+	if len(n.Id) == 0 {
+		if n.Name == "dt" || n.Name == "section" {
+			// n.Id = encodeOnPlaceWithUnderscore(bytes.Clone(n.RestLine))
+			n.Id = bytes.Clone(n.RestLine)
+			// If the id already exists, make it unique
+			if p.Xref[string(n.Id)] != nil {
+				n.Id = strconv.AppendInt(n.Id, int64(n.LineNumber), 10)
+			}
+
+		}
+	}
+
+	// Update the table for cross-references using Ids in the tag.
+	// If this tag has an 'id'
+	if len(n.Id) > 0 {
+
+		// We enforce uniqueness of ids
+		if p.Xref[string(n.Id)] != nil {
+			stdlog.Panicf("id already used, processing line %d\n", n.LineNumber)
+		}
+		// Include the 'id' in the table and also the text for references
+		p.Xref[string(n.Id)] = n
+	}
+
+	return n
+}
 
 // String returns a string representation of the TokenType.
 func (n NodeType) String() string {
@@ -167,7 +453,7 @@ func (n *Node) AddClassString(newClass string) {
 // RenderHTML renders recursively to HTML this node and its children (if any)
 func (n *Node) RenderHTML(br *ByteRenderer) error {
 
-	indentStr := indent(n.Indentation)
+	//	indentStr := indent(n.Indentation)
 
 	switch n.Type {
 	case DiagramNode:
@@ -180,21 +466,21 @@ func (n *Node) RenderHTML(br *ByteRenderer) error {
 			return err
 		}
 
-	case ExplanationNode:
-		// Render the start tag of this node
-		br.Renderln(indentStr, n.RawText.Content)
-		br.Render("<div>\n")
+	// case ExplanationNode:
+	// 	// Render the start tag of this node
+	// 	br.Renderln(indentStr, n.RawText.Content)
+	// 	br.Render("<div>\n")
 
-		// We visit depth-first the children of the
-		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-			if err := theNode.RenderHTML(br); err != nil {
-				return err
-			}
-		}
-		br.Render("</div>\n")
+	// 	// We visit depth-first the children of the
+	// 	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+	// 		if err := theNode.RenderHTML(br); err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// 	br.Render("</div>\n")
 
-		// Render the end tag of the node
-		br.Renderln(indentStr, "</li>")
+	// 	// Render the end tag of the node
+	// 	br.Renderln(indentStr, "</li>")
 
 	default:
 		if err := n.RenderNormalNode(br); err != nil {
@@ -227,7 +513,12 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 
 			// If the referenced node has a description, we will use it for the text of the link.
 			// Otherwise we will use the plain ID of the referenced node
-			referencedNode := n.p.xref[sub1]
+			referencedNode := n.p.Xref[sub1]
+			if referencedNode == nil {
+				fmt.Println("invalid x-ref at line", n.LineNumber)
+				continue
+			}
+
 			var description string
 			if referencedNode.Name == "x-li" {
 				description = string(referencedNode.Id)
@@ -250,31 +541,29 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 	// Render the start tag of this node
 	br.Renderln(indentStr, startTag, rest)
 
-	// We visit depth-first the children of the node
-	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-		indentChild := indent(theNode.Indentation)
+	// Special case when the child nodes are list items and the parent node is not a list tag (ol, ul)
+	// If the parent node is a <p>, we auto-generate an <ul> tag
 
+	if n.Name == "p" && (n.FirstChild != nil) && (n.FirstChild.Name == "li" || n.FirstChild.Name == "x-li") {
+		// Close the <p> tag
+		br.Renderln(indentStr, endTag)
+
+		// Open the <ul> tag
+		br.Renderln(indent(n.FirstChild.Indentation), "<ul>")
+
+	}
+
+	// We visit depth-first the children of the node
+	for childNode := n.FirstChild; childNode != nil; childNode = childNode.NextSibling {
+		indentChild := indent(childNode.Indentation)
+
+		// Wrap each children of a <li> items in a <div>
 		if n.Name == "li" {
 			br.Renderln(indentChild, "<div>")
 		}
-		if theNode == n.FirstChild {
-			if n.Name != "ul" && n.Name != "ol" {
-				if theNode.Name == "li" {
-					br.Renderln("<ul>")
-				}
-			}
-		}
 
-		if err := theNode.RenderHTML(br); err != nil {
+		if err := childNode.RenderHTML(br); err != nil {
 			return err
-		}
-
-		if theNode == n.LastChild {
-			if n.Name != "ul" && n.Name != "ol" {
-				if theNode.Name == "li" {
-					br.Renderln("</ul>")
-				}
-			}
 		}
 
 		if n.Name == "li" {
@@ -282,8 +571,14 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 		}
 	}
 
-	// Render the end tag of the node
-	br.Renderln(strings.Repeat(" ", n.Indentation), endTag)
+	if n.Name == "p" && (n.FirstChild != nil) && (n.FirstChild.Name == "li" || n.FirstChild.Name == "x-li") {
+		// Close the <ul> tag. No need to close the parent tag, as we already did it
+		br.Renderln(indent(n.FirstChild.Indentation), "</ul>")
+
+	} else {
+		// Render the end tag of the node
+		br.Renderln(strings.Repeat(" ", n.Indentation), endTag)
+	}
 
 	return nil
 
@@ -330,8 +625,8 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		startTag = fmt.Appendf(startTag, ">")
 
 		endTag = fmt.Appendf(endTag, "</li>")
-		if len(n.Id) > 0 {
-			rest = fmt.Appendf(rest, "<b>%s</b>", n.Id)
+		if len(n.Number) > 0 {
+			rest = fmt.Appendf(rest, "<b>%s</b>", n.Number)
 		}
 		rest = fmt.Appendf(rest, "%s", n.RestLine)
 
@@ -800,18 +1095,6 @@ func ReparentChildren(dst, src *Node) {
 		src.RemoveChild(child)
 		dst.AppendChild(child)
 	}
-}
-
-// Clone returns a new node with the same type, data and attributes.
-// The Clone has no parent, no siblings and no children.
-func (n *Node) Clone() *Node {
-	m := &Node{
-		Type: n.Type,
-		Name: n.Name,
-		Attr: make([]Attribute, len(n.Attr)),
-	}
-	copy(m.Attr, n.Attr)
-	return m
 }
 
 // ErrBufferExceeded means that the buffering limit was exceeded.

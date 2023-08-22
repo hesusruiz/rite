@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/hesusruiz/vcutils/yaml"
@@ -45,12 +44,12 @@ type Parser struct {
 	// This is true when we have read the whole file
 	atEOF bool
 
-	// Contains the last error encountered. When this is set, parsin stops
+	// Contains the last error encountered. When this is set, parsing stops
 	lastError error
 
 	Ids  map[string]int // To provide numbering of different entity classes
-	figs map[string]int // To provide numbering of figs of different types in the document
-	xref map[string]*Node
+	Figs map[string]int // To provide numbering of figs of different types in the document
+	Xref map[string]*Node
 
 	Config *yaml.YAML
 
@@ -342,223 +341,6 @@ func getStartSectionTagName(text *Text) []byte {
 
 }
 
-// NewNode creates a node from the text line that is passed.
-// The new node is set to the proper type and its attributes populated.
-// If the line starts with a proper tag, it is processed and the node is updated accordingly.
-func (p *Parser) NewNode(text *Text) *Node {
-	var tagSpec []byte
-
-	n := &Node{}
-
-	// Set the basic fields
-	n.p = p
-	n.Indentation = text.Indentation
-	n.LineNumber = text.LineNumber
-	n.RawText = text
-
-	// Process the tag at the beginning of the line, if there is one
-
-	// If the tag is less than 3 chars or the node does not start with '<', mark it as a paragraph
-	// and do not process it further.
-	if len(text.Content) < 3 || text.Content[0] != StartHTMLTag {
-		n.Type = BlockNode
-		n.Name = "p"
-		n.RestLine = text.Content
-		return n
-	}
-
-	// Now we know the line starts with a tag '<'
-
-	// Extract the whole tag string between the start and end tags
-	// The end bracket is optional if there is no more text in the line after the tag attributes
-	indexRightBracket := bytes.IndexByte(text.Content, EndHTMLTag)
-	if indexRightBracket == -1 {
-		tagSpec = text.Content[1:]
-	} else {
-
-		// Extract the whole tag spec
-		tagSpec = text.Content[1:indexRightBracket]
-
-		// And the remaining text in the line
-		n.RestLine = text.Content[indexRightBracket+1:]
-
-	}
-
-	// Extract the name of the tag from the tagSpec
-	name, tagSpec := ReadTagName(tagSpec)
-
-	// Set the name of the node with the tag name
-	n.Name = string(name)
-
-	// Do not process the tag if it is not a section element or it is a void one
-	if contains(NoBlockElements, name) || contains(VoidElements, name) {
-		n.Type = BlockNode
-		n.Name = "p"
-		n.RestLine = text.Content
-		return n
-	}
-
-	// Determine type of node to create
-	switch n.Name {
-	case "section":
-		n.Type = SectionNode
-	case "x-diagram":
-		n.Type = DiagramNode
-	case "x-code", "pre":
-		n.Type = VerbatimNode
-	default:
-		n.Type = BlockNode
-	}
-
-	// Process all the attributes in the tag
-	for {
-
-		// We have finished the loop if there is no more data
-		if len(tagSpec) == 0 {
-			break
-		}
-
-		var attrVal []byte
-
-		switch tagSpec[0] {
-		case '#':
-			if len(tagSpec) < 2 {
-				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
-			}
-			// Shortcut for id="xxxx"
-			if tagSpec[1] != '"' && tagSpec[1] != '\'' {
-				attrVal, tagSpec = ReadWord(tagSpec[1:])
-			} else {
-				attrVal, tagSpec = ReadQuotedWords(tagSpec[1:])
-				// attrVal = encodeOnPlaceWithUnderscore(bytes.Clone(attrVal))
-			}
-
-			// Only the first id attribute is used, others are ignored
-			if len(n.Id) == 0 {
-				n.Id = attrVal
-			}
-
-		case '.':
-			if len(tagSpec) < 2 {
-				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
-			}
-			// Shortcut for class="xxxx"
-			// The tag may specify more than one class and all are accumulated
-			attrVal, tagSpec = ReadWord(tagSpec[1:])
-			if len(n.Class) > 0 {
-				n.Class = append(n.Class, ' ')
-			}
-			n.Class = append(n.Class, attrVal...)
-		case '@':
-			if len(tagSpec) < 2 {
-				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
-			}
-			// Shortcut for src="xxxx"
-			// Only the first attribute is used
-			attrVal, tagSpec = ReadWord(tagSpec[1:])
-			if len(n.Src) == 0 {
-				n.Src = attrVal
-			}
-
-		case '-':
-			if len(tagSpec) < 2 {
-				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
-			}
-			// Shortcut for href="xxxx"
-			// Only the first attribute is used
-			attrVal, tagSpec = ReadWord(tagSpec[1:])
-			if len(n.Href) == 0 {
-				n.Href = attrVal
-			}
-		case ':':
-			if len(tagSpec) < 2 {
-				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
-			}
-			// Special attribute "type" for item classification and counters
-			// Only the first attribute is used
-			attrVal, tagSpec = ReadWord(tagSpec[1:])
-			if len(n.Bucket) == 0 {
-				n.Bucket = attrVal
-			}
-		case '=':
-			if len(tagSpec) < 2 {
-				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
-			}
-			// Special attribute "number" for list items
-			// Only the first attribute is used
-			attrVal, tagSpec = ReadWord(tagSpec[1:])
-			if len(n.Number) == 0 {
-				n.Number = attrVal
-			}
-		default:
-			// This should be a standard HTML attribute
-			var attr Attribute
-			attr, tagSpec = ReadTagAttrKey(tagSpec)
-			if len(attr.Key) == 0 {
-				tagSpec = nil
-			} else {
-
-				// Treat the most important attributes specially
-				switch attr.Key {
-				case "id":
-					// Set the special Id field if it is not already set
-					if len(n.Id) == 0 {
-						// n.Id = encodeOnPlaceWithUnderscore(bytes.Clone(attr.Val))
-						n.Id = bytes.Clone(attr.Val)
-					}
-				case "class":
-					// More than one class can be specified and and all are accumulated, separated by a spece
-					if len(n.Class) > 0 {
-						n.Class = append(n.Class, ' ')
-					}
-					n.Class = append(n.Class, attr.Val...)
-				case "src":
-					// Only the first attribute is used
-					if len(n.Src) == 0 {
-						n.Src = attr.Val
-					}
-				case "href":
-					// Only the first attribute is used
-					if len(n.Href) == 0 {
-						n.Href = attr.Val
-					}
-				default:
-					n.Attr = append(n.Attr, attr)
-				}
-			}
-
-		}
-
-	}
-
-	// For special types of nodes we generate automatically the id if the user did not specify it
-	if len(n.Id) == 0 {
-		if n.Name == "dt" || n.Name == "section" {
-			// n.Id = encodeOnPlaceWithUnderscore(bytes.Clone(n.RestLine))
-			n.Id = bytes.Clone(n.RestLine)
-			// If the id already exists, make it unique
-			if p.xref[string(n.Id)] != nil {
-				n.Id = strconv.AppendInt(n.Id, int64(n.LineNumber), 10)
-			}
-
-		}
-	}
-
-	// Update the table for cross-references using Ids in the tag.
-	// If this tag has an 'id'
-	if len(n.Id) > 0 {
-
-		// We enforce uniqueness of ids
-		if p.xref[string(n.Id)] != nil {
-			stdlog.Panicf("id already used, processing line %d\n", n.LineNumber)
-		}
-		// Include the 'id' in the table and also the text for references
-		p.xref[string(n.Id)] = n
-	}
-
-	return n
-}
-
 // ParseBlock parses the segment of the document that belongs to the block represented by the node.
 // The node will have as child nodes all elements that are at the same iundentation
 func (p *Parser) ParseBlock(parent *Node) {
@@ -585,7 +367,7 @@ func (p *Parser) ParseBlock(parent *Node) {
 		if para.Indentation == blockIndentation {
 
 			// Create a node for the paragraph as a child of the received node
-			child := p.NewNode(para)
+			child := NewNormalNode(p, p.fileName, para)
 
 			// Section nodes can only be children of other section nodes or of the root Document
 			if child.Type == SectionNode && string(child.Id) != "abstract" {
@@ -699,25 +481,14 @@ func (p *Parser) parseMdList(lineSt *Text) *Text {
 		// Build the line
 		// r.Render("<x-li id='", bulletTextEncoded, "'>", "<a href='#", bulletTextEncoded, "' class='selfref'>")
 		// r.Render("<b>", bulletText, "</b></a>", restLine)
-		r.Render("<x-li id='", bulletText, "'>", restLine)
+		// r.Render("<x-li id='", lineNum, "-", bulletText, "'>", restLine)
+		r.Render("<x-li id='", bulletText, "'><b>", bulletText, "</b>", restLine)
 
 	}
 
 	l := r.Bytes()
 	lineSt.Content = l
 	return lineSt
-
-}
-
-func (p *Parser) parseVerbatimExplanation(node *Node) {
-
-	// We receive in node.RawText the unparsed explanation paragraph
-	// We convert it into a list item with the proper markup
-	// Sanity check
-	node.RawText = p.parseMdList(node.RawText)
-
-	// Parse the possible inner block
-	p.ParseBlock(node)
 
 }
 
@@ -762,39 +533,30 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 			break
 		}
 
-		// Process normal lines
-		if !bytes.HasPrefix(line.Content, []byte("# -")) {
-
-			// Update minimum indentation if needed
-			if line.Indentation < minimumIndentation {
-				minimumIndentation = line.Indentation
-			}
-
-			// Append the line
-			diagContentLines = append(diagContentLines, line)
-			lastNonBlankLine = len(diagContentLines)
-
-		} else {
+		// Process explanation lines (starting with "# -")
+		if bytes.HasPrefix(line.Content, []byte("# -")) {
 
 			// Create a node to parse the explanation text
-			child := &Node{}
-			child.p = p
+			child := NewVerbatimExplanationNode(p, p.fileName, line)
+
+			// And add it to the AST
 			parent.AppendChild(child)
-			child.Type = ExplanationNode
 
-			// Add the paragraph to the node's paragraph
-			child.RawText = line
-			// This is really redundant but facilitates life for processing
-			// This way the node has all relevant info at the main level
-			child.Indentation = line.Indentation
-			child.LineNumber = line.LineNumber
-
-			p.parseVerbatimExplanation(child)
+			// Go to process next line
+			continue
 
 		}
 
-		// Go to process next line
-		continue
+		// Process normal lines
+
+		// Update minimum indentation if needed
+		if line.Indentation < minimumIndentation {
+			minimumIndentation = line.Indentation
+		}
+
+		// Append the line
+		diagContentLines = append(diagContentLines, line)
+		lastNonBlankLine = len(diagContentLines)
 
 	}
 
@@ -820,7 +582,7 @@ func (p *Parser) ParseSimple() error {
 	// Initialize the document structure
 	if p.doc.Type == DocumentNode {
 		p.Ids = make(map[string]int)
-		p.figs = make(map[string]int)
+		p.Figs = make(map[string]int)
 	}
 
 	p.doc.Indentation = -1
@@ -843,7 +605,7 @@ func (p *Parser) Parse() error {
 	// Initialize the document structure
 	if p.doc.Type == DocumentNode {
 		p.Ids = make(map[string]int)
-		p.figs = make(map[string]int)
+		p.Figs = make(map[string]int)
 	}
 
 	p.doc.Indentation = -1
@@ -899,7 +661,7 @@ func ParseFromFileSimple(fileName string) (*Parser, error) {
 			Type: DocumentNode,
 		},
 	}
-	p.xref = make(map[string]*Node)
+	p.Xref = make(map[string]*Node)
 
 	if err := p.ParseSimple(); err != nil {
 		panic(err)
@@ -910,7 +672,7 @@ func ParseFromFileSimple(fileName string) (*Parser, error) {
 }
 
 // NewDocumentFromFile reads a file and preprocesses it in memory
-func ParseFromFile(fileName string) (*Parser, []byte, error) {
+func ParseAndRenderFromFile(fileName string) (*Parser, []byte, error) {
 
 	// Read the whole file into memory
 	file, err := os.Open(fileName)
@@ -929,7 +691,7 @@ func ParseFromFile(fileName string) (*Parser, []byte, error) {
 			Type: DocumentNode,
 		},
 	}
-	p.xref = make(map[string]*Node)
+	p.Xref = make(map[string]*Node)
 
 	if err := p.Parse(); err != nil {
 		panic(err)
@@ -938,6 +700,49 @@ func ParseFromFile(fileName string) (*Parser, []byte, error) {
 	fragmentHTML := p.RenderHTML()
 
 	return p, fragmentHTML, nil
+
+}
+
+// ParseIncludedFile reads the file specified and returns the Parser object containing the AST
+func ParseIncludedFile(fileName string, parentParser *Parser) (*Parser, error) {
+
+	// Read the whole file into memory
+	file, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// Process the file one line at a time, creating a Document object in memory
+	linescanner := bufio.NewScanner(file)
+
+	p := &Parser{
+		fileName: fileName,
+		s:        linescanner,
+		doc: &Node{
+			Type: DocumentNode,
+		},
+	}
+
+	// Set values from the parent parser so we update them when parsing this file
+	p.Xref = parentParser.Xref
+	p.Ids = parentParser.Ids
+	p.Figs = parentParser.Figs
+	p.Config = parentParser.Config
+
+	// Perform the actual parsing
+	if err := p.Parse(); err != nil {
+		panic(err)
+	}
+
+	// Copy the (possibly) updated values from the current parser to the Parent
+	parentParser.Xref = p.Xref
+	parentParser.Ids = p.Ids
+	parentParser.Figs = p.Figs
+
+	// And add the nodes to the parent tree
+
+	return p, nil
 
 }
 

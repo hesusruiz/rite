@@ -183,7 +183,7 @@ var assets embed.FS
 
 func NewParseAndRender(fileName string) string {
 
-	p, fragmentHTML, err := rite.ParseFromFile(fileName)
+	p, fragmentHTML, err := rite.ParseAndRenderFromFile(fileName)
 	if err != nil {
 		panic(err)
 	}

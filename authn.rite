@@ -158,7 +158,6 @@ localBiblio:
         
         The mechanism leverages Verifiable Credentials and the existing eIDAS framework by:
         
-        <ul>
             - making the credential a **machine-readable e-mandate** by embedding authorisation information in the credential using a formal language and binding it to the identities of the issuer and subject.
             - making the credential a **legally binding document** under the [[eIDAS]] framework, by signing the credential with an advanced or qualified seal/signature.
             - making the credential an **authentication mechanism**, by binding the identities of the subject and holder of the credential so it can be used for authentication.
@@ -193,8 +192,6 @@ localBiblio:
         Representation is complex, and electronic mandates schemes and policies are basically national and usually do not contemplate the possibility to use those mandates in cross-border scenarios. The problem of mandates when accessing services from a Public Administration is extremely complex, so we will focus here on the private sector: when both the Relying Party and the Participant are legal persons from the private sector.
 
         In order to have a usable mechanism using Verifiable Credentials, the main requirements are the following:
-
-        <ul>
 
             -(REQ-01): **The credential is an e-mandate**, by embedding authorisation information in the credential and binding it to the identities of the issuer and subject. We call such a credential a `Verifiable Authorisation`.
 
@@ -543,7 +540,6 @@ localBiblio:
 
         The essential components of a LEARCredential are the following:
 
-        <ul>
             - <b>Claims identifying the employee</b>
 
             - <b>DID of the employee to enable authentication</b>
@@ -740,7 +736,7 @@ localBiblio:
 
     <section>Issuing the LEARCredential
 
-        <section>Overview
+        <section #lear_overview>Overview
 
             In this example we use what we call a <i>profile</i> of the [[OpenID.VCI]] protocol. The standard is very flexible, and we restrict the different options available in the standard and implement a set of the options with given values that are adequate for our use case, without impacting flexibility in practice.
 
