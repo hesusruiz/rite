@@ -27,7 +27,7 @@ func main() {
 
 	app := &cli.App{
 		Name:     "rite",
-		Version:  "v0.07",
+		Version:  "v0.08",
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
 			{
@@ -35,7 +35,7 @@ func main() {
 				Email: "hesus.ruiz@gmail.com",
 			},
 		},
-		Usage:     "process a rite document and produce HTML",
+		Usage:     "process a rite document and produce HTML. (includefile branch)",
 		UsageText: "rite [options] [INPUT_FILE] (default input file is index.txt)",
 		Action:    processCommandLineAndExecute,
 		Flags: []cli.Flag{

@@ -356,7 +356,12 @@ func NewNormalNode(p *Parser, fileName string, text *Text) *Node {
 
 		// We enforce uniqueness of ids
 		if p.Xref[string(n.Id)] != nil {
-			stdlog.Panicf("id already used, processing line %d\n", n.LineNumber)
+			if n.Name == "x-li" {
+				n.Id = append(n.Id, '_')
+				n.Id = strconv.AppendInt(n.Id, int64(n.LineNumber), 10)
+			} else {
+				stdlog.Panicf("id already used, processing line %d\n", n.LineNumber)
+			}
 		}
 		// Include the 'id' in the table and also the text for references
 		p.Xref[string(n.Id)] = n
