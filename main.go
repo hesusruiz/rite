@@ -8,8 +8,10 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
@@ -23,11 +25,13 @@ import (
 var norespec bool
 var debug bool
 
+const defaultIndexFileName = "index.rite"
+
 func main() {
 
 	app := &cli.App{
 		Name:     "rite",
-		Version:  "v0.07",
+		Version:  "v0.08",
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
 			{
@@ -39,6 +43,12 @@ func main() {
 		UsageText: "rite [options] [INPUT_FILE] (default input file is index.txt)",
 		Action:    processCommandLineAndExecute,
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "index",
+				Aliases: []string{"i"},
+				Value:   defaultIndexFileName,
+				Usage:   "the name of the index file in a directory to process (may include other files)",
+			},
 			&cli.StringFlag{
 				Name:    "output",
 				Aliases: []string{"o"},
@@ -82,6 +92,9 @@ func processCommandLineAndExecute(c *cli.Context) error {
 	// Output file name command line parameter
 	outputFileName := c.String("output")
 
+	// The index file to process when working in directory mode
+	indexFileName := c.String("index")
+
 	// Dry run
 	dryrun := c.Bool("dryrun")
 
@@ -97,10 +110,29 @@ func processCommandLineAndExecute(c *cli.Context) error {
 		fmt.Printf("no input file provided, using \"%v\"\n", inputFileName)
 	}
 
+	// Get the absolute input path
+	absInputPath, err := filepath.Abs(inputFileName)
+	if err != nil {
+		return err
+	}
+
+	// Check if input path is a directory
+	finfo, err := os.Stat(absInputPath)
+	if err != nil {
+		return err
+	}
+
+	isDir := finfo.IsDir()
+
+	if isDir {
+		fmt.Println("processing directory", absInputPath)
+		return processDirectory(absInputPath, indexFileName)
+	}
+
 	// Generate the output file name, changing the extension or adding it
 	if len(outputFileName) == 0 {
 		ext := path.Ext(inputFileName)
-		if len(ext) == 0 {
+		if (len(ext) == 0) || (ext != ".rite") {
 			outputFileName = inputFileName + ".html"
 		} else {
 			outputFileName = strings.Replace(inputFileName, ext, ".html", 1)
@@ -121,7 +153,7 @@ func processCommandLineAndExecute(c *cli.Context) error {
 		return err
 	}
 
-	html := NewParseAndRender(inputFileName)
+	html := NewParseAndRender(absInputPath)
 
 	// Do nothing if flag dryrun was specified
 	if dryrun {
@@ -129,12 +161,51 @@ func processCommandLineAndExecute(c *cli.Context) error {
 	}
 
 	// Write the HTML to the output file
-	err := os.WriteFile(outputFileName, []byte(html), 0664)
+	err = os.WriteFile(outputFileName, []byte(html), 0664)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func processDirectory(absInputPath string, indexFileName string) error {
+
+	return filepath.WalkDir(absInputPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+			// fmt.Println("Directory", path)
+		} else {
+			_, fileName := filepath.Split(path)
+			if fileName == indexFileName {
+				var outputFileName string
+
+				fmt.Println("File", path)
+				// Generate the output file name, changing the extension or adding it
+				ext := filepath.Ext(fileName)
+				if (len(ext) == 0) || (ext != ".rite") {
+					outputFileName = path + ".html"
+				} else {
+					outputFileName = strings.Replace(path, ext, ".html", 1)
+				}
+
+				html := NewParseAndRender(fileName)
+
+				// Write the HTML to the output file
+				err = os.WriteFile(outputFileName, []byte(html), 0664)
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		return nil
+
+	})
 }
 
 // processWatch checks periodically if an input file (inputFileName) has been modified, and if so
@@ -183,20 +254,25 @@ var assets embed.FS
 
 func NewParseAndRender(fileName string) string {
 
-	p, fragmentHTML, err := rite.ParseFromFile(fileName)
+	// Open the file and parse it
+	p, err := rite.ParseFromFile(fileName, true)
 	if err != nil {
-		panic(err)
+		fmt.Printf("error processing %s: %s\n", fileName, err.Error())
+		os.Exit(1)
 	}
 
+	// Generate the HTML by visiting all the nodes in the parse tree
+	fragmentHTML := p.RenderHTML()
+
 	// Initialise the template system. Use the templates specified in the document header,
-	// or the default if not specified ("assets/templates/respec")
+	// or the default if not specified (assets/templates/respec or assets/templates/standard)
 	defaultTemplate := "assets/templates/respec"
 	if p.Config.Bool("rite.noReSpec") {
 		defaultTemplate = "assets/templates/standard"
 	}
 	templateDir := p.Config.String("template", defaultTemplate)
 
-	// First check if the user has a local template, otherwise use the embedded onw
+	// First check if the user has a local template, otherwise use the embedded one
 	var t *template.Template
 	_, err = os.Stat(templateDir)
 	if err != nil {

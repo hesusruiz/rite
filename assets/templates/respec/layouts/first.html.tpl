@@ -76,7 +76,7 @@
             {{- end}}
         };
     </script>
-    <link rel="stylesheet" href="./assets/templates/respec/additional.css">
+    <link rel="stylesheet" href="/assets/templates/respec/additional.css">
 </head>
 
 <body>

@@ -35,6 +35,11 @@ func (r *ByteRenderer) Renderln(inputs ...any) {
 	r.Render('\n')
 }
 
+// CloneBytes returns a copy of the buffer contents, so the returned copy is owned by the caller
+func (r *ByteRenderer) CloneBytes() []byte {
+	return bytes.Clone(r.Bytes())
+}
+
 type Text struct {
 	Indentation int
 	LineNumber  int
@@ -60,13 +65,13 @@ func HasPrefix(line []byte, pre string) bool {
 	return bytes.HasPrefix(line, []byte(pre))
 }
 
-func TrimLeft(line []byte, s byte) []byte {
+func TrimLeft(line []byte, s byte) (int, []byte) {
 	for i, c := range line {
 		if c != s {
-			return line[i:]
+			return i, line[i:]
 		}
 	}
-	return nil
+	return len(line), nil
 }
 
 func EncodeOnPlaceWithUnderscore(line []byte) []byte {
@@ -89,16 +94,14 @@ func SkipWhiteSpace(line []byte) []byte {
 
 func ReadWord(line []byte) (word []byte, rest []byte) {
 
-	// If no blank space found, return the whole tagSpec
+	// If no blank space found, return the whole input line
 	indexSpace := bytes.IndexByte(line, ' ')
 	if indexSpace == -1 {
 		return line, nil
 	}
 
-	// Otherwise, return the tag name and the rest of the tag
+	// Otherwise, return the first word and the remaining text in the line
 	word = line[:indexSpace]
-
-	// And the remaining text in the line
 	line = line[indexSpace+1:]
 
 	line = SkipWhiteSpace(line)
@@ -112,8 +115,13 @@ func ReadTagName(tagSpec []byte) (tagName []byte, rest []byte) {
 
 func ReadQuotedWords(workingTagSpec []byte) (word []byte, rest []byte) {
 
-	// The first character must be the quotation mark
+	// The first character can be the quotation mark
 	quote := workingTagSpec[0]
+
+	// The identifier can be enclosed in single or double quotes if there are spaces
+	if quote != '"' && quote != '\'' {
+		return ReadWord(workingTagSpec)
+	}
 
 	workingTagSpec = workingTagSpec[1:]
 	for i, c := range workingTagSpec {

@@ -1,0 +1,283 @@
+---
+title: Rite, a simple syntax for writing documents in HTML
+editors:
+   - name: "Jesus Ruiz"
+     email: "hesusruiz@gmail.com"
+     company: "JesusRuiz"
+     url: "https://www.linkedin.com/in/jesus-ruiz-martinez/"
+
+latestVersion: "https://hesusruiz.github.io/rite"
+github: "https://github.com/hesusruiz/rite"
+---
+
+<section #abstract>
+
+    The core of `rite` syntax  is essentially semantic HTML5 with some simplifications to make it easier to write. It also allows a reduced set of Markdown features, described below.
+
+    The most important concept in `rite` is that indentation is relevant for the structure of the document. Indentation is used to eliminate the need to use the end tags.
+
+    By default, `rite` generates HTML prepared for <a href="https://respec.org/docs/">ReSpec</a>, the tool originally designed for writing W3C specifications, but which now supports many output formats. Via a flag `rite` can be instructed to generate HTML that does not depend from ReSpec functionalities so you can fully control the visual appearance of the final document.
+
+    This document is itself written in `rite` and you can see the source in <a href="https://github.com/hesusruiz/rite/blob/main/index.rite">index.rite</a>
+
+<section>Structure
+
+    `rite` documents are documents which rely on HTML structural elements as in ReSpec, in particular `section`, `aside`, `h2-h6`, `dl`, `ol` etc. By default, `rite` converts the source document into an HTML ReSpec file.
+
+    In `rite` the convention is that when using those structural elements their start tag should be the at the beginning of a line and the content of the tag should be indented in the following lines. Because indentation is used, the corresponding end tag does not have to be specified (but `rite` ignores the end tag if it is used, to facilitate transition from standard HTML formatting).
+
+    In `rite` indentation is relevant, making the document source much easier to understand. The meaning of <i>relevant</i> is the same as in Python, Markdown lists or even natural language.
+
+    Block structure is evident from the indentation of the text and takes priority over inline structure.
+
+    Items of the same block are separated from one another by blank lines. For a given block item, all contiguous lines are processed as a single paragraph. Processing of paragraphs is explained below.
+
+    A line which is indented more than the previous one starts a new, indented block.
+
+    In addition, `rite` provides shorthands for the most common attributes inside the start tag, simplifying their usage.
+
+    A very small example document would be:
+
+    <x-code .html>
+        ---
+        title: Replace me with a real title
+        editors:
+        - name: "Jesus Ruiz"
+          email: "hesusruiz@gmail.com"
+          url: "https://hesusruiz.github.io/hesusruiz"
+        ---
+
+        <section #abstract>
+            This is required. This is a section with an id of 'abstract'.
+
+        <section .informative>Introduction
+            
+            Some informative introductory text, marked with the class 'informative'.
+
+            <aside .note title="A useful note">
+                I'm a note! marked with the class 'note'
+
+        <section>This is a normal section
+
+            Anything indented at this level or more belongs to this section.
+
+            <aside .example>
+                This is an example, marked with the class 'example'.
+
+                <x-code .js>
+                    // A code section with sutomatic syntax highlighting
+                    function someJavaScript(){}
+
+            <section>I'm a sub-section
+
+                This is a subsection because it is indented with respect to the parent section
+
+        <section>Another top-level section
+
+            <ul>
+                - First item in a list
+
+                - Second item
+
+
+    Which corresponds to the following ReSpec HTML code:
+
+    <x-code .html>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="utf-8" />
+            <title>Replace me with a real title</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <script src="https://www.w3.org/Tools/respec/respec-w3c" async="" class="remove"></script>
+            <script class="remove">
+                var respecConfig = {
+                    editors: [
+                        {
+                            email: "hesusruiz@gmail.com",
+                            name: "Jesus Ruiz",
+                            url: "https://hesusruiz.github.io/hesusruiz",
+                        },
+                    ],
+                };
+            </script>
+            <style>
+                code {
+                    color: red;
+                }
+            </style>
+        </head>
+
+        <body>
+            <p class="copyright">
+                Copyright © 2021 the document editors/authors. Text is available under the
+                <a rel="license" href="https://creativecommons.org/licenses/by/4.0/legalcode">
+                Creative Commons Attribution 4.0 International Public License</a>
+            </p>
+
+        <section id='abstract'>
+            <p>This is required. This is a section with an id of 'abstract'.
+            </p>
+        </section>
+
+        <section class='informative'>
+            <h2>Introduction</h2>
+
+            <p>Some informative introductory text, marked with the class 'informative'.
+            </p>
+
+            <aside class='note' title="A useful note">
+                <p>I'm a note! marked with the class 'note'
+                </p>
+            </aside>
+
+        </section>
+
+        <section>
+            <h2>This is a normal section</h2>
+
+            <p>Anything indented at this level or more belongs to this section.
+            </p>
+
+            <aside class='example'>
+                <p>This is an example, marked with the class 'example'.
+                </p>
+
+                <pre class='js'><code>// A code section with sutomatic syntax highlighting
+        function someJavaScript(){}</code></pre>
+
+            </aside>
+
+            <section>
+                <h2>I'm a sub-section</h2>
+
+                <p>This is a subsection because it is indented with respect to the parent section
+                </p>
+            </section>
+
+        </section>
+
+        <section>
+            <h2>Another top-level section</h2>
+
+            <ul>
+                <li id='list_36.1'>First item in a list
+                </li>
+                <li id='list_36.2'>Second item
+            </ul>
+
+        </section>
+
+        </body>
+        </html>
+
+
+    <section>Header of a document
+
+        A `rite` document may start with a metadata header in YAML format, started by a line of minimum three dashes and ended by another line of minimum three dashes. The `title` item is compulsory, like this:
+
+        <x-code .yaml>
+            ---
+            title: Syntax for Rite
+            ---
+
+        The metadata section can contain many more elements, specially the ones required by the <a href="https://respec.org/docs/#respecConfig">ReSpec configuration object</a>, which uses JSON. Any valid JSON is also valid YAML, however the convention in `rite` is to use the 'natural' YAML format.
+
+        An example header specifying more ReSpec configuration data would be:
+
+        <x-code .yaml>
+            ---
+            title: Access to data service
+
+            editors:
+            - name: "Jesus Ruiz"
+              email: "hesusruiz@gmail.com"
+              company: "JesusRuiz"
+              companyURL: "https://hesusruiz.github.io/hesusruiz"
+
+            authors:
+            - name: "Jesus Ruiz"
+              email: "hesusruiz@gmail.com"
+              company: "JesusRuiz"
+              companyURL: "https://hesusruiz.github.io/hesusruiz"
+            - name: "Another Author"
+              email: "another.author@mycompany.com"
+              company: "MyCompany Name"
+              companyURL: "https://mycompany.com/"
+
+            copyright: >
+                Copyright © 2023 the document editors/authors. Text is available under the
+                <a rel="license" href="https://creativecommons.org/licenses/by/4.0/legalcode">
+                Creative Commons Attribution 4.0 International Public License</a>
+
+            latestVersion: "https://github.com/hesusruiz/did-method-elsi"
+            github: "https://github.com/hesusruiz/did-method-elsi"
+            ---
+
+
+    <section>Title of the document
+
+        The `title` in the header of the document is converted to the `\<title\>` tag in the `\<head\>` section of the generated HTML ReSpec document. ReSpec will reuse it for the resulting document's h1, so they are always in sync and you need not worry about specifying it twice.
+        As in ReSpec, if you need to add additional markup to the title, you can use a `\<h1\>` with `id="title"` at the beginning of the document and after the metadata.
+
+        <x-code .example .html title="Specification title with custom markup">
+            <h1 id="title">The <code>Foo</code> API</h1>
+
+
+    <section>Editors & Authors
+
+        As any ReSpec document, a `rite` document can specify editors (at least one) and/or authors as part of the metadata. See the Person objects in ReSpec for the full list of properties you can assign.
+
+
+    <section>Sections
+        Like in ReSpec, your content should be wrapped in `\<section\>` elements. Sections, subsections, appendices, and whatever other structural items are marked up using `\<section\>` elements.
+
+        <x-code .example .html title="Sections and sub-sections">
+            <section>A section
+                Some text.
+
+            <section .informative>I'm a sub-section
+                Sub-section text
+
+        You can specify any standard HTML attribute inside the `\<section\>` element or any other HTML tag, whith the semantics exactly as defined in ReSpec. To simplify writing, `rite` defines a small set of shorthands for some of the more common attributes:
+
+        <ul>
+
+            -(class) The `class` attribute `class="a_class"` can be shortened to `.a_class` where the `class` is specified without quotes and so it can be only one word. For several classes you can use the shorthand several times, or just use the standard HTML syntax.
+
+            -(id) The `id` attribute `id="an_ID"` can be shortened to `#an_ID` where the `id` is specified without quotes and so it can be only one word.
+
+            -(src) The `src` attribute `src="an_src"` can be shortened to `@an_src` where the `src` is specified without quotes and so it can be only one word.
+
+            -(href) The `href` attribute `src="an_href"` can be shortened to `@an_href` where the `href` is specified without quotes and so it can be only one word.
+
+        In addition to the above shorthands, `rite` provides two additional shorthands that do not correspond to standard HTML attributes but that can be useful in many circumstances:
+
+        <ul>
+
+            -(type) The shorthand is the prefix `:` and is useful for item classification and counters, for example for figures and tables.
+
+            -(number) The shorthand is the prefix `=` and it is useful for lists in order to assign a bullet text to each item in the list.
+
+        An example using the classes "example" and "html" for a `code` section in HTML from ReSpec would be:
+
+        <x-code .example .html title="Using shorthands for class specifications">
+            <x-code .example .html title="This is the title of the example">
+                Some text for the example.
+
+        The above would be translated into the following:
+
+        <x-code .example .html title="Translated in ReSpec">
+            <pre class="example html" title="This is the title of the example">
+                <code>
+                    Some text for the example.
+                </code>
+            </pre>
+
+
+    <section>Examples
+
+        Any `\<x-code .example\>` `\<pre .example\>` or `\<aside .example\>` gets the additional example header and style. Content inside `\<pre\>/\<code\>` elements is syntax highlighted. You can specify the language in the class attribute, for example `\<x-code .example .js\>`.
+
+
+<section>(Documentation in progress)

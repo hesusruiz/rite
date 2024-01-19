@@ -29,9 +29,12 @@ import (
 	"oss.terrastruct.com/d2/lib/textmeasure"
 )
 
-type Node struct {
+type TreeNode struct {
 	Parent, FirstChild, LastChild, PrevSibling, NextSibling *Node
+}
 
+type Node struct {
+	TreeNode
 	Type        NodeType
 	Level       int
 	Outline     string
@@ -70,6 +73,7 @@ const (
 	DiagramNode
 	ExplanationNode
 	VerbatimNode
+	IncludeNode
 )
 
 // String returns a string representation of the TokenType.
@@ -89,6 +93,8 @@ func (n NodeType) String() string {
 		return "Verbatim"
 	case ExplanationNode:
 		return "Explanations"
+	case IncludeNode:
+		return "Include"
 	}
 	return "Invalid(" + strconv.Itoa(int(n)) + ")"
 }
@@ -135,10 +141,10 @@ func (n Node) tagString() string {
 func (n Node) String() string {
 	switch n.Type {
 	case ErrorNode:
-		return ""
+		return "ErrorNode"
 	case DocumentNode:
 		return "TopLevelDocument"
-	case BlockNode, VerbatimNode, DiagramNode, ExplanationNode:
+	case SectionNode, BlockNode, VerbatimNode, DiagramNode, ExplanationNode, IncludeNode:
 		return "<" + n.tagString() + ">"
 	}
 	return "Invalid(" + strconv.Itoa(int(n.Type)) + ")"
@@ -146,7 +152,7 @@ func (n Node) String() string {
 
 func (n *Node) AddClass(newClass []byte) {
 
-	// More than one class can be specified and all are accumulated, separated by a spece
+	// More than one class can be specified and all are accumulated, separated by a space
 	if len(n.Class) > 0 {
 		n.Class = append(n.Class, ' ')
 	}
@@ -167,9 +173,23 @@ func (n *Node) AddClassString(newClass string) {
 // RenderHTML renders recursively to HTML this node and its children (if any)
 func (n *Node) RenderHTML(br *ByteRenderer) error {
 
+	if n.Type == DocumentNode {
+		fmt.Printf("Document: %s %d\n", n.p.fileName, n.LineNumber)
+		// We visit depth-first the children of the node
+		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+			if err := theNode.RenderHTML(br); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
 	indentStr := indent(n.Indentation)
 
+	// fmt.Printf("%d %s (%s) %d\n", n.Indentation, n.Type, n.Name, n.LineNumber)
+
 	switch n.Type {
+
 	case DiagramNode:
 		if err := n.RenderDiagramNode(br); err != nil {
 			return err
@@ -185,7 +205,7 @@ func (n *Node) RenderHTML(br *ByteRenderer) error {
 		br.Renderln(indentStr, n.RawText.Content)
 		br.Render("<div>\n")
 
-		// We visit depth-first the children of the
+		// We visit depth-first the children of the node
 		for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
 			if err := theNode.RenderHTML(br); err != nil {
 				return err
@@ -217,9 +237,10 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 	// Get the rendered components of the tag
 	_, startTag, endTag, rest := n.preRenderTheTag()
 
-	if allsubmatchs := reXRef.FindAllSubmatch(rest, -1); len(allsubmatchs) > 0 {
+	// Handle cross-references in the line
+	if allsubmatches := reXRef.FindAllSubmatch(rest, -1); len(allsubmatches) > 0 {
 
-		for _, submatchs := range allsubmatchs {
+		for _, submatchs := range allsubmatches {
 
 			// Convert blanks to underscores blanks
 			// sub1 := string(encodeOnPlaceWithUnderscore(bytes.Clone(submatchs[1])))
@@ -252,10 +273,13 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 
 	// We visit depth-first the children of the node
 	for theNode := n.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-		indentChild := indent(theNode.Indentation)
+		if theNode.Indentation < 0 {
+			fmt.Println("indentation negative", n)
+			fmt.Println("indentation negative", theNode)
+		}
 
 		if n.Name == "li" {
-			br.Renderln(indentChild, "<div>")
+			br.Renderln(indent(theNode.Indentation), "<div>")
 		}
 		if theNode == n.FirstChild {
 			if n.Name != "ul" && n.Name != "ol" {
@@ -278,7 +302,7 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 		}
 
 		if n.Name == "li" {
-			br.Renderln(indentChild, "</div>")
+			br.Renderln(indent(theNode.Indentation), "</div>")
 		}
 	}
 
@@ -289,158 +313,151 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 
 }
 
-func (n *Node) addAttributes(startTag []byte) []byte {
+type AttrType int
 
-	if len(n.Id) > 0 {
-		startTag = fmt.Appendf(startTag, " id='%s'", n.Id)
-	}
-	if len(n.Class) > 0 {
-		startTag = fmt.Appendf(startTag, " class='%s'", n.Class)
-	}
-	if len(n.Src) > 0 {
-		startTag = fmt.Appendf(startTag, " src='%s'", n.Src)
-	}
-	if len(n.Href) > 0 {
-		startTag = fmt.Appendf(startTag, " href='%s'", n.Href)
-	}
+const (
+	Id AttrType = iota
+	Class
+	Src
+	Href
+	Attrs
+)
 
-	for _, a := range n.Attr {
-		startTag = fmt.Appendf(startTag, " %s='%s'", a.Key, a.Val)
-	}
+func (n *Node) addAttributes2(st *ByteRenderer, attrs ...AttrType) {
 
-	return startTag
+	for _, attr := range attrs {
+		if attr == Id && len(n.Id) > 0 {
+			st.Render(" id='", n.Id, "'")
+		}
+		if attr == Class && len(n.Class) > 0 {
+			st.Render(" class='", n.Class, "'")
+		}
+		if attr == Src && len(n.Src) > 0 {
+			st.Render(" src='", n.Src, "'")
+		}
+		if attr == Href && len(n.Href) > 0 {
+			st.Render(" href='", n.Href, "'")
+		}
+		if attr == Attrs {
+			for _, a := range n.Attr {
+				st.Render(" ", a.Key, "='", a.Val, "'")
+			}
+		}
+	}
 
 }
 
 func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte, rest []byte) {
+	st := &ByteRenderer{}
+	et := &ByteRenderer{}
 
 	switch n.Name {
 
+	case "section":
+		st.Render("<", n.Name)
+		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
+		st.Render(">")
+
+		if len(n.RestLine) > 0 {
+			if n.p.Config.Bool("rite.noReSpec") {
+				st.Render("<h2>", n.Outline, " ", n.RestLine, "</h2>\n")
+			} else {
+				st.Render("<h2>", n.RestLine, "</h2>\n")
+			}
+		}
+
+		et.Render("</", n.Name, ">")
+
 	case "pre":
 		// Handle the 'pre' tag, with special case when the section started with '<pre><code>
-		startTag = fmt.Appendf(startTag, "<pre")
+		st.Render("<pre")
+		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
+		st.Render(">")
+
 		if bytes.HasPrefix(n.RestLine, []byte("<code")) {
-			endTag = fmt.Appendf(endTag, "</code>")
+			et.Render("</code>")
 		}
-		endTag = fmt.Appendf(endTag, "</pre>")
+		et.Render("</pre>")
+
+		rest = bytes.Clone(n.RestLine)
 
 	case "x-li":
-		startTag = fmt.Appendf(startTag, "<li")
-		startTag = n.addAttributes(startTag)
-		startTag = fmt.Appendf(startTag, ">")
+		st.Render("<li")
+		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
+		st.Render(">")
 
-		endTag = fmt.Appendf(endTag, "</li>")
+		et.Render("</li>")
+
 		if len(n.Id) > 0 {
 			rest = fmt.Appendf(rest, "<b>%s</b>", n.Id)
 		}
 		rest = fmt.Appendf(rest, "%s", n.RestLine)
 
-		return n.Name, startTag, endTag, rest
-
 	case "x-dl":
+		// We represent definition lists as tables, for compatibility when copying from HTML
+		// and pasting to Google Docs.
+		// This is a class for table formatting
 		n.AddClassString("deftable")
-		startTag = fmt.Appendf(startTag, "<table")
-		startTag = n.addAttributes(startTag)
-		startTag = fmt.Appendf(startTag, ">")
 
-		endTag = fmt.Appendf(endTag, "</table>")
+		st.Render("<table")
+		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
+		st.Render(">")
 
-		return n.Name, startTag, endTag, nil
+		et.Render("</table>")
 
 	case "x-dt":
-		startTag = fmt.Appendf(startTag,
-			"<tr><td style='padding-left: 0px;'><b>%s</b></td></tr><tr><td style='padding-left: 20px;'>",
-			bytes.TrimSpace(n.RestLine))
+		st.Render(
+			"<tr><td style='padding-left: 0px;'><b>", bytes.TrimSpace(n.RestLine), "</b></td></tr><tr><td style='padding-left: 20px;'>",
+		)
 
-		endTag = fmt.Appendf(endTag, "</td></tr>")
-
-		return n.Name, startTag, endTag, nil
+		et.Render("</td></tr>")
 
 	case "x-code":
-		startTag = fmt.Appendf(startTag, "<pre")
-		endTag = fmt.Appendf(endTag, "</code></pre>")
+		st.Render("<pre")
+		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
+		st.Render("><code>")
+
+		et.Render("</code></pre>")
 
 	case "x-note":
-		startTag = fmt.Appendf(startTag, "<table style='width:%s;'><tr><td class='xnotet'><aside class='xnotea'", "100%")
-		endTag = fmt.Appendf(endTag, "</aside></td></tr></table>")
+		st.Render("<table style='width:100%;margin:1em 0;'><tr><td class='xnotet'><aside class='xnotea'>")
+		if len(n.RestLine) > 0 {
+			st.Render("<p class='xnotep'>NOTE: ", bytes.TrimSpace(n.RestLine), "</p>")
+		}
+
+		et.Render("</aside></td></tr></table>")
 
 	case "x-warning":
 		// Handle the 'x-note' special tag
-		startTag = fmt.Appendf(startTag, "<table style='width:%s;'><tr><td class='xwarnt'><aside class='xwarna'", "100%")
-		endTag = fmt.Appendf(endTag, "</aside></td></tr></table>")
+		st.Render("<table style='width:100%;'><tr><td class='xwarnt'><aside class='xwarna'>")
+		if len(n.RestLine) > 0 {
+			st.Render("<p class='xnotep'>WARNING! ", bytes.TrimSpace(n.RestLine), "</p>")
+		}
+
+		et.Render("</aside></td></tr></table>")
 
 	case "x-img":
 		// Handle the 'x-img' special tag
-		startTag = fmt.Appendf(startTag, "<figure><img")
-		endTag = fmt.Appendf(endTag, "<figcaption>%s</figcaption></figure>", n.RestLine)
+		st.Render("<figure")
+		n.addAttributes2(st, Id, Class, Href, Attrs)
+		st.Render("><img")
+		n.addAttributes2(st, Src)
+		st.Render(" alt='", n.RestLine, "'>")
+
+		et.Render("<figcaption>", n.RestLine, "</figcaption></figure>\n")
 
 	default:
-		startTag = fmt.Appendf(startTag, "<%s", n.Name)
-		endTag = fmt.Appendf(endTag, "</%s>", n.Name)
+		st.Render("<", n.Name)
+		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
+		st.Render(">")
+
+		rest = bytes.Clone(n.RestLine)
+
+		et.Render("</", n.Name, ">")
 
 	}
 
-	if len(n.Id) > 0 {
-		startTag = fmt.Appendf(startTag, " id='%s'", n.Id)
-	}
-	if len(n.Class) > 0 {
-		startTag = fmt.Appendf(startTag, " class='%s'", n.Class)
-	}
-	if len(n.Src) > 0 {
-		startTag = fmt.Appendf(startTag, " src='%s'", n.Src)
-	}
-	if len(n.Href) > 0 {
-		startTag = fmt.Appendf(startTag, " href='%s'", n.Href)
-	}
-
-	for _, a := range n.Attr {
-		startTag = fmt.Appendf(startTag, " %s='%s'", a.Key, a.Val)
-	}
-
-	restLine := bytes.Clone(n.RestLine)
-
-	// Handle the special cases
-	switch string(n.Name) {
-	case "section":
-		startTag = fmt.Appendf(startTag, ">")
-		if len(n.RestLine) > 0 {
-			if n.p.Config.Bool("rite.noReSpec") {
-				startTag = fmt.Appendf(startTag, "<h2>%s %s</h2>\n", n.Outline, n.RestLine)
-			} else {
-				startTag = fmt.Appendf(startTag, "<h2>%s</h2>\n", n.RestLine)
-			}
-		}
-		restLine = nil
-
-	case "x-note":
-		if len(n.RestLine) > 0 {
-			startTag = fmt.Appendf(startTag, "><p class='xnotep'>NOTE: %s</p>", bytes.TrimSpace(n.RestLine))
-		} else {
-			startTag = fmt.Appendf(startTag, ">\n")
-		}
-		restLine = nil
-	case "x-warning":
-		if len(n.RestLine) > 0 {
-			startTag = fmt.Appendf(startTag, "><p class='xnotep'>WARNING! %s</p>", bytes.TrimSpace(n.RestLine))
-		} else {
-			startTag = fmt.Appendf(startTag, ">\n")
-		}
-		restLine = nil
-
-	case "x-code":
-		startTag = fmt.Appendf(startTag, "><code>")
-		restLine = nil
-
-	case "x-img":
-		startTag = fmt.Appendf(startTag, "/>")
-		restLine = nil
-
-	default:
-		startTag = fmt.Appendf(startTag, ">")
-
-	}
-
-	return n.Name, startTag, endTag, restLine
+	return n.Name, st.CloneBytes(), et.CloneBytes(), rest
 
 }
 
@@ -528,6 +545,7 @@ func (n *Node) RenderDiagramNode(br *ByteRenderer) error {
 	// Get the type of diagram
 	diagType := strings.ToLower(string(n.Class))
 
+	// Generate a PNG images except for D2 which only accepts SVG
 	imageType := "png"
 	if diagType == "d2" {
 		imageType = "svg"
@@ -539,7 +557,7 @@ func (n *Node) RenderDiagramNode(br *ByteRenderer) error {
 	hhString := fmt.Sprintf("%x", hh)
 
 	// The file will be in the 'builtassets' directory
-	fileName := "builtassets/" + diagType + "_" + string(hhString) + "." + imageType
+	fileName := "builtassets/" + diagType + "_" + hhString + "." + imageType
 
 	skinParams := []byte(`
 skinparam shadowing true
@@ -553,7 +571,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 
 	// Check if the file already exists. Because the hash of the diagram is in the file name, a modification
 	// in the source diagram will cause a new file to be generated.
-	// Eventually, spurious files should be deleted.
+	// Eventually, spurious files should be deleted manually.
 	if _, err := os.Stat(fileName); err != nil {
 		// File does not exist, generate the image
 		fmt.Println("Generating", fileName)
@@ -587,6 +605,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 			}
 
 		} else if diagType == "plantuml" {
+			fmt.Printf("generating Plantuml line %d\n", n.LineNumber)
 
 			input := bytes.NewBuffer(skinParams)
 			input.Write(n.InnerText)
@@ -698,7 +717,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 
 	sectionIndentStr := strings.Repeat(" ", n.Indentation)
 
-	br.Render(sectionIndentStr, "<figure><img src='"+fileName+"' alt=''>\n")
+	br.Render(sectionIndentStr, "<figure><img src='/"+fileName+"' alt='", n.RestLine, "'>\n")
 
 	br.Render(sectionIndentStr, "<figcaption>", n.RestLine, "</figcaption></figure>\n\n")
 

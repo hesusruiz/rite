@@ -21,9 +21,14 @@
             editors: [
                 {
                     company: "JesusRuiz",
-                    companyURL: "https://hesusruiz.github.io/hesusruiz",
+                    companyURL: "https://hesusruiz.github.io/",
                     email: "hesusruiz@gmail.com",
                     name: "Jesus Ruiz",
+                },
+            ],
+            authors: [
+                {
+                    name: "The DOME project participants",
                 },
             ],
             localBiblio: {
@@ -67,6 +72,11 @@
                 "DIF.PresentationExchange": {
                         href: "https://identity.foundation/presentation-exchange/spec/v2.0.0/",
                         title: "Presentation Exchange 2.0.0",
+                },
+                "EDIW.ARF": {
+                        date: "20 April 2023",
+                        href: "https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework/blob/main/docs/arf.md",
+                        title: "EUDI Wallet Architecture and Reference Framework 1.1.0",
                 },
                 "ENISA-Qualified Electronic Seals": {
                         date: "June 2017",
@@ -181,7 +191,7 @@
             },
         };
     </script>
-    <link rel="stylesheet" href="./assets/templates/respec/additional.css">
+    <link rel="stylesheet" href="/assets/templates/respec/additional.css">
 </head>
 
 <body>
@@ -191,28 +201,30 @@
 
 
 <section id='abstract'>
-        <p>We describe a mechanism which combines eIDAS X.509 certificates issued by QTSPs, advanced or qualified signatures and seals, and Verifiable Credentials to enable Decentralised Identity and Access Management (DIAM) in B2B ecosystems where it is required a high level of legal certainty, reduced manual processes and reduced dependency in third parties for the operation of the ecosystem.
-        </p>
-        <p>The mechanism enables authentication and access control of <b>entities acting on behalf of a legal person</b> with much more descriptive power and flexibility than trying to use just X.509 certificates of representation, and in a more efficient and automated way than using just signed PDFs.
-        </p>
-        <p>The mechanism is aligned with the upcoming EDIW (European Digital Identity Wallet) and its supporting eIDAS2 regulation, but it advances the state of the art by focusing entirely on legal persons. The mechanism can <b>not</b> be used for natural persons, but for legal persons there is no need to wait for future regulation and it can be implemented today.
-        </p>
-        <p>The mechanism leverages Verifiable Credentials and the existing eIDAS framework by:
-        </p>
-        <ul>
-            <li>making the credential a <b>machine-readable e-mandate</b> by embedding authorisation information in the credential using a formal language and binding it to the identities of the issuer and subject.
-            </li>
-            <li>making the credential a <b>legally binding document</b> under the [[eIDAS]] framework, by signing the credential with an advanced or qualified seal/signature.
-            </li>
-            <li>making the credential an <b>authentication mechanism</b>, by binding the identities of the subject and holder of the credential so it can be used for authentication.
-            </li>
-        </ul>
-        <p>In this way, the credential is a <b>legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential</b>.
-        </p>
-        <p>The subject can then <b>use the credential to authenticate to a Relying Party</b> because the identities of holder and subject are bound.
-        </p>
-        <p>This mechanism leverages the eIDAS trust framework using advanced or qualified signatures and seals to provide a <b>high level of legal certainty and enjoying the presumption of non-repudiation in the courts</b>, something that does not happen when using other types of basic signatures.
-        </p>
+    <p>We describe a mechanism enabling <b>Decentralised Identity and Access Management in B2B</b> ecosystems which require a high level of legal certainty, reduced manual processes and reduced dependency in third parties for the operation of the ecosystem. It combines eIDAS X.509 certificates issued by QTSPs with advanced or qualified signatures and seals of Verifiable Credentials.
+    </p>
+    <p>The mechanism enables authentication and access control of <b>entities acting on behalf of a legal person</b> with much more descriptive power and flexibility than trying to use just X.509 certificates of representation, and in a more efficient and automated way than using just signed PDFs.
+    </p>
+    <p>The mechanism is aligned with the upcoming EDIW (European Digital Identity Wallet) and its supporting eIDAS2 regulation, but it advances the state of the art by focusing entirely on <b>legal persons</b> with an implementation that can be used today without the need to wait for future supporting regulation.
+    </p>
+    <p>In particular, we support natural persons acting on behalf of legal entities (e.g., employees or contractors of a business), interacting with other legal entities. The mechanism is <b>not recommended for natural persons acting as citizens</b>, even if technically the mechanism could be adapted. For citizens we recommend to wait for eIDAS2 and EDIW.
+    </p>
+    <p>The mechanism leverages Verifiable Credentials and the existing eIDAS framework by:
+    </p>
+    <ul>
+        <li>making the credential a <b>machine-readable e-mandate</b> by embedding authorisation information in the credential using a formal language and binding it to the identities of the issuer and subject.
+        </li>
+        <li>making the credential a <b>legally binding document</b> under the [[eIDAS]] framework, by signing the credential with an advanced or qualified seal/signature.
+        </li>
+        <li>making the credential an <b>authentication mechanism</b>, by binding the identities of the subject and holder of the credential so it can be used for authentication.
+        </li>
+    </ul>
+    <p>In this way, the credential is a <b>legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential</b>.
+    </p>
+    <p>The subject can then <b>use the credential to authenticate to a Relying Party</b> because the identities of holder and subject of the credential are bound.
+    </p>
+    <p>This mechanism leverages the eIDAS trust framework using advanced or qualified signatures and seals to provide a <b>high level of legal certainty and enjoying the presumption of non-repudiation in the courts</b>, something that does not happen when using other types of basic signatures.
+    </p>
 </section>
 <section id='conformance'>
 </section>
@@ -220,52 +232,72 @@
 
     <section id='Problem Statement'><h2>Problem Statement</h2>
 
-        <p>Representation powers and mandates are an essential element for businesses establishing relationships with other businesses, governments and customers, because in many cases natural persons act on behalf of legal persons and depending on the sensitivity of the involved data/processes the Relying Party wants to enforce a high level of compliance and reduce associated legal risks.
-        </p>
-        <p>The "traditional" way to solve this is by using manual processes and paper/PDF documents associated to onboarding and Know-Your-Customer (KYC) processes, that the Relying Party verifies until it is satisfied with the level of legal risk assumed when allowing a Principal to access some services on behalf of the Participant. Those setup processes are normally cumbersome, slow and people-intensive, creating a lot of friction in the initial stages of using a service, especially when strong identification is required by the nature of the service.
-        </p>
-        <p>Verifiable Credentials can become a good instrument to migrate those paper/PDF documents to a machine-readable and legally-binding format and streamline and automate most of the tasks in this area, making the whole process more efficient while maintaining the same level of compliance and legal risk than with traditional processes.
+        <p>Representation powers and mandates are an essential element for businesses establishing relationships with other businesses, governments and customers, because in many cases <b>natural persons act on behalf of legal persons</b> and depending on the sensitivity of the involved data/processes the Relying Party may want to enforce a high level of legal compliance and reduce associated legal risks.
         </p>
         <p>Electronic powers of representation and mandates are an <b>explicit objective of the European Digital Identity Wallet</b> (EDIW) and the proposed amendment to eIDAS to support it:
         </p>
         <blockquote>
-            <p>To achieve simplification and cost reduction benefits to persons and businesses across the Union, including by enabling <b>powers of representation and e-mandates</b>, Member States should issue EDIWs relying on common standards and technical specifications to ensure seamless interoperability and to adequately increase the IT security, strengthen robustness against cyber-attacks and thus significantly reduce the potential risks of ongoing digitalisation for citizens and businesses.
+            <p>To achieve <b>simplification and cost reduction benefits to persons and businesses across the Union, including by enabling powers of representation and e-mandates</b>, Member States should issue EDIWs relying on common standards and technical specifications to ensure seamless interoperability and to adequately increase the IT security, strengthen robustness against cyber-attacks and thus significantly reduce the potential risks of ongoing digitalisation for citizens and businesses.
             </p>
             <figcaption>—[[[eIDAS2.Regulation]]]
             </figcaption>
         </blockquote>
-        <p>However, currently there are important barriers that hinder the adoption of an EU wide solution for cross-border transfer of representation information, being one of the most relevant the <b>lack of a common semantic framework</b>.
+        <p>The traditional way to solve this is by using cumbersome processes associated to onboarding and Know-Your-Customer (KYC) procedures, in many cases manual processes and paper/PDF documents that the Relying Party verifies until it is satisfied with the level of legal risk assumed when allowing a Principal to access some services on behalf of the Participant. Those setup processes are normally cumbersome, slow and people-intensive, creating a lot of friction in the initial stages of using a service, especially when strong identification is required by the nature of the service.
         </p>
-        <p>Representation is complex, and electronic mandates schemes and policies are basically national and usually do not contemplate the possibility to use those mandates in cross-border scenarios. The problem of mandates when accessing services from a Public Administration is extremely complex, so we will focus here on the private sector: when both the Relying Party and the Participant are legal persons from the private sector.
+        <p>Standard eIDAS certificates of representation can help (see an example QTSP <a href="https://eadtrust.eu/en/electronic-certificates/legal-entity-representative/">Certificate of Legal Entity Representative</a>), but they tend to be for natural persons with full powers or for very standard use cases.
         </p>
-        <p>In order to have a usable mechanism using Verifiable Credentials, the main requirements are the following:
+        <p>For a more granular specification of the powers of a natural person when acting on behalf of a legal person, other solutions have been implemented in different Member States, but they are typically centralised, non-interoperable among them and limited to the services provided by the Public Administration. In the private sector there is not any standardised solution and basically every company does it their own way.
+        </p>
+        <p><b>Verifiable Credentials</b> can become a good instrument to implement a machine-readable and legally-binding e-mandate with much more descriptive power and flexibility than trying to use just certificates of representation, while maintaining the same level of compliance and legal risk than with traditional processes, and this is the reason why it is included in the objectives of the upcoming eIDAS2 regulation.
+        </p>
+        <p>However, currently there are important barriers that hinder the adoption of an EU-wide solution for cross-border transfer of representation information, being one of the most relevant the <b>lack of a common semantic framework</b>.
+        </p>
+        <p>Representation is complex, and electronic mandates schemes and policies are basically national and usually do not contemplate the possibility to use those mandates in cross-border scenarios. The problem of mandates when accessing services from a Public Administration is extremely complex, so <b>we will focus here on the private sector</b>: when both the Relying Party and the Participant are legal persons from the private sector.
+        </p>
+        <p>In order to have a simple, flexible and powerful mechanism using Verifiable Credentials, the main requirements are the following:
         </p>
         <ul>
-            <li id='REQ-01'><b>REQ-01</b>: <b>The credential is an e-mandate</b>, by embedding authorisation information in the credential and binding it to the identities of the issuer and subject. We call such a credential a <code>Verifiable Authorisation</code>.
-                <p>We need to define a controlled vocabulary that can be used to express in a formal language (e.g. ODRL) the semantics of the powers delegated to a Principal by the Participant.
+            <li id='REQ-01_80'><b>REQ-01</b>: <b>The credential is an e-mandate</b>, by embedding authorisation information in the credential and binding it to the identities of the issuer and subject. We call such a credential a "Verifiable Authorisation".
+                <div>
+                <p>There must be a <b>controlled vocabulary</b> that can be used to express in a formal language (e.g. ODRL) the semantics of the powers delegated to a Principal by the Participant.
                 </p>
+                </div>
             </li>
-            <li id='REQ-02'><b>REQ-02</b>: <b>The Relying Party does not have to know in advance the Principal</b> accessing its services on behalf of a Participant.
-                <p>However, the Relying Party should have an easy authentication mechanism based on Verifiable Credentials to ensure that the entity accessing the services is the same entity identified in the e-mandate, and so that it has the required powers to access.
+            <li id='REQ-02_84'><b>REQ-02</b>: <b>The Relying Party does not have to know in advance the Principal</b> accessing its services on behalf of a Participant.
+                <div>
+                <p>However, the Relying Party should have an easy authentication mechanism based on Verifiable Credentials to ensure that the entity accessing the services is the same entity identified in the e-mandate, and so that it has the required powers to access the service.
                 </p>
-                <p>Ideally, to simplify the authentication and authorisation process for the Relying Party, the same credential that is a mandate (we call it a Verifiable Authorisation) can enable authentication (we call it a VerifiableID). Of course, we could use different credentials and even a "traditional" authentication mechanism, but having a single credential that can be used both for authentication and authorisation (using the powers specified in the mandate) is what we describe here.
+                </div>
+                <div>
+                <p>Ideally, to simplify the authentication and authorisation process for the Relying Party, the same credential that is a mandate (we call it a Verifiable Authorisation) can be used for authentication (we call it a VerifiableID). Of course, we could use different credentials and even a "traditional" authentication mechanism, but having a single credential that can be used both for authentication and authorisation (using the powers specified in the mandate) is what we describe here.
                 </p>
+                </div>
             </li>
-            <li id='REQ-03'><b>REQ-03</b>: There may be several Principals accessing the services of a Relying Party on behalf of the same Participant, and each Principal may have different powers that enable them to access different (possibly overlapping) sets of services.
-                <p>The Relying Party specifies the powers that need to be validated for each service (the scope the access is requested on and the type of representation that the Service provider allows). Each individual service may require different sets of powers, at the sole discretion of the Relying Partly (of course always in synch with the agreement formalised with the Participant).
+            <li id='REQ-03_90'><b>REQ-03</b>: There may be several Principals accessing the services of a Relying Party on behalf of the same Participant, and each Principal may have different powers assigned by the Participant that enable them to access different (possibly overlapping) sets of services with different privileges.
+                <div>
+                <p>The Relying Party specifies the powers that need to be validated for each service (the scope the access is requested on, and the type of representation that the Service provider allows). Each individual service may require different sets of powers, at the sole discretion of the Relying Partly (of course always in synch with the agreement formalised with the Participant).
                 </p>
+                </div>
+                <div>
                 <p>The Participant grants the authorisations to the Principals at its own discretion. Only the Principals that have the powers required by an individual service can access that service. The Participant may have more powers than strictly required (for example, full representation of the legal entity).
                 </p>
+                </div>
             </li>
-            <li id='REQ-04'><b>REQ-04</b>: The Relying Party can <b>reduce the legal risks and associated costs of litigation</b> in court by leveraging the <b>presumption of non-repudiation</b> associated to the use of an eIDAS advanced/qualified seal/signature for the Verifiable Credential.
+            <li id='REQ-04_96'><b>REQ-04</b>: The Relying Party can <b>reduce the legal risks and associated costs of litigation</b> in court by leveraging the <b>presumption of non-repudiation</b> associated to the use of an eIDAS advanced/qualified seal/signature for the Verifiable Credential.
+                <div>
                 <p>Of course, the Relying Party is free to request from Participants other types of signatures, if it is willing to assume the higher level of legal risk. We define here a mechanism which can have the same level as a document with a handwritten signature (when using qualified electronic signatures/seals).
                 </p>
+                </div>
+                <div>
                 <p>In this way the credential is a <b>legally binding machine-readable document where the issuer (Participant) attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential (Principal)</b>.
                 </p>
+                </div>
             </li>
-            <li id='REQ-05'><b>REQ-05</b>: The Relying Party can verify that the issuer of the credential corresponds to a <b>real-world identity which is fully accountable</b> for the contents of the credential, without needing any additional third-party, trust framework or participant list associated to a given Data Space or Federation.
-                <p>Because we use an eIDAS signature/seal for the credential, the current EU legal and trust framework in place since 2016 is enough for the Relying Party to verify that the Participant has issued a legally-binding mandate to the Principal.
+            <li id='REQ-05_102'><b>REQ-05</b>: The Relying Party can verify that the issuer of the credential corresponds to a <b>real-world identity which is fully accountable</b> for the contents of the credential, without needing any additional third-party, trust framework or participant list associated to a given Data Space or Federation.
+                <div>
+                <p>Using an eIDAS signature/seal for the credential, the current EU legal and trust framework in place since 2016 is enough for the Relying Party to verify that the Participant has issued a legally-binding mandate to the Principal.
                 </p>
+                </div>
             </li>
         </ul>
         <p>With all these properties, the credential is a <b>legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential</b>. The subject can then <b>use the credential to authenticate to a Relying Party</b> because the identities of holder and subject are bound.
@@ -279,9 +311,11 @@
         </p>
         <p>However, when interacting in the context of execution of the agreement, typically other entities are acting on behalf of the legal persons both for the consumer organisation and for the service provider organisation.
         </p>
-        <p>For example, an employee of the consumer organisation may start on behalf of his employer an interaction with the provider organisation to perform a process needed for the provision of a service. In this case, the provider organisation should authenticate the natural person and apply appropriate access control policies to ensure that the natural person is really entitled by the consumer organisation to perform the intended process.
+        <p>For example, an employee of the consumer organisation may start, on behalf of his employer, an interaction with the provider organisation to perform a process needed for the procurement and provision of a service. In this case, the provider organisation should authenticate the natural person and apply appropriate access control policies to ensure that the natural person is really entitled by the consumer organisation to perform the intended process.
         </p>
-        <p>In the context of authentication and access management, the legal entity acting as consumer organisation will be named <code>Participant</code>. The digital representation of a natural person, acting on behalf of a Participant, is referred to as a <code>Principal</code>. However, when the context is clear and we need to refer to eIDAS legal terms, we will use the term <code>user</code> (defined in the Glossary) to denote a natural or legal person, or a natural person representing a legal person using a wallet to authenticate.
+        <p>Another example is when a device, server machine or a service controlled by the consumer organisation interacts with a service provider in an automated way (“controlled” means in this context that the device, machine or service is operating under the responsibility of the legal person). Before allowing the entity to access protected resources, the provider organisation should authenticate the entity and apply appropriate access control policies to ensure that the entity is really entitled by the consumer organisation to perform the intended process.
+        </p>
+        <p>In the context of authentication and access management, the legal person acting as consumer organisation will be named <code>Participant</code>. The digital representation of an entity acting on behalf of a Participant is referred to as a <code>Principal</code>. In Human-to-Machine (H2M) scenarios, the <code>Principal</code> is a natural person (typically an employee or contractor), while in Machine-to-Machine (M2M) scenarios the <code>Principal</code> can be a device, an application or any other automated entity without legal personality under eIDAS. However, when the context is clear and we need to refer to eIDAS legal terms, we will use the term <code>user</code> (defined in the Glossary) to denote a natural or legal person, or a natural person representing a legal person using a wallet to authenticate.
         </p>
         <p>The legal entity acting as service provider and performing authentication and access management will be called <code>Relying Party</code>.
         </p>
@@ -438,8 +472,13 @@
             </p>
             <p>For the purpose of this discussion we use a diagram derived from the taxonomy <a href="https://ec.europa.eu/digital-building-blocks/wikis/display/EBSIDOC/Data+Models+and+Schemas">defined in EBSI</a>:
             </p>
-            <figure><img src='builtassets/plantuml_47747c7c84b49ce4c8b0f3159b566ffc.png' alt=''>
+            <figure><img src='/builtassets/plantuml_47747c7c84b49ce4c8b0f3159b566ffc.png' alt='Classes of credentials'>
             <figcaption>Classes of credentials</figcaption></figure>
+
+            <p>And this is the chain of trust from the "Authentic sources" to the credential that the employee (for example) holds.
+            </p>
+            <figure><img src='/builtassets/plantuml_server_e4338e4c75a470db448bc8cde251a4ee.png' alt='Chain of trust'>
+            <figcaption>Chain of trust</figcaption></figure>
 
             <p>The sections below refer to this diagram for each type of credential discussed.
             </p>
@@ -484,7 +523,7 @@
             </p>
             <p>We repeat here the taxonomy diagram to facilitate the description of the LEARCredential.
             </p>
-            <figure><img src='builtassets/plantuml_47747c7c84b49ce4c8b0f3159b566ffc.png' alt=''>
+            <figure><img src='/builtassets/plantuml_47747c7c84b49ce4c8b0f3159b566ffc.png' alt='The LEARCredential'>
             <figcaption>The LEARCredential</figcaption></figure>
 
             <p>The subject identified in the credential can authenticate to perform a protected process by using a special type of Verifiable Credential called <code>LEARCredential</code> (from <b>L</b>egal <b>E</b>ntity <b>A</b>uthorised <b>R</b>epresentation).
@@ -551,7 +590,7 @@
             </p>
             <p>The high-level view of the process is described in the following diagram, using as an example a COO (Chief Operating Officer) acting a legal entity representative and appointing an employee to perform some processes:
             </p>
-            <figure><img src='builtassets/plantuml_53418b3092cb323db978af09dc064024.png' alt=''>
+            <figure><img src='/builtassets/plantuml_53418b3092cb323db978af09dc064024.png' alt='High level view of issuance of LEARCredential to an employee'>
             <figcaption>High level view of issuance of LEARCredential to an employee</figcaption></figure>
 
         </section>
@@ -592,12 +631,9 @@
             </p>
             <p>For our example, we use the same that are used for accessing the European Commission portal. The claims in the credential are the digital equivalent of their analog counterparts, displayed here for illustration.
             </p>
-            <figure id='lear-appointment-letter-1'>
-                <p><img src="images/lear-appointment-letter-1.png" alt="" />
-                </p>
-                <figcaption>LEAR subject identification data.
-                </figcaption>
-            </figure>
+            <figure id='lear-appointment-letter-1'><img src='images/lear-appointment-letter-1.png' alt='LEAR subject identification data.'>
+            <figcaption>LEAR subject identification data.</figcaption></figure>
+
             <p>From the above form we can derive the following claims using the example data:
             </p>
 
@@ -621,7 +657,7 @@
 
             <p>In this example we use the <code>did:key</code> method for the DID of the employee, which provides a very high level of privacy and given the way the LEARCredential is generated it supports the verification of the chain of responsibility with a proper level of guarantee.
             </p>
-            <p>If the highest levels of assurance and legal compliance is desired and the employee has an eIDAS certificate for signatures (in this case a personal one, not one like the COO), we could use the <code>elsi:did</code> method for identification of the employee. However, the organisation (GoodAir in our example) should make sure that the employee is aware of and agree to the possible privacy implications of doing so, given the personal details leaked from the eIDAS certificate.
+            <p>If the highest levels of assurance and legal compliance are desired and the employee has an eIDAS certificate for signatures (in this case a personal one, not one like the COO), we could use the <code>elsi:did</code> method for identification of the employee. However, the organisation (GoodAir in our example) should make sure that the employee is aware of and agree to the possible privacy implications of doing so, given the personal details leaked from the eIDAS certificate.
             </p>
             <p>Those personal details are exactly the same as if the employee signs any document with a digital certificate, but care should be taken by the organisation because in this case the signature would be done "on behalf of" his employer and not as an individual personal action.
             </p>
@@ -685,7 +721,7 @@
 }
 </pre></td></tr></table>
 
-            <table style='width:100%;'><tr><td class='xnotet'><aside class='xnotea'><p class='xnotep'>NOTE: Attributes for natural and legal persons</p>
+            <table style='width:100%;margin:1em 0;'><tr><td class='xnotet'><aside class='xnotea'><p class='xnotep'>NOTE: Attributes for natural and legal persons</p>
                 <p>The attributes for natural persons and legal persons are derived from the <a href="https://ec.europa.eu/digital-building-blocks/wikis/download/attachments/467109280/eidas_saml_attribute_profile_v1.0_2.pdf?version=1&modificationDate=1639417533738&api=v2">eIDAS SAML Attribute Profile (eIDAS Technical Sub-group, 22 June 2015)</a>.
                 </p>
                 <p>All attributes for the eIDAS minimum data sets can be derived from the <a href="https://ec.europa.eu/isa2/solutions/core-vocabularies_en/">ISA Core Vocabulary</a> and <a href="https://joinup.ec.europa.eu/collection/semic-support-centre/specifications">https://joinup.ec.europa.eu/collection/semic-support-centre/specifications</a>.
@@ -698,14 +734,10 @@
 
             <p>The LEARCredential should include a formal description with the roles and duties of the LEAR. This is the digital equivalent to the analog description in our example, which uses natural language:
             </p>
-            <figure id='lear-appointment-letter-2'>
-                <p><img src="images/lear-appointment-letter-2.png" alt="" />
-                </p>
-                <figcaption>LEAR roles and duties.
-                </figcaption>
-            </figure>
-            <table style='width:100%;'><tr><td class='xnotet'><aside class='xnotea'>
+            <figure id='lear-appointment-letter-2'><img src='images/lear-appointment-letter-2.png' alt='LEAR roles and duties.'>
+            <figcaption>LEAR roles and duties.</figcaption></figure>
 
+            <table style='width:100%;margin:1em 0;'><tr><td class='xnotet'><aside class='xnotea'>
                 <p>We do not yet have defined the actual mechanism that will be used for describing formally the roles and duties of the LEAR. The way we specify them below is just an example. There is work ongoing to define the detailed mechanism formally (e.g. with ODRL), and it is expected to change. This example is intended only to describe the concepts in detail.
                 </p>
             </aside></td></tr></table>
@@ -803,12 +835,9 @@
             </p>
             <p>The description of the issuance process is general enough to be used for many types of credentials, but the text includes notes describing the concrete application of the process to the case of the LEARCredential.
             </p>
-            <figure id='iss-overview'>
-                <p><img src="images/issuance/issuance_background.svg" alt="" />
-                </p>
-                <figcaption>Overview of participants.
-                </figcaption>
-            </figure>
+            <figure id='iss-overview'><img src='images/issuance/issuance_background.svg' alt='Overview of participants.'>
+            <figcaption>Overview of participants.</figcaption></figure>
+
             <p><b>End user</b>
             </p>
             <p>This profile is valid for both natural and juridical persons, but because we are focusing on the issuance of the LEARCredential, in the detailed examples below we assume a natural person as the user.
@@ -846,17 +875,14 @@
         </section>
         <section id='Authentication'><h2>Authentication</h2>
 
-            <figure id='iss-authentication'>
-                <p><img src="images/issuance/issuance_authentication.svg" alt="" />
-                </p>
-                <figcaption>Issuance authentication.
-                </figcaption>
-            </figure>
+            <figure id='iss-authentication'><img src='images/issuance/issuance_authentication.svg' alt='Issuance authentication.'>
+            <figcaption>Issuance authentication.</figcaption></figure>
+
             <p>Before requesting a new credential, the End User has to authenticate with the Issuer with whatever mechanism is already implemented by the Issuer. This profile does not require that it is based on OIDC, Verifiable Credentials or any other specific mechanism.
             </p>
             <p>The level of assurance (LoA) of this authentication mechanism is one of the factors that will determine the confidence that the Verifiers can have on the credentials received by them from a given Issuer.
             </p>
-            <table style='width:100%;'><tr><td class='xnotet'><aside class='xnotea'><p class='xnotep'>NOTE: LEARCredential</p>
+            <table style='width:100%;margin:1em 0;'><tr><td class='xnotet'><aside class='xnotea'><p class='xnotep'>NOTE: LEARCredential</p>
                 <p>In the case of the LEARCredential, the End User (John Doe) is an employee of GoodAir and in order to receive the credential John first has to authenticate into the company systems using whatever mechanism GoodAir uses for employee authentication.
                 </p>
                 <p>Being a modern company, GoodAir uses Verifiable Credentials IAM but this is not a requirement for the issuance of the LEARCredential.
@@ -865,12 +891,9 @@
         </section>
         <section id='Credential Offer'><h2>Credential Offer</h2>
 
-            <figure id='iss-credentialoffer'>
-                <p><img src="images/issuance/issuance_credentialoffer.svg" alt="" />
-                </p>
-                <figcaption>Credential offer.
-                </figcaption>
-            </figure>
+            <figure id='iss-credentialoffer'><img src='images/issuance/issuance_credentialoffer.svg' alt='Credential offer.'>
+            <figcaption>Credential offer.</figcaption></figure>
+
             <p>In this profile the wallet does not have to implement the Credential Offer Endpoint described in section 4 of [[OpenID.VCI]].
             </p>
             <p>Instead, the Credential Issuer renders a QR code containing a reference to the Credential Offer that can be scanned by the End-User using a Wallet, as described in section 4.1 of [[OpenID.VCI]].
@@ -886,7 +909,7 @@
                     </li>
                     <li><code>credentials</code>: REQUIRED. A JSON array, where every entry is a JSON string. To achieve interoperability faster, this profile defines a global Trusted Credential Schemas List where well-known credential schemas are defined, in addition to the individual credentials that each Issuer can define themselves. The string value MUST be one of the id values in one of the objects in the <code>credentials_supported</code> metadata parameter of the Trusted Credential Schemas List (described later), or one of the id values in one of the objects in the <code>credentials_supported</code> Credential Issuer metadata parameter provided by the Credential Issuer. When processing, the Wallet MUST resolve this string value to the respective object. The credentials defined in the global Trusted Credential Schema List have precedence over the ones defined by the Credential Issuer.
                         <div>
-                        <table style='width:100%;'><tr><td class='xnotet'><aside class='xnotea'><p class='xnotep'>NOTE: LEARCredential</p>
+                        <table style='width:100%;margin:1em 0;'><tr><td class='xnotet'><aside class='xnotea'><p class='xnotep'>NOTE: LEARCredential</p>
                             <p>The only credential being offered in our case is the LEARCredential, so this is the credential schema that should be specified here. The LEARCredential is a credential known globally to the DOME ecosystem, so its schema should be published and be available in the Trusted Credential Schemas List.
                             </p>
                         </aside></td></tr></table>
@@ -963,12 +986,9 @@
             </p>
             <p>The retrieval of the Credential Issuer configuration is illustrated below.
             </p>
-            <figure id='iss-issuermetadata'>
-                <p><img src="images/issuance/issuance_issuermetadata.svg" alt="" />
-                </p>
-                <figcaption>Issuer metadata.
-                </figcaption>
-            </figure>
+            <figure id='iss-issuermetadata'><img src='images/issuance/issuance_issuermetadata.svg' alt='Issuer metadata.'>
+            <figcaption>Issuer metadata.</figcaption></figure>
+
             <section id='Credential Issuer Metadata Parameters'><h2>Credential Issuer Metadata Parameters</h2>
 
                 <p>The object contained in <code>openid-credential-issuer</code> contains the following:
@@ -1006,12 +1026,9 @@
         </section>
         <section id='Access Token'><h2>Access Token</h2>
 
-            <figure id='issuance_accesstoken'>
-                <p><img src="images/issuance/issuance_accesstoken.svg" alt="" />
-                </p>
-                <figcaption>Access Token.
-                </figcaption>
-            </figure>
+            <figure id='issuance_accesstoken'><img src='images/issuance/issuance_accesstoken.svg' alt='Access Token.'>
+            <figcaption>Access Token.</figcaption></figure>
+
             <p>The Wallet invokes the Token Endpoint implemented by the Authorization Server, which issues an Access Token and, optionally, a Refresh Token in exchange for the Pre-authorized Code that the wallet obtained in the Credential Offer.
             </p>
             <section id='Token Request'><h2>Token Request</h2>
@@ -1082,12 +1099,9 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
         </section>
         <section id='Request and receive Credential'><h2>Request and receive Credential</h2>
 
-            <figure id='issuance_requestcredential'>
-                <p><img src="images/issuance/issuance_requestcredential.svg" alt="" />
-                </p>
-                <figcaption>Request and receive Credential.
-                </figcaption>
-            </figure>
+            <figure id='issuance_requestcredential'><img src='images/issuance/issuance_requestcredential.svg' alt='Request and receive Credential.'>
+            <figcaption>Request and receive Credential.</figcaption></figure>
+
             <p>The Wallet backend invokes the Credential Endpoint, which issues a Credential as approved by the End-User upon presentation of a valid Access Token representing this approval.
             </p>
             <p>Communication with the Credential Endpoint MUST utilise TLS.
@@ -1249,103 +1263,309 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
             </section>
         </section>
     </section>
+    <section id='Reference architecture for authentication and access control'><h2>Reference architecture for authentication and access control</h2>
+
+        <p>According to the [[[EDIW.ARF]]], there are four types of flows when using the wallet with Verifiable Credentials:
+        </p>
+        <ol>
+            <li>Proximity supervised flow.
+            </li>
+            <li>Proximity unsupervised flow.
+            </li>
+            <li>Remote cross-device flow.
+            </li>
+            <li>Remote same-device flow.
+            </li>
+        </ol>
+        <p>Flows 1 and 2 are used when the Wallet User is physically close to a Relying Party and the credential exchange should happen using proximity protocols (NFC, Bluetooth, QR-Code, etc.), not using the Internet.
+        </p>
+        <p>Flows 3 and 4 are used when credential exchange should happen over the Internet. These are the flows that are used for online interactions between the user and the Relying Party.
+        </p>
+        <p>We focus here on the remote/online flows, which have the following characteristics:
+<ul>
+            <li>The remote cross-device flow is typically used when the user consumes information from the Relying Party on a web browser in a laptop/PC and uses the Wallet in a mobile to authenticate the session. We describe here a mechanism using a QR code displayed in the laptop/PC screen which is scanned by the Wallet running in a mobile.
+            </li>
+            <li>In the remote same-device flow, the Wallet and the consumption device are the same, typically a mobile device.
+            </li>
+</ul>
+        </p>
+        <p>The User journeys described here focus on the cross-device flow, which is the most complex, involving two different devices.
+        </p>
+        <p>To describe the system we will use the following figure which is based on [[[NIST-AUTH]]] and describes a reference architecture with the required functional components to achieve authentication and enforcement of the authorization policies.
+        </p>
+        <p>The diagram uses the logical concepts also used in the XACML reference architecture, but our description is agnostic to the actual policy language used in a concrete implementation.
+        </p>
+        <p>At this moment, we are interested in the overall flows and the details will be explained later in the corresponding sections.
+        </p>
+        <figure id='fig-general-architecture'><img src='images/login_in_DOME/authn_architecture-GeneralArchitecture.drawio.png' alt='General architecture, remote cross-device flow'>
+        <figcaption>General architecture, remote cross-device flow</figcaption></figure>
+
+        <p>The system supports both Human-To-Machine (H2M) and Machine-To-Machine (M2M) flows. They share a lot of things, but the H2M flows may be more interactive.
+        </p>
+        <ul class='plain'>
+            <li id='1._Request_protected_resource._1055'><b>1. Request protected resource.</b> In any of the scenarios (H2M or M2M), a request to access a protected resource managed by the Relying Party has to come with authentication information. Without authentication information, it is impossible to perform any type of access control to protect a resource from external entities (any entity acting on behalf of the Participant).
+                <div>
+                <p>In addition to authentication information, the request may carry also information intended specifically for access control, like the type of entity (natural person, device, application, ...), the relationship with the Participant (employee, contractor, sensor operated by Participant, ...), and specific powers assigned to the entity by the legal representative. More on this in the section <a href="#accesscontrol" class="xref">Access control with Verifiable Credentials</a>.
+                </p>
+                </div>
+                <div>
+                <p>The component in charge of <b>enforcing</b> that all requests come authenticated and that they comply with the access control policies of the Relying Party is the <code>PEP</code> (Policy Enforcement Point).
+                </p>
+                </div>
+            </li>
+            <li id='2_&_3._Check_if_authenticated._1061'><b>2 & 3. Check if authenticated.</b> Every request to a protected resource is intercepted by the <code>PEP</code>. The PEP is normally implemented as a reverse proxy or API gateway, so all calls to protected resources entering the organisation are intercepted and forwarded to the resource server only if they are accepted.
+                <div>
+                <p>If the request does not come with authentication information, there are two main scenarios which are possible:
+<ul>
+                    <li id='M2M_1065'><b>M2M</b>. If the user is a machine using an API, the request is rejected with an error. The caller is responsible for authenticating before retrying, which can be done using the metadata about the Relying Party available at the standard OpenID endpoints.
+                    </li>
+                    <li id='H2M_1067'><b>H2M</b>. If the user is a natural person using a browser for navigating the portal of the Relying Party, the typical approach is to redirect the browser to the authentication component (<strong>step 3</strong> in the figure) using an HTTP Status of <code>302 Found</code>. The redirection may include enough information so the authentication component can send back the user to the original request if the user completes authentication successfully.
+                    </li>
+</ul>
+                </p>
+                </div>
+                <div>
+                <p>If the request includes authentication information which has been obtained before via an authentication process, the PEP goes directly into the authorisation phase, described later in section <a href="#accesscontrol" class="xref">Access control with Verifiable Credentials</a>.
+                </p>
+                </div>
+            </li>
+            <li id='4._Authentication._1071'><b>4. Authentication.</b> The result of the authentication phase is to exchange a long-term VerifiableID (and possibly additional Verifiable Attestations) for a shorter-term Access Token issued by the Relying Party, which can be used later to invoke protected services. In order to do so, the Relying Party should make sure that the holder of the VerifiableID (the entity presenting the credential to the Relying Party) is the same entity as the one identified in the VerifiableID (the subject of the claims in the <code>credentialSubject</code> object). In addition, the authentication component enforces the compliance with the <b>authentication policies</b> defined in the Relying Party.
+                <div>
+                <p>These authentication policies should not be confused with the authorisation policies that will be used in the access control phase (though they may be related). One example of authentication policy could be: "we do not allow anyone to authenticate from 22:00 to 6:00". Authentication policies can also provide useful information to the user (especially a natural person) during the authentication phase about which credentials are required for a given service, before the user tries to access the service.
+                </p>
+                </div>
+            </li>
+            <li id='5._Authorization._1075'><b>5. Authorization.</b> When the PEP intercepts an authenticated request, it enforces access control policies by requesting a decision from the PDP (Policy Decision Point). The PDP uses information from the request to retrieve the applicable policies, evaluates those policies and returns its decision, either <code>Accept</code> or <code>Reject</code>. More detail on this process later in the document.
+                <div>
+                <p>The PEP (Policy <b>Enforcement</b> Point) enforces the decision taken by the PDP (Policy <b>Decision</b> Point):
+<ul>
+                    <li>If the decision is <code>Reject</code> the PDP returns an error to the caller (it may be <code>401 Unauthorized</code> or any other depending on security considerations).
+                    </li>
+                    <li>If the decision is <code>Accept</code> the PEP forwards the request to the Resource Server for execution, and returns to the caller whatever result the Resource Server send back to the PEP.
+                    </li>
+</ul>
+                </p>
+                </div>
+            </li>
+            <li id='6._Trust_Framework._1083'><b>6. Trust Framework.</b> During authentication and access control the system queries the Trust Framework to retrieve information required for execution of those phases. For example, authentication fails if any of the credentials presented by the user is revoked. Also, the policies for authentication and for access control may specify a set of Trusted Lists to query, and the process fails if the issuer of a credential is not in that list (for example, if the issuer is not in the Trusted Participants List because it does not belong to a given ecosystem, like a Data Space). More details later.
+            </li>
+        </ul>
+    </section>
     <section id='Authenticating with Verifiable Credentials'><h2>Authenticating with Verifiable Credentials</h2>
 
-        <section id='Overview1135'><h2>Overview</h2>
+        <p>We focus here on how to perform authentication using Verifiable Credentials. Access control is the subject of another section.
+        </p>
+        <p>Authentication requires a special type of Verifiable Credential called a <code>VerifiableID</code>. For the examples illustrating the mechanism we will use a LEARCredential, which is at the same time a <code>VerifiableID</code> and a <code>Verifiable Authorization</code>. The LEARCredential is a powerful mechanism that can be used both for authentication and sophisticated access control. In this section we will focus only on authentication using the LEARCredential.
+        </p>
+        <p>The authentication mechanism supports both Human-To-Machine (H2M) and Machine-To-Machine (M2M) flows. They share a lot of things, but we describe each one separately.
+        </p>
+        <section id='Authentication in Human-To-Machine scenarios'><h2>Authentication in Human-To-Machine scenarios</h2>
 
-            <p>Authentication requires a special type of Verifiable Credential called a VerifiableID. For the examples illustrating the mechanism we will use a LEARCredential, which is at the same time a VerifiableId and a Verifiable Authorization.
-            </p>
-            <p>For the explanation we will use the following figure which is based on [[[NIST-AUTH]]] which describes a reference architecture with necessary functional components to achieve authentication and enforcement of the authorization policies. The authorization process depends on four layers of functionality: <b>Enforcement</b>, <b>Decision</b>, <b>Access Control Data</b>, and <b>Administration</b>.
-            </p>
-            <p>The diagram uses the logical concepts also used in the XACML reference architecture, but the description is agnostic to the actual policy language used in a concrete implementation.
-            </p>
-            <p>In this description we assume that the user is a natural person who wants to access a protected resource. However, the architecture supports machine-to-machine (M2M) interactions. The differences will be described in the description when they are relevant.
-            </p>
-            <figure><img src='images/login_in_DOME/authn_architecture_numbered.drawio.png'/>
-            <figcaption>Architecture overview</figcaption></figure>
-            <p>The high level flow is the following:
-            </p>
-            <ul class='plain'>
-                <li id='1'><b>1</b> The user sends a request to access a protected resource managed by the Relying Party.
-                </li>
-                <li id='2'><b>2</b> Every request to a protected resource is intercepted by the PEP (Policy Enforcement Point). The PEP is normally implemented as a reverse proxy or API gateway, so all calls to protected resources entering the organisation are intercepted and forwarded only if they are accepted. If the request does not come with authentication information, there are several high level scenarios which are possible:
-                    <ul>
-                        <li>If the user is a machine using an API, the request is rejected with an error. The caller is responsible for authenticating before retrying, which can be done using the metadata about the Relying Party available at the standard OpenID endpoints.
-                        </li>
-                        <li>If the user is a natural person using a browser for navigating the portal of the Relying Party, the typical approach is to redirect the browser to the authentication component using an HTTP Status of 302. The redirection includes enough information so the authentication component can send back the user to the original request if the user completes authentication successfully.
-                        </li>
-                    </ul>
-                    <p>Alternatively, the request can include authentication information which has been obtained before via an authentication process. If this is the case, the PEP goes directly into the authentication phase, described later in section <a href="#accesscontrol" class="xref">Access control with Verifiable Credentials</a>.
-                    </p>
-                </li>
-                <li id='3'><b>3</b> The user is redirected to the authentication component. As mentioned before, alternatively the authorization component can be accessed directly by the user before trying to access the protected resource. This would be the expected behaviour of a user who knows that authentication is required. The mechanism described here supports all possible scenarios both for natural persons and machines.
-                    <p>An example flow with a natural person would be: The user navigates first to a general Login page in the portal of the Relying Party and authenticates. After authentication the portal presents a collection of services that the user can access. The user selects one of the services/operations and the Relying Party executes the operation if the user is authorised to do so.
-                    </p>
-                </li>
-                <li id='4'><b>4</b> The Verifiable Credentials verifier component of the Relying Party retrieves the credentials that are required for authentication. If the user has been redirected when trying to access a protected resource, the redirection provides information about the operation and protected resource that was trying to access, so there may be more credentials required than just a VerifiableID.
-                    <p>If the user accessed the Login page directly, the VC Verifier component does not have information about the resource that the user intends to access, so it can request just a VerifiableID.
-                    </p>
-                </li>
-                <li id='5'><b>5</b> The VC Verifier component of the Relying Party and the Wallet of the user engage in a Verifiable Presentation Exchange flow, where the result is that the VC Verifier receives a VerifiableID and possibly additional Verifiable Credentials as determined in step 4.
-                </li>
-                <li id='6'><b>6</b> The authorization mechanism uses the Trust Framework to query different Trusted Lists that are needed to evaluate the policy rules applicable to the request and compute a decision.
-                    <p>The Trust Framework is composed of one or more Trusted Lists where each list is specialised in some specific domain of trust.
-                    </p>
-                    <p>For example, the Trust Framework contains Trusted Lists with the schema definitions used for the well-known types of Verifiable Credentials in the ecosystem. In this way, if the Verifiable Registry used for the Trust Framework is based on a Blockchain network (or several federated networks), the schemas can be published in a trusted and resilient manner reducing the risk of malicious tampering and keeping a record of the history of modifications.
-                    </p>
-                    <p>But the most interesting Trusted Lists in the Trust Framework are the Trusted Issuers Lists, which provide the mechanism to efficiently and securely verify that the issuer of a given credential is a Trusted Issuer of that type of credentials.
-                    </p>
-                    <p>It has to be noticed that even though most Trusted Issuer Lists are global (used by all participants in the ecosystem) and have essentially public information, there may be some specialised lists that are private to one or more organisations and specialised in some specific requirement.
-                    </p>
-                    <p>In this way, there may be some lists that are specific to the products that one organisation provides to other participants in the ecosystem. For example, there may be a Trusted Issuer List private to one organisation which is updated with the identity of a participant when that participant acquires access to some product provided by that organisation.
-                    </p>
-                    <p>For example, this "product-specific" Trusted Issuer List is queried when performing authorization if the related policy rules specify that the issuer of the Verifiable Credential received in the request should have acquired the product that the request is trying to access.
-                    </p>
-                    <p>However, as mentioned before, the set of "internal" and "external" Trusted Lists to query is not hardcoded but it depends on the specific policy rules that should be applied to the request when computing the decision to grant access or not.
-                    </p>
-                    <p>In this way, the system provides a great deal of flexibility on how access control is performed.
-                    </p>
-                    <p>For simplicity, the diagram below shows the query of the Trusted Issuer Lists as a single interaction to a single box, but the actual interactions can be very complex if required. In addition, the diagram does not specify whether the list is "private" or "global".
-                    </p>
-                </li>
-            </ul>
-            <p>The following sections elaborate in more detail in each of the interactions.
-            </p>
-        </section>
-        <section id='Starting the OpenID for Verifiable Presentations flow'><h2>Starting the OpenID for Verifiable Presentations flow</h2>
+            <section id='Overview1096'><h2>Overview</h2>
 
-            <p>In this section we assume that the user tries to access a protected resource and that the user is not authenticated. The flow when the user is already authenticated is the same, just skipping the authentication phase (steps 1 to 6).
+                <p>For the explanation we will use an expanded version of [[[#fig-general-architecture]]], which can be seen in [[[#fig-authentication]]].
+                </p>
+                <figure id='fig-authentication'><img src='images/login_in_DOME/authn_architecture_authentication.drawio.png' alt='Authentication, H2M flow'>
+                <figcaption>Authentication, H2M flow</figcaption></figure>
+
+                <p>The high level flow is the following:
+                </p>
+                <ul class='plain'>
+                    <li id='1_1106'><b>1</b> The user sends a request to access a protected resource managed by the Relying Party.
+                    </li>
+                    <li id='2_1108'><b>2</b> The request is intercepted by the PEP which checks if the request is authenticated.
+                    </li>
+                    <li id='3_1110'><b>3</b> If the request is not authenticated, the user is redirected to the authentication component (VC Verifier) by returning an HTTP Status of <code>302 Found</code>.
+                        <div>
+                        <p>Alternatively, the authorization component can be accessed directly by the user before trying to access the protected resource. This would be the expected behaviour of a user who knows that authentication is required. The mechanism described here supports both scenarios.
+                        </p>
+                        </div>
+                        <div>
+                        <p>An example flow would be: The user navigates first to a general Login page in the portal of the Relying Party and authenticates. After authentication the portal presents a collection of services that the user can access. The user selects one of the services/operations and the Relying Party executes the operation if the user is authorised to do so.
+                        </p>
+                        </div>
+                    </li>
+                    <li id='4_1116'><b>4</b> The Verifiable Credentials verifier (VC Verifier) component of the Relying Party retrieves the credentials that are required for authentication. If the user has been redirected when trying to access a protected resource, the redirection provides information about the operation and protected resource that was trying to access, so there may be more credentials required than just a VerifiableID.
+                        <div>
+                        <p>If the user accessed the Login page directly, the VC Verifier component does not have information about the resource that the user intends to access, so it can request just a VerifiableID.
+                        </p>
+                        </div>
+                        <div>
+                        <p>The VC Verifier component retrieves the applicable policies from the Policy Retrieval Point (PRP) storing the authentication policies (do not confuse with the PRP for authorization, they could be the same in a given deployment but for more generality we have depicted separate logical components). The PRP is just the repository of policies. The Policy Administration Point is the component responsible for the management of the authentication policies in the PRP.
+                        </p>
+                        </div>
+                        <div>
+                        <p>The authentication policies specify, among other things:
+<ul>
+                            <li>The type of VerifiableID that the user should present in order to be authenticated
+                            </li>
+                            <li>If the user was redirected to the VC Verifier when trying to access a specific protected resource, the VC Component has received with the redirection the information about the service that the user intended to access. The VC Component passes this information to the PRP, and the PRP replies with the Verifiable Credentials (additional to the VerifiableID) that the user must present in order to have access to the service.
+                            </li>
+</ul>
+                        </p>
+                        </div>
+                        <div>
+                        <p>This information will be used by the VC Verifier to request from the Wallet those credentials. Please note that this is not performing authorization, only requesting the credentials that are know to be required for the service that the user intends to call. There may be additional authorization policies that implement more granular authorization checks when actually accessing the service.
+                        </p>
+                        </div>
+                        <div>
+                        <p>However, in most common cases it may be enough with just one credential of type LEARCredential if it includes enough authorization information to determine if access to the service can be allowed or not.
+                        </p>
+                        </div>
+                    </li>
+                    <li id='5_1131'><b>5</b> The VC Verifier component of the Relying Party and the Wallet of the user engage in a Verifiable Presentation Exchange flow, where the result is that the VC Verifier receives a VerifiableID and possibly additional Verifiable Credentials as determined in step 4.
+                    </li>
+                    <li id='6_1133'><b>6</b> The authorization mechanism uses the Trust Framework to query different Trusted Lists that are needed to evaluate the policy rules applicable to the request and compute a decision.
+                        <div>
+                        <p>The Trust Framework is composed of one or more Trusted Lists where each list is specialised in some specific domain of trust.
+                        </p>
+                        </div>
+                        <div>
+                        <p>For example, the Trust Framework contains Trusted Lists with the schema definitions used for the well-known types of Verifiable Credentials in the ecosystem. In this way, if the Verifiable Registry used for the Trust Framework is based on a Blockchain network (or several federated networks), the schemas can be published in a trusted and resilient manner reducing the risk of malicious tampering and keeping a record of the history of modifications.
+                        </p>
+                        </div>
+                        <div>
+                        <p>But the most interesting Trusted Lists in the Trust Framework are the Trusted Issuers Lists, which provide the mechanism to efficiently and securely verify that the issuer of a given credential is a Trusted Issuer of that type of credentials.
+                        </p>
+                        </div>
+                        <div>
+                        <p>It has to be noticed that even though most Trusted Issuer Lists are global (used by all participants in the ecosystem) and have essentially public information, there may be some specialised lists that are private to one or more organisations and specialised in some specific requirement.
+                        </p>
+                        </div>
+                        <div>
+                        <p>In this way, there may be some lists that are specific to the products that one organisation provides to other participants in the ecosystem. For example, there may be a Trusted Issuer List private to one organisation which is updated with the identity of a participant when that participant acquires access to some product provided by that organisation.
+                        </p>
+                        </div>
+                        <div>
+                        <p>For example, this "product-specific" Trusted Issuer List is queried when performing authorization if the related policy rules specify that the issuer of the Verifiable Credential received in the request should have acquired the product that the request is trying to access.
+                        </p>
+                        </div>
+                        <div>
+                        <p>However, as mentioned before, the set of "internal" and "external" Trusted Lists to query is not hardcoded but it depends on the specific policy rules that should be applied to the request when computing the decision to grant access or not.
+                        </p>
+                        </div>
+                        <div>
+                        <p>In this way, the system provides a great deal of flexibility on how access control is performed.
+                        </p>
+                        </div>
+                        <div>
+                        <p>For simplicity, the diagram below shows the query of the Trusted Issuer Lists as a single interaction to a single box, but the actual interactions can be very complex if required. In addition, the diagram does not specify whether the list is "private" or "global".
+                        </p>
+                        </div>
+                    </li>
+                </ul>
+                <p>The following sections elaborate in more detail in each of the interactions.
+                </p>
+            </section>
+<section id='Problem Statement'><h2>Problem Statement</h2>
+
+    <p>Representation powers and mandates are an essential element for businesses establishing relationships with other businesses, governments and customers, because in many cases <b>natural persons act on behalf of legal persons</b> and depending on the sensitivity of the involved data/processes the Relying Party may want to enforce a high level of legal compliance and reduce associated legal risks.
+    </p>
+    <p>Electronic powers of representation and mandates are an <b>explicit objective of the European Digital Identity Wallet</b> (EDIW) and the proposed amendment to eIDAS to support it:
+    </p>
+    <blockquote>
+        <p>To achieve <b>simplification and cost reduction benefits to persons and businesses across the Union, including by enabling powers of representation and e-mandates</b>, Member States should issue EDIWs relying on common standards and technical specifications to ensure seamless interoperability and to adequately increase the IT security, strengthen robustness against cyber-attacks and thus significantly reduce the potential risks of ongoing digitalisation for citizens and businesses.
+        </p>
+        <figcaption>—[[[eIDAS2.Regulation]]]
+        </figcaption>
+    </blockquote>
+    <p>The traditional way to solve this is by using cumbersome processes associated to onboarding and Know-Your-Customer (KYC) procedures, in many cases manual processes and paper/PDF documents that the Relying Party verifies until it is satisfied with the level of legal risk assumed when allowing a Principal to access some services on behalf of the Participant. Those setup processes are normally cumbersome, slow and people-intensive, creating a lot of friction in the initial stages of using a service, especially when strong identification is required by the nature of the service.
+    </p>
+    <p>Standard eIDAS certificates of representation can help (see an example QTSP <a href="https://eadtrust.eu/en/electronic-certificates/legal-entity-representative/">Certificate of Legal Entity Representative</a>), but they tend to be for natural persons with full powers or for very standard use cases.
+    </p>
+    <p>For a more granular specification of the powers of a natural person when acting on behalf of a legal person, other solutions have been implemented in different Member States, but they are typically centralised, non-interoperable among them and limited to the services provided by the Public Administration. In the private sector there is not any standardised solution and basically every company does it their own way.
+    </p>
+    <p><b>Verifiable Credentials</b> can become a good instrument to implement a machine-readable and legally-binding e-mandate with much more descriptive power and flexibility than trying to use just certificates of representation, while maintaining the same level of compliance and legal risk than with traditional processes, and this is the reason why it is included in the objectives of the upcoming eIDAS2 regulation.
+    </p>
+    <p>However, currently there are important barriers that hinder the adoption of an EU-wide solution for cross-border transfer of representation information, being one of the most relevant the <b>lack of a common semantic framework</b>.
+    </p>
+    <p>Representation is complex, and electronic mandates schemes and policies are basically national and usually do not contemplate the possibility to use those mandates in cross-border scenarios. The problem of mandates when accessing services from a Public Administration is extremely complex, so <b>we will focus here on the private sector</b>: when both the Relying Party and the Participant are legal persons from the private sector.
+    </p>
+    <p>In order to have a simple, flexible and powerful mechanism using Verifiable Credentials, the main requirements are the following:
+    </p>
+    <ul>
+        <li id='REQ-01_28'><b>REQ-01</b>: <b>The credential is an e-mandate</b>, by embedding authorisation information in the credential and binding it to the identities of the issuer and subject. We call such a credential a "Verifiable Authorisation".
+            <div>
+            <p>There must be a <b>controlled vocabulary</b> that can be used to express in a formal language (e.g. ODRL) the semantics of the powers delegated to a Principal by the Participant.
             </p>
-            <p>The authentication process starts an OpenID for Verifiable Presentations flow combined with the Self-Issued OP v2 specification [[OpenID.SIOP2]], where the VC Verifier component of the portal plays the role of a Relying Party (RP in Open ID Connect terminology) and the wallet of the user is a Self-Issued IdP.
+            </div>
+        </li>
+        <li id='REQ-02_32'><b>REQ-02</b>: <b>The Relying Party does not have to know in advance the Principal</b> accessing its services on behalf of a Participant.
+            <div>
+            <p>However, the Relying Party should have an easy authentication mechanism based on Verifiable Credentials to ensure that the entity accessing the services is the same entity identified in the e-mandate, and so that it has the required powers to access the service.
             </p>
-            <p>In this step, the Verifier has to send an Authorization Request to the wallet. But as a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
+            </div>
+            <div>
+            <p>Ideally, to simplify the authentication and authorisation process for the Relying Party, the same credential that is a mandate (we call it a Verifiable Authorisation) can be used for authentication (we call it a VerifiableID). Of course, we could use different credentials and even a "traditional" authentication mechanism, but having a single credential that can be used both for authentication and authorisation (using the powers specified in the mandate) is what we describe here.
             </p>
-            <p>We use a QR code to start the process and allow the wallet to receive the Authorization Request from the Verifier, and respond with an Authorization Response, sent to the Verifier in the body of an HTTP <code>POST</code> request.
+            </div>
+        </li>
+        <li id='REQ-03_38'><b>REQ-03</b>: There may be several Principals accessing the services of a Relying Party on behalf of the same Participant, and each Principal may have different powers assigned by the Participant that enable them to access different (possibly overlapping) sets of services with different privileges.
+            <div>
+            <p>The Relying Party specifies the powers that need to be validated for each service (the scope the access is requested on, and the type of representation that the Service provider allows). Each individual service may require different sets of powers, at the sole discretion of the Relying Partly (of course always in synch with the agreement formalised with the Participant).
             </p>
-            <figure><img src='builtassets/plantuml_51a6d72099c0f633c0a0905d9fcd4b0b.png' alt=''>
-            <figcaption>Starting the authentication phase</figcaption></figure>
+            </div>
+            <div>
+            <p>The Participant grants the authorisations to the Principals at its own discretion. Only the Principals that have the powers required by an individual service can access that service. The Participant may have more powers than strictly required (for example, full representation of the legal entity).
+            </p>
+            </div>
+        </li>
+        <li id='REQ-04_44'><b>REQ-04</b>: The Relying Party can <b>reduce the legal risks and associated costs of litigation</b> in court by leveraging the <b>presumption of non-repudiation</b> associated to the use of an eIDAS advanced/qualified seal/signature for the Verifiable Credential.
+            <div>
+            <p>Of course, the Relying Party is free to request from Participants other types of signatures, if it is willing to assume the higher level of legal risk. We define here a mechanism which can have the same level as a document with a handwritten signature (when using qualified electronic signatures/seals).
+            </p>
+            </div>
+            <div>
+            <p>In this way the credential is a <b>legally binding machine-readable document where the issuer (Participant) attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential (Principal)</b>.
+            </p>
+            </div>
+        </li>
+        <li id='REQ-05_50'><b>REQ-05</b>: The Relying Party can verify that the issuer of the credential corresponds to a <b>real-world identity which is fully accountable</b> for the contents of the credential, without needing any additional third-party, trust framework or participant list associated to a given Data Space or Federation.
+            <div>
+            <p>Using an eIDAS signature/seal for the credential, the current EU legal and trust framework in place since 2016 is enough for the Relying Party to verify that the Participant has issued a legally-binding mandate to the Principal.
+            </p>
+            </div>
+        </li>
+    </ul>
+    <p>With all these properties, the credential is a <b>legally binding machine-readable document where the issuer attests that it delegates the set of powers specified in the credential to the user identified as the subject of the credential</b>. The subject can then <b>use the credential to authenticate to a Relying Party</b> because the identities of holder and subject are bound.
+    </p>
+    <p>This mechanism leverages the eIDAS trust framework using advanced or qualified signatures and seals to provide a <b>high level of legal certainty and enjoying the presumption of non-repudiation in the courts</b>, something that does not happen when using other types of basic signatures.
+    </p>
+</section>
+            <section id='Starting the OpenID for Verifiable Presentations flow'><h2>Starting the OpenID for Verifiable Presentations flow</h2>
+
+                <p>In this section we assume that the user starts the authentication process interacting with the VC Verifier component of the Relying Party. The user can direct its browser directly to the VC Component or may have been redirected after trying to access a service without being authenticated previously.
+                </p>
+                <p>The authentication process starts an OpenID for Verifiable Presentations flow [[OpenID.VP]] combined with the Self-Issued OP v2 specification [[OpenID.SIOP2]], where the VC Verifier component of the portal plays the role of a Relying Party (RP in Open ID Connect terminology) and the wallet of the user is a Self-Issued IdP.
+                </p>
+                <p>In this step, the VC Verifier has to send an Authorization Request to the wallet. But as a Self-Issued OP may be running as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
+                </p>
+                <p>We use a QR code to start the process and allow the wallet to receive the Authorization Request from the Verifier, and respond with an Authorization Response, sent to the Verifier in the body of an HTTP <code>POST</code> request.
+                </p>
+                <figure><img src='/builtassets/plantuml_51a6d72099c0f633c0a0905d9fcd4b0b.png' alt='Starting the authentication phase'>
+                <figcaption>Starting the authentication phase</figcaption></figure>
 
 <!-- ****** EXPLANATIONS **** -->
 
-            <ul class='plain'>
-                <x-li id='1'> The user (GoodAir employee) uses his Laptop browser to access the DOME portal to perform the onboarding process.
+                <ul class='plain'>
+                    <li id='1_1180'><b>1</b> The User navigates with his Laptop browser to access the portal Of the  to perform the onboarding process.
 <div>
-                    <p>We assume in this scenario a cross-device interaction, that is, the user accesses the portal services with a PC browser, but authentication is performed with a mobile using Verifiable Credentials, as in typical 2-factor authentication.
-                    </p>
+                        <p>We assume in this scenario a cross-device interaction, that is, the user accesses the portal services with a PC browser, but authentication is performed with a mobile using Verifiable Credentials, as in typical 2-factor authentication.
+                        </p>
 </div>
-                </li>
-                <x-li id='2'> The browser sends a request to the Packet Delivery portal server.
-<div>
-</div>
-                </li>
-                <x-li id='3'> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
+                    </li>
+                    <li id='2_1185'><b>2</b> The browser sends a request to the Packet Delivery portal server.
 <div>
 </div>
-                </li>
-                <x-li id='4'> The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
+                    </li>
+                    <li id='3_1189'><b>3</b> The portal redirects the user to the login page of the Verifier component of DOME Onboarding. The page shows a button labelled “Login with Verifiable Credentials” or something similar.
 <div>
-                    <p>A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
-                    </p>
+</div>
+                    </li>
+                    <li id='4_1192'><b>4</b> The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
+<div>
+                        <p>A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
+                        </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1353,69 +1573,68 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 </pre></td></tr></table>
 
 </div>
-                </li>
-                <x-li id='5'> The QR code is displayed in the user browser with instructions to scan it and go to the URL inside it.
+                    </li>
+                    <li id='5_1199'><b>5</b> The QR code is displayed in the user browser with instructions to scan it and go to the URL inside it.
 <div>
-                    <figure id='qr_code_authreq'>
-                        <p><img src="images/qrcode-authreq.png" alt="" />
-                        </p>
-                        <figcaption>QR code with the example Authorization Request endpoint inside
-                        </figcaption>
-                    </figure>
-</div>
-                </li>
-                <x-li id='6'> The user scans the QR with his wallet and tells the wallet to go to the URL in the QR.
-<div>
-</div>
-                </li>
-                <x-li id='7'> After confirmation by the user, the wallet performs a `GET /authentication-requests` to the endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
-<div>
-</div>
-                </li>
-                <x-li id='8'> The VC Verifier creates a SIOP Authentication Request. The parameters comprising a request for verifiable presentations are described in detail in the next section
-<div>
-</div>
-                </li>
-                <x-li id='9'> The Verifier replies to the wallet with the Authorization Request
-<div>
-</div>
-                </li>
-            </ul>
-        </section>
-        <section id='Generating the Authorization Request'><h2>Generating the Authorization Request</h2>
+                        <figure id='qr_code_authreq'><img src='images/qrcode-authreq.png' alt='QR code with the example Authorization Request endpoint inside'>
+                        <figcaption>QR code with the example Authorization Request endpoint inside</figcaption></figure>
 
-            <p>The Authorization Request travels in the response body of the HTTP GET request performed in the previous point, as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service and with the JAdES signature format.
-            </p>
-            <p>The parameters comprising a request for verifiable presentations are given in section 5 of [[OpenID.VP]] and in section 10.1 of [[OpenID.SIOP2]] and are reproduced here with the particularities of this use case, in particular taking into account that this is a cross-device interaction:
-            </p>
-            <ul>
-                <li id='response_type'><b>response_type</b> (REQUIRED). Must be <code>vp_token</code>. This parameter is defined in [[RFC6749]]. The possible values are determined by the response type registry established by [[RFC6749]]. The [[OpenID.VP]] specification introduces the response type <code>vp_token</code>. This response type asks the Wallet to return only a VP Token in the Authorization Response, which is what we want in our case.
-                </li>
-                <li id='scope'><b>scope</b> (REQUIRED). This parameter is defined in [[RFC6749]] which allows it to be used by verifiers to request presentation of credentials by utilizing a pre-defined scope value designating the type of credential. See section <a href="#request_scope" class="xref">Request Scope</a> for more details. We use in this instance the value <code>dome.credentials.presentation.LEARCredential</code> which means that the RP (DOME onboarding service) is asking the SIOP (user wallet) to send a credential of type <code>LEARCredential</code>.
-                </li>
-                <li id='response_mode'><b>response_mode</b> REQUIRED. MUST be <code>direct_post</code>. As this is a cross-device scenario, this response mode is used to instruct the Self-Issued OP to deliver the result of the authentication process to a certain endpoint using the HTTP POST method. This endpoint to which the SIOP shall deliver the authentication result is conveyed in the parameter <code>redirect_uri</code> described below.
-                </li>
-                <li id='redirect_uri'><b>redirect_uri</b> (REQUIRED). MUST be a valid RP endpoint. The Authentication Response is sent to this endpoint using <code>POST</code> and encoding <code>application/json</code>).
-                </li>
-                <li id='client_id'><b>client_id</b> REQUIRED. MUST be the DID of the RP (DOM onboarding entity) so it can be resolved by the SIOP and checked against a Trusted List, or rejected if it does not pass validation. This provides a high level of assurance to the SIOP that the RP is really who it claims.
-                </li>
-                <li id='client_id_scheme'><b>client_id_scheme</b> REQUIRED. MUST have the value <code>did</code>. This value indicates that the Client Identifier is a DID defined in [[DID-Core]]. The request MUST be signed with a private key associated with the DID. To obtain the corresponding private key, the Wallet MUST use DID Resolution defined by the DID method used by the Verifier. For most DID methods and since the associated DID Document may include multiple public keys, a particular public key used to sign the request in question MUST be identified by the kid in the JOSE Header. However, in our case the Verifier uses <code>did:elsi</code> and so the request MUST be signed with the eIDAS certificate according to the [[JAdES]] format, which defines the mechanism to identify the public key.
-                    <p>All Verifier metadata other than the public key MUST be obtained from the client_metadata or the <code>client_metadata_uri parameter</code> as defined in Section 5 of [[OpenID.VP]].
-                    </p>
-                </li>
-                <li id='nonce'><b>nonce</b> REQUIRED. This parameter follows the definition given in [[OpenID.Core]]. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.
-                </li>
-                <li id='state'><b>state</b> REQUIRED. Used by the portal component of DOM onboarding to associate the start of an authentication session with the end of that session when the RP Verifier component notifies to the portal.
-                </li>
-                <li id='presentation_definition'><b>presentation_definition</b> CONDITIONAL. A string containing a <code>presentation_definition</code> JSON object as defined in Section 4 of [[DIF.PresentationExchange]]. We do not use this parameter because <code>scope</code> already specifies the credential type.
-                </li>
-                <li id='presentation_definition_uri'><b>presentation_definition_uri</b> CONDITIONAL. A string containing a URL pointing to a resource where a <code>presentation_definition</code> JSON object as defined in Section 4 of [[DIF.PresentationExchange]] can be retrieved. We do not use this parameter because <code>scope</code> already specifies the credential type.
-                </li>
-            </ul>
-            <p>Note: A request MUST contain either a <code>presentation_definition</code> or a <code>presentation_definition_uri</code> or a single <code>scope</code> value representing a presentation definition, those three ways to request credential presentation are mutually exclusive. We use here the <code>scope</code> mechanism, which is simpler and fits our use case.
-            </p>
-            <p>This is an example request object using the definitions above:
-            </p>
+</div>
+                    </li>
+                    <li id='6_1205'><b>6</b> The user scans the QR with his wallet and tells the wallet to go to the URL in the QR.
+<div>
+</div>
+                    </li>
+                    <li id='7_1210'><b>7</b> After confirmation by the user, the wallet performs a `GET /authentication-requests` to the endpoint that was inside the QR code. The reply to the GET request is an Authorization Request
+<div>
+</div>
+                    </li>
+                    <li id='8_1214'><b>8</b> The VC Verifier creates a SIOP Authentication Request. The parameters comprising a request for verifiable presentations are described in detail in the next section
+<div>
+</div>
+                    </li>
+                    <li id='9_1217'><b>9</b> The Verifier replies to the wallet with the Authorization Request
+<div>
+</div>
+                    </li>
+                </ul>
+            </section>
+            <section id='Generating the Authorization Request'><h2>Generating the Authorization Request</h2>
+
+                <p>The Authorization Request travels in the response body of the HTTP GET request performed in the previous point, as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service and with the JAdES signature format.
+                </p>
+                <p>The parameters comprising a request for verifiable presentations are given in section 5 of [[OpenID.VP]] and in section 10.1 of [[OpenID.SIOP2]] and are reproduced here with the particularities of this use case, in particular taking into account that this is a cross-device interaction:
+                </p>
+                <ul>
+                    <li id='response_type_1228'><b>response_type</b> (REQUIRED). Must be <code>vp_token</code>. This parameter is defined in [[RFC6749]]. The possible values are determined by the response type registry established by [[RFC6749]]. The [[OpenID.VP]] specification introduces the response type <code>vp_token</code>. This response type asks the Wallet to return only a VP Token in the Authorization Response, which is what we want in our case.
+                    </li>
+                    <li id='scope_1230'><b>scope</b> (REQUIRED). This parameter is defined in [[RFC6749]] which allows it to be used by verifiers to request presentation of credentials by utilizing a pre-defined scope value designating the type of credential. See section <a href="#request_scope" class="xref">Request Scope</a> for more details. We use in this instance the value <code>dome.credentials.presentation.LEARCredential</code> which means that the RP (DOME onboarding service) is asking the SIOP (user wallet) to send a credential of type <code>LEARCredential</code>.
+                    </li>
+                    <li id='response_mode_1232'><b>response_mode</b> REQUIRED. MUST be <code>direct_post</code>. As this is a cross-device scenario, this response mode is used to instruct the Self-Issued OP to deliver the result of the authentication process to a certain endpoint using the HTTP POST method. This endpoint to which the SIOP shall deliver the authentication result is conveyed in the parameter <code>redirect_uri</code> described below.
+                    </li>
+                    <li id='redirect_uri_1234'><b>redirect_uri</b> (REQUIRED). MUST be a valid RP endpoint. The Authentication Response is sent to this endpoint using <code>POST</code> and encoding <code>application/json</code>).
+                    </li>
+                    <li id='client_id_1236'><b>client_id</b> REQUIRED. MUST be the DID of the RP (DOM onboarding entity) so it can be resolved by the SIOP and checked against a Trusted List, or rejected if it does not pass validation. This provides a high level of assurance to the SIOP that the RP is really who it claims.
+                    </li>
+                    <li id='client_id_scheme_1238'><b>client_id_scheme</b> REQUIRED. MUST have the value <code>did</code>. This value indicates that the Client Identifier is a DID defined in [[DID-Core]]. The request MUST be signed with a private key associated with the DID. To obtain the corresponding private key, the Wallet MUST use DID Resolution defined by the DID method used by the Verifier. For most DID methods and since the associated DID Document may include multiple public keys, a particular public key used to sign the request in question MUST be identified by the kid in the JOSE Header. However, in our case the Verifier uses <code>did:elsi</code> and so the request MUST be signed with the eIDAS certificate according to the [[JAdES]] format, which defines the mechanism to identify the public key.
+                        <div>
+                        <p>All Verifier metadata other than the public key MUST be obtained from the client_metadata or the <code>client_metadata_uri parameter</code> as defined in Section 5 of [[OpenID.VP]].
+                        </p>
+                        </div>
+                    </li>
+                    <li id='nonce_1242'><b>nonce</b> REQUIRED. This parameter follows the definition given in [[OpenID.Core]]. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.
+                    </li>
+                    <li id='state_1244'><b>state</b> REQUIRED. Used by the portal component of DOM onboarding to associate the start of an authentication session with the end of that session when the RP Verifier component notifies to the portal.
+                    </li>
+                    <li id='presentation_definition_1246'><b>presentation_definition</b> CONDITIONAL. A string containing a <code>presentation_definition</code> JSON object as defined in Section 4 of [[DIF.PresentationExchange]]. We do not use this parameter because <code>scope</code> already specifies the credential type.
+                    </li>
+                    <li id='presentation_definition_uri_1248'><b>presentation_definition_uri</b> CONDITIONAL. A string containing a URL pointing to a resource where a <code>presentation_definition</code> JSON object as defined in Section 4 of [[DIF.PresentationExchange]] can be retrieved. We do not use this parameter because <code>scope</code> already specifies the credential type.
+                    </li>
+                </ul>
+                <p>Note: A request MUST contain either a <code>presentation_definition</code> or a <code>presentation_definition_uri</code> or a single <code>scope</code> value representing a presentation definition, those three ways to request credential presentation are mutually exclusive. We use here the <code>scope</code> mechanism, which is simpler and fits our use case.
+                </p>
+                <p>This is an example request object using the definitions above:
+                </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1429,12 +1648,12 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 <span style="color:#008080">nonce</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">n-0S6_WzA2Mj</span>
 </pre></td></tr></table>
 
-            <p>(URL encoding removed, line breaks and leading spaces added for readability).
-            </p>
-            <p>As mentioned above, the Authentication Request is returned to the wallet in the reply body of the GET request, as a JWT in JWS form [[RFC7515]]), signed with eIDAS certificate of the DOM onboarding legal person.
-            </p>
-            <p>This is an example of the unencoded contents of the payload of the JWT:
-            </p>
+                <p>(URL encoding removed, line breaks and leading spaces added for readability).
+                </p>
+                <p>As mentioned above, the Authentication Request is returned to the wallet in the reply body of the GET request, as a JWT in JWS form [[RFC7515]]), signed with eIDAS certificate of the DOM onboarding legal person.
+                </p>
+                <p>This is an example of the unencoded contents of the payload of the JWT:
+                </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1448,57 +1667,57 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 }
 </pre></td></tr></table>
 
-            <p>Where the claims <code>iss</code> and <code>sub</code> MUST be the DID of the RP (in this case DOME onboarding) and MUST correspond exactly with the <code>client_id</code> parameter in the Authorization Request. The claim <code>auth_request</code> contains the Authentication Request as a string. The expiration time in claim <code>exp</code> avoids replays and can be very short because it is used by the Wallet just on reception of the Authentication Request. The expiration time should be enough for the user to review the Authorization Request, decide the credential(s) to send to the RP and instruct the Wallet to send the Authorization Reply to the RP.
-            </p>
-        </section>
-        <section id='Verification of the Authorization Request'><h2>Verification of the Authorization Request</h2>
+                <p>Where the claims <code>iss</code> and <code>sub</code> MUST be the DID of the RP (in this case DOME onboarding) and MUST correspond exactly with the <code>client_id</code> parameter in the Authorization Request. The claim <code>auth_request</code> contains the Authentication Request as a string. The expiration time in claim <code>exp</code> avoids replays and can be very short because it is used by the Wallet just on reception of the Authentication Request. The expiration time should be enough for the user to review the Authorization Request, decide the credential(s) to send to the RP and instruct the Wallet to send the Authorization Reply to the RP.
+                </p>
+            </section>
+            <section id='Verification of the Authorization Request'><h2>Verification of the Authorization Request</h2>
 
-            <p>Before sending the Authentication Response, the wallet should verify that the Authorization Request is correct. The most important verifications are described here:
-            </p>
-            <figure><img src='builtassets/plantuml_7d3dc5e7b6f4ba49b913e048dd96c2be.png' alt=''>
-            <figcaption>Starting the authentication phase</figcaption></figure>
-
-<!-- ****** EXPLANATIONS **** -->
-
-            <ul class='plain'>
-                <x-li id='10'> Verification of the signature. As mentioned in the previous section, the Authorization Request is received as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service. This allows the wallet to verify that the signature corresponds to a real-world entity.
-<div>
-</div>
-                </li>
-                <x-li id='11'> Verification that the DID in the `client_id` field of the Authorization Request corresponds to the entity that signed the Authorization Request. This is easy in our case because we use the `did:elsi` method.
-<div>
-</div>
-                </li>
-                <x-li id='12'> Verification that the entity identified in the `client_id` field of the Authorization Request is a trusted entity belonging to the ecosystem, by resolving the DID in the `client_id` field.
-<div>
-                    <p>The actual mechanism may vary depending on the DID method used and the ecosystem where the client wants to onboard.
-                    </p>
-                    <p>If the Relying Party is a well known entity (like the DOME onboarding service in the case of DOME), it is easy to verify that the DID corresponds to the Relying Party.
-                    </p>
-                    <p>In most other cases, for example when the Relying Party is a participant in the ecosystem, we assume that the ecosystem provides a Trusted Participants Registry with an API compatible with the EBSI Trusted Issuers Registry, and that the participants registry is managed in a trusted way by the onboarding service (meaning that the Wallet user trusts on the onboarding service, in the same way as all other participants).
-                    </p>
-                    <p>In this case, to check if the DID is a participant on the ecosystem, the wallet sends a <code>GET /api/did/v1/identifiers/{did-to-verify}</code> request to the endpoint of one of several trusted servers implementing the functionality to query the Trusted Participant Registry, where <code>{did-to-verify}</code> is the actual DID the Wallet wants to check (in our example it would be <code>did:elsi:VATFR-99999999</code>, corresponding to the RP) . The API returns a JSON document as a DID Document. The DID Document (as per W3C) contains relevant information about the entity owner of the DID. It contains its Public Key, used to verify the digital signature of the entity. It also contains the status of the entity in the ecosystem. It is extensible and can contain any public information which may be relevant for the use case. The API must be operated by a trusted entity for the Wallet user. There may be as many servers implementing the API as needed and operated by different entities. At least one of those trusted entities has to be configured in the Wallet of the user, to facilitate the use of the wallet.
-                    </p>
-</div>
-                </li>
-            </ul>
-        </section>
-        <section id='Creating and sending the Authorization Response'><h2>Creating and sending the Authorization Response</h2>
-
-            <p>Once the Authorization Request has been validated, the Wallet creates an Authorization Response to be posted in the <code>redirect_uri</code> specified by teh RP in the Authorization Request. For completeness, we describe in the following figure the complete process from reception of Authorization Request until sending the Authorization Response.
-            </p>
-            <figure><img src='builtassets/plantuml_089aed180d78fe7872d1120fafc45855.png' alt=''>
-            <figcaption>Starting the authentication phase</figcaption></figure>
+                <p>Before sending the Authentication Response, the wallet should verify that the Authorization Request is correct. The most important verifications are described here:
+                </p>
+                <figure><img src='/builtassets/plantuml_7d3dc5e7b6f4ba49b913e048dd96c2be.png' alt='Starting the authentication phase'>
+                <figcaption>Starting the authentication phase</figcaption></figure>
 
 <!-- ****** EXPLANATIONS **** -->
 
-            <ul class='plain'>
-                <x-li id='13'> The wallet creates an Authorization Response to be posted in the `redirect_uri` specified by GoodAir in the Authorization Request that was sent to the wallet. The contents of the Authorization Response are described below.
+                <ul class='plain'>
+                    <li id='10_1304'><b>10</b> Verification of the signature. As mentioned in the previous section, the Authorization Request is received as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service. This allows the wallet to verify that the signature corresponds to a real-world entity.
 <div>
-                    <p>The response is constructed as defined in section 6.1 of [[OpenID.VP]]. In particular, because the Authorization Request included only <code>vp_token</code> as the <code>response_type</code>, the VP Token is provided directly in the Authorization Response and a separate <code>id_token</code> is not needed.
-                    </p>
-                    <p>The contents of the Authorization Response in our specific use case are:
-                    </p>
+</div>
+                    </li>
+                    <li id='11_1307'><b>11</b> Verification that the DID in the `client_id` field of the Authorization Request corresponds to the entity that signed the Authorization Request. This is easy in our case because we use the `did:elsi` method.
+<div>
+</div>
+                    </li>
+                    <li id='12_1310'><b>12</b> Verification that the entity identified in the `client_id` field of the Authorization Request is a trusted entity belonging to the ecosystem, by resolving the DID in the `client_id` field.
+<div>
+                        <p>The actual mechanism may vary depending on the DID method used and the ecosystem where the client wants to onboard.
+                        </p>
+                        <p>If the Relying Party is a well known entity (like the DOME onboarding service in the case of DOME), it is easy to verify that the DID corresponds to the Relying Party.
+                        </p>
+                        <p>In most other cases, for example when the Relying Party is a participant in the ecosystem, we assume that the ecosystem provides a Trusted Participants Registry with an API compatible with the EBSI Trusted Issuers Registry, and that the participants registry is managed in a trusted way by the onboarding service (meaning that the Wallet user trusts on the onboarding service, in the same way as all other participants).
+                        </p>
+                        <p>In this case, to check if the DID is a participant on the ecosystem, the wallet sends a <code>GET /api/did/v1/identifiers/{did-to-verify}</code> request to the endpoint of one of several trusted servers implementing the functionality to query the Trusted Participant Registry, where <code>{did-to-verify}</code> is the actual DID the Wallet wants to check (in our example it would be <code>did:elsi:VATFR-99999999</code>, corresponding to the RP) . The API returns a JSON document as a DID Document. The DID Document (as per W3C) contains relevant information about the entity owner of the DID. It contains its Public Key, used to verify the digital signature of the entity. It also contains the status of the entity in the ecosystem. It is extensible and can contain any public information which may be relevant for the use case. The API must be operated by a trusted entity for the Wallet user. There may be as many servers implementing the API as needed and operated by different entities. At least one of those trusted entities has to be configured in the Wallet of the user, to facilitate the use of the wallet.
+                        </p>
+</div>
+                    </li>
+                </ul>
+            </section>
+            <section id='Creating and sending the Authorization Response'><h2>Creating and sending the Authorization Response</h2>
+
+                <p>Once the Authorization Request has been validated, the Wallet creates an Authorization Response to be posted in the <code>redirect_uri</code> specified by the RP in the Authorization Request. For completeness, we describe in the following figure the complete process from reception of Authorization Request until sending the Authorization Response.
+                </p>
+                <figure><img src='/builtassets/plantuml_089aed180d78fe7872d1120fafc45855.png' alt='Starting the authentication phase'>
+                <figcaption>Starting the authentication phase</figcaption></figure>
+
+<!-- ****** EXPLANATIONS **** -->
+
+                <ul class='plain'>
+                    <li id='13_1344'><b>13</b> The wallet creates an Authorization Response to be posted in the `redirect_uri` specified by GoodAir in the Authorization Request that was sent to the wallet. The contents of the Authorization Response are described below.
+<div>
+                        <p>The response is constructed as defined in section 6.1 of [[OpenID.VP]]. In particular, because the Authorization Request included only <code>vp_token</code> as the <code>response_type</code>, the VP Token is provided directly in the Authorization Response and a separate <code>id_token</code> is not needed.
+                        </p>
+                        <p>The contents of the Authorization Response in our specific use case are:
+                        </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1506,8 +1725,8 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 <span style="color:#008080">&amp;vp_token</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">[see definition below]</span>
 </pre></td></tr></table>
 
-                    <p>The content of the <code>presentation_submission</code> parameter in the above Authorization Response is:
-                    </p>
+                        <p>The content of the <code>presentation_submission</code> parameter in the above Authorization Response is:
+                        </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1528,11 +1747,11 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 }
 </pre></td></tr></table>
 
-                    <p>Which complies with [[DIF.PresentationExchange]] and refers to the Verifiable Presentation in the <code>vp_token</code> parameter provided in the same response. In our example, the Verifiable Presentation includes the LEARCredential that was described in the previous sections.
-                    </p>
+                        <p>Which complies with [[DIF.PresentationExchange]] and refers to the Verifiable Presentation in the <code>vp_token</code> parameter provided in the same response. In our example, the Verifiable Presentation includes the LEARCredential that was described in the previous sections.
+                        </p>
 </div>
-                </li>
-                <x-li id='14'> The wallet sends the Authorization Response to the endpoint received in the `redirect_uri` parameter of the Authorization Request, sending an HTTP `POST` request using the encoding `application/x-www-form-urlencoded`.
+                    </li>
+                    <li id='14_1376'><b>14</b> The wallet sends the Authorization Response to the endpoint received in the `redirect_uri` parameter of the Authorization Request, sending an HTTP `POST` request using the encoding `application/x-www-form-urlencoded`.
 <div>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -1546,43 +1765,43 @@ presentation_submission=[see definition below]
 </pre></td></tr></table>
 
 </div>
-                </li>
-            </ul>
-        </section>
-        <section id='Authenticating the user with the LEARCredential'><h2>Authenticating the user with the LEARCredential</h2>
+                    </li>
+                </ul>
+            </section>
+            <section id='Authenticating the user with the LEARCredential'><h2>Authenticating the user with the LEARCredential</h2>
 
-            <p>We should remember that inside the LEARCredential the <code>credentialSubject</code> object has an <code>id</code> field with value <code>did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK</code> which is the DID of the user. It was generated during the creation of the LEARCredential, and the Relying Party should trust that the credential was generated in the proper way binding cryptographically the DID with the LEARCredential, as described in a previous section. It is the same trust that should be put in the generation of any other signed document, like a contract or invoice.
-            </p>
-            <p>The process of verifying the Authorization Response and authenticating the user with the LEARCredential is the following:
-            </p>
-            <figure><img src='builtassets/plantuml_5e65e6b64889e67cad7ed8a938eee406.png' alt=''>
-            <figcaption>Starting the authentication phase</figcaption></figure>
+                <p>We should remember that inside the LEARCredential the <code>credentialSubject</code> object has an <code>id</code> field with value <code>did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK</code> which is the DID of the user. It was generated during the creation of the LEARCredential, and the Relying Party should trust that the credential was generated in the proper way binding cryptographically the DID with the LEARCredential, as described in a previous section. It is the same trust that should be put in the generation of any other signed document, like a contract or invoice.
+                </p>
+                <p>The process of verifying the Authorization Response and authenticating the user with the LEARCredential is the following:
+                </p>
+                <figure><img src='/builtassets/plantuml_5e65e6b64889e67cad7ed8a938eee406.png' alt='Starting the authentication phase'>
+                <figcaption>Starting the authentication phase</figcaption></figure>
 
 <!-- ****** EXPLANATIONS **** -->
 
-            <ul class='plain'>
-                <x-li id='15 and 16'> The Verifier receives the Authorization Request and has to perform verifications, the standard ones being defined in [[DIF.PresentationExchange]]. In order to verify that the Verifiable Credential has been issued by a trusted entity, the Relying Party has to verify:
+                <ul class='plain'>
+                    <li id='15_and_16_1407'><b>15 and 16</b> The Verifier receives the Authorization Request and has to perform verifications, the standard ones being defined in [[DIF.PresentationExchange]]. In order to verify that the Verifiable Credential has been issued by a trusted entity, the Relying Party has to verify:
 <div>
-                    <ol>
-                        <li>That the DID of the entity which is the issuer of the VC is a trusted entity.
-                        </li>
-                        <li>That the VC was signed by that participant.
-                        </li>
-                    </ol>
-                    <p>Both verifications can be done by performing DID resolution, checking that the resulting DID Document contains the public key corresponding to the one specified in the Verifiable Credential, and by verifying the digital signature of the credential against that public key.
-                    </p>
-                    <p>In our case the LEARCredential was issued using the <code>did:elsi</code> method, so resolution is very simple and is specified in [[DID-ELSI]].
-                    </p>
+                        <ol>
+                            <li>That the DID of the entity which is the issuer of the VC is a trusted entity.
+                            </li>
+                            <li>That the VC was signed by that participant.
+                            </li>
+                        </ol>
+                        <p>Both verifications can be done by performing DID resolution, checking that the resulting DID Document contains the public key corresponding to the one specified in the Verifiable Credential, and by verifying the digital signature of the credential against that public key.
+                        </p>
+                        <p>In our case the LEARCredential was issued using the <code>did:elsi</code> method, so resolution is very simple and is specified in [[DID-ELSI]].
+                        </p>
 </div>
-                </li>
-                <x-li id='17'> After verifying the credential, the Relying Party can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the user and not by a malicious agent. To do so, it uses the public key associated to the `did:key` identifier `id` field inside the `credentialSubject` structure. That public key is cryptographically bound to the customer DID during the onboarding process that GoodAir performed with its employee.
+                    </li>
+                    <li id='17_1418'><b>17</b> After verifying the credential, the Relying Party can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the user and not by a malicious agent. To do so, it uses the public key associated to the `did:key` identifier `id` field inside the `credentialSubject` structure. That public key is cryptographically bound to the customer DID during the onboarding process that GoodAir performed with its employee.
 <div>
 </div>
-                </li>
-                <x-li id='18'> The Verifier creates an Access Token for the user so it can be used later for access services provided by the Relying Party (in the case of onboarding, those services would be the ones related to the onboarding process implemented by the Onboarding portal). The Access Token is generated in JWT format and signed by the VC Verifier. The access token is intended for use as bearer token over HTTP [[RFC2616]] using Transport Layer Security (TLS) [[RFC5246]] to access protected resources, and it should use the JWT Profile profile described in [[RFC9068]].
+                    </li>
+                    <li id='18_1421'><b>18</b> The Verifier creates an Access Token for the user so it can be used later for access services provided by the Relying Party (in the case of onboarding, those services would be the ones related to the onboarding process implemented by the Onboarding portal). The Access Token is generated in JWT format and signed by the VC Verifier. The access token is intended for use as bearer token over HTTP [[RFC2616]] using Transport Layer Security (TLS) [[RFC5246]] to access protected resources, and it should use the JWT Profile profile described in [[RFC9068]].
 <div>
-                    <p>For our use case, the payload of the JWT access token looks like:
-                    </p>
+                        <p>For our use case, the payload of the JWT access token looks like:
+                        </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1599,38 +1818,38 @@ presentation_submission=[see definition below]
 }
 </pre></td></tr></table>
 
-                    <p>Where, according to [[RFC9068]]:
-                    </p>
-                    <ul>
-                        <li><code>iss</code> and <code>client_id</code> have the same value because the access token has been generated by the Verifier component of the DOME onboarding service, acting as the DOME legal person.
-                        </li>
-                        <li><code>sub</code> identifies the user (employee of GoodAir acting as LEAR of the company) using the DID inside the Verifiable Credential received
-                        </li>
-                        <li><code>aud</code> identifies the RS (Resource Server) component in Packet Delivery. In this case we assume that it is internal and does not have a DID assigned, so we use the URI of the component.
-                        </li>
-                        <li><code>kid</code> in the header identifies the key that is used to sign the JWT and which must be configured up-front and known by the RS (Resource Server.
-                        </li>
-                        <li><code>scope</code> has the same value as the equivalent <code>scope</code> parameter in the initial Authorization Request.
-                        </li>
-                        <li><code>verifiableCredential</code> contains the Verifiable Credential that was received, specifically the value of the first element of the field <code>verifiableCredential</code> of the Verifiable Presentation.
-                        </li>
-                    </ul>
+                        <p>Where, according to [[RFC9068]]:
+                        </p>
+                        <ul>
+                            <li><code>iss</code> and <code>client_id</code> have the same value because the access token has been generated by the Verifier component of the DOME onboarding service, acting as the DOME legal person.
+                            </li>
+                            <li><code>sub</code> identifies the user (employee of GoodAir acting as LEAR of the company) using the DID inside the Verifiable Credential received
+                            </li>
+                            <li><code>aud</code> identifies the RS (Resource Server) component in Packet Delivery. In this case we assume that it is internal and does not have a DID assigned, so we use the URI of the component.
+                            </li>
+                            <li><code>kid</code> in the header identifies the key that is used to sign the JWT and which must be configured up-front and known by the RS (Resource Server.
+                            </li>
+                            <li><code>scope</code> has the same value as the equivalent <code>scope</code> parameter in the initial Authorization Request.
+                            </li>
+                            <li><code>verifiableCredential</code> contains the Verifiable Credential that was received, specifically the value of the first element of the field <code>verifiableCredential</code> of the Verifiable Presentation.
+                            </li>
+                        </ul>
 </div>
-                </li>
-                <x-li id='19'> The Verifier sends a successful response to the POST request from the wallet. The wallet receives the response to the POST indicating the success or failure of the process. The Verifier continues processing because the web portal of Packet Delivery has to be refreshed with the services that this specific user can access, based on the information received in the Verifiable Credential and the access control policies implemented by the DOME portal.
+                    </li>
+                    <li id='19_1454'><b>19</b> The Verifier sends a successful response to the POST request from the wallet. The wallet receives the response to the POST indicating the success or failure of the process. The Verifier continues processing because the web portal of Packet Delivery has to be refreshed with the services that this specific user can access, based on the information received in the Verifiable Credential and the access control policies implemented by the DOME portal.
 <div>
 </div>
-                </li>
-                <x-li id='20'> The Verifier notifies the DOME portal to refresh the login page so it can present the services to the user. The notification includes the following:
+                    </li>
+                    <li id='20_1457'><b>20</b> The Verifier notifies the DOME portal to refresh the login page so it can present the services to the user. The notification includes the following:
 <div>
-                    <ul>
-                        <li>The <code>state</code> nonce that was generated by the portal when it generated the QR code. The portal uses the <code>state</code> nonce to know what login session is being notified.
-                        </li>
-                        <li>The access token generated before.
-                        </li>
-                    </ul>
-                    <p>The notification is a simple POST request with both parameters in the body:
-                    </p>
+                        <ul>
+                            <li>The <code>state</code> nonce that was generated by the portal when it generated the QR code. The portal uses the <code>state</code> nonce to know what login session is being notified.
+                            </li>
+                            <li>The access token generated before.
+                            </li>
+                        </ul>
+                        <p>The notification is a simple POST request with both parameters in the body:
+                        </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
 <pre class='nohighlight precolor'>
@@ -1642,20 +1861,282 @@ access_token=[the access token]
 &amp;state=af0ifjsldkj
 </pre></td></tr></table>
 
-                    <p>The portal component replies immediately and continues processing.
-                    </p>
+                        <p>The portal component replies immediately and continues processing.
+                        </p>
 </div>
-                </li>
-                <x-li id='21'> The portal of the Relying Party refreshes the screen and displays the services available to users, sending the Access Token to the browser of the user. The Access Token will be sent back by the browser to the portal whenever the user tries to access a protected resource of the portal, and so access control can be performed using the data inside the token, in the same way as with any other access token in other authentication mechanisms.
+                    </li>
+                    <li id='21_1477'><b>21</b> The portal of the Relying Party refreshes the screen and displays the services available to users, sending the Access Token to the browser of the user. The Access Token will be sent back by the browser to the portal whenever the user tries to access a protected resource of the portal, and so access control can be performed using the data inside the token, in the same way as with any other access token in other authentication mechanisms.
 <div>
 </div>
-                </li>
-            </ul>
+                    </li>
+                </ul>
+            </section>
+        </section>
+        <section id='Authenticating with Verifiable Credentials, Machine-To-Machine (M2M)'><h2>Authenticating with Verifiable Credentials, Machine-To-Machine (M2M)</h2>
+
+            <section id='Overview1483'><h2>Overview</h2>
+
+                <p>The M2M flow for authentication shares many things with the flows for H2M authentication. We focus here on the differences.
+                </p>
+                <p>In this description we assume that the user is an application or service running in a server operated by a legal person, and the application wants to access a protected resource in an automated way. This is also applicable when the application or service is running in a constrained device like a sensor. Without loss of generality, we will use the term <code>application</code> interchangeably with <code>user</code> when the context is clear.
+                </p>
+                <p>We assume, like in the H2M case, that the legal entity operating the application issues a LEARCredential to the application, and that the application uses a so-called <code>enterprise wallet</code> to store and manage Verifiable Credentials and their associated private keys.
+                </p>
+                <figure id='arch-overview'><img src='images/login_in_DOME/authn_architecture_numbered.drawio.png' alt='Architecture overview'>
+                <figcaption>Architecture overview</figcaption></figure>
+
+                <p>The high level flow is the following:
+                </p>
+                <ul class='plain'>
+                    <li id='1_1497'><b>1</b> The application sends a request to access a protected resource managed by the Relying Party.
+                    </li>
+                    <li id='2_1499'><b>2</b> Every request to a protected resource is intercepted by the PEP (Policy Enforcement Point). The PEP is normally implemented as a reverse proxy or API gateway, so all calls to protected resources entering the organisation are intercepted and forwarded only if they are accepted. If the request does not come with authentication information, there are several high level scenarios which are possible:
+                        <div>
+                        <ul>
+                            <li>If the user is a machine using an API, the request is rejected with an error. The caller is responsible for authenticating before retrying, which can be done using the metadata about the Relying Party available at the standard OpenID endpoints.
+                            </li>
+                            <li>If the user is a natural person using a browser for navigating the portal of the Relying Party, the typical approach is to redirect the browser to the authentication component using an HTTP Status of 302. The redirection includes enough information so the authentication component can send back the user to the original request if the user completes authentication successfully.
+                            </li>
+                        </ul>
+                        </div>
+                        <div>
+                        <p>Alternatively, the request can include authentication information which has been obtained before via an authentication process. If this is the case, the PEP goes directly into the authentication phase, described later in section <a href="#accesscontrol" class="xref">Access control with Verifiable Credentials</a>.
+                        </p>
+                        </div>
+                    </li>
+                    <li id='3_1508'><b>3</b> The user is redirected to the authentication component. As mentioned before, alternatively the authorization component can be accessed directly by the user before trying to access the protected resource. This would be the expected behaviour of a user who knows that authentication is required. The mechanism described here supports all possible scenarios both for natural persons and machines.
+                        <div>
+                        <p>An example flow with a natural person would be: The user navigates first to a general Login page in the portal of the Relying Party and authenticates. After authentication the portal presents a collection of services that the user can access. The user selects one of the services/operations and the Relying Party executes the operation if the user is authorised to do so.
+                        </p>
+                        </div>
+                    </li>
+                    <li id='4_1512'><b>4</b> The Verifiable Credentials verifier component of the Relying Party retrieves the credentials that are required for authentication. If the user has been redirected when trying to access a protected resource, the redirection provides information about the operation and protected resource that was trying to access, so there may be more credentials required than just a VerifiableID.
+                        <div>
+                        <p>If the user accessed the Login page directly, the VC Verifier component does not have information about the resource that the user intends to access, so it can request just a VerifiableID.
+                        </p>
+                        </div>
+                    </li>
+                    <li id='5_1516'><b>5</b> The VC Verifier component of the Relying Party and the Wallet of the user engage in a Verifiable Presentation Exchange flow, where the result is that the VC Verifier receives a VerifiableID and possibly additional Verifiable Credentials as determined in step 4.
+                    </li>
+                    <li id='6_1518'><b>6</b> The authorization mechanism uses the Trust Framework to query different Trusted Lists that are needed to evaluate the policy rules applicable to the request and compute a decision.
+                        <div>
+                        <p>The Trust Framework is composed of one or more Trusted Lists where each list is specialised in some specific domain of trust.
+                        </p>
+                        </div>
+                        <div>
+                        <p>For example, the Trust Framework contains Trusted Lists with the schema definitions used for the well-known types of Verifiable Credentials in the ecosystem. In this way, if the Verifiable Registry used for the Trust Framework is based on a Blockchain network (or several federated networks), the schemas can be published in a trusted and resilient manner reducing the risk of malicious tampering and keeping a record of the history of modifications.
+                        </p>
+                        </div>
+                        <div>
+                        <p>But the most interesting Trusted Lists in the Trust Framework are the Trusted Issuers Lists, which provide the mechanism to efficiently and securely verify that the issuer of a given credential is a Trusted Issuer of that type of credentials.
+                        </p>
+                        </div>
+                        <div>
+                        <p>It has to be noticed that even though most Trusted Issuer Lists are global (used by all participants in the ecosystem) and have essentially public information, there may be some specialised lists that are private to one or more organisations and specialised in some specific requirement.
+                        </p>
+                        </div>
+                        <div>
+                        <p>In this way, there may be some lists that are specific to the products that one organisation provides to other participants in the ecosystem. For example, there may be a Trusted Issuer List private to one organisation which is updated with the identity of a participant when that participant acquires access to some product provided by that organisation.
+                        </p>
+                        </div>
+                        <div>
+                        <p>For example, this "product-specific" Trusted Issuer List is queried when performing authorization if the related policy rules specify that the issuer of the Verifiable Credential received in the request should have acquired the product that the request is trying to access.
+                        </p>
+                        </div>
+                        <div>
+                        <p>However, as mentioned before, the set of "internal" and "external" Trusted Lists to query is not hardcoded but it depends on the specific policy rules that should be applied to the request when computing the decision to grant access or not.
+                        </p>
+                        </div>
+                        <div>
+                        <p>In this way, the system provides a great deal of flexibility on how access control is performed.
+                        </p>
+                        </div>
+                        <div>
+                        <p>For simplicity, the diagram below shows the query of the Trusted Issuer Lists as a single interaction to a single box, but the actual interactions can be very complex if required. In addition, the diagram does not specify whether the list is "private" or "global".
+                        </p>
+                        </div>
+                    </li>
+                </ul>
+                <p>The following sections elaborate in more detail in each of the interactions.
+                </p>
+            </section>
+            <section id='Exchanging a LEARCredential for an Access Token'><h2>Exchanging a LEARCredential for an Access Token</h2>
+
+                <p>In order to authenticate, the Wallet sends a <code>POST</code> request to a given endpoint specialised in M2M authentication. The contents of this POST request is very similar to the contents of the Authorization Response in the case of H2M flows. There are several reasons for having separate authentication endpoints for machines and humans, the most important being of legal responsibility nature: natural persons are completely different entities from the point of view of the legal system in the EU (for example, with specific laws like GDPR or Consumer Rights Directive). Having separate authentication endpoints helps reduce the risk of affecting natural persons when modifying the authentication of machines.
+                </p>
+                <p>The
+Once the Authorization Request has been validated, the Wallet creates an Authorization Response to be posted in the <code>redirect_uri</code> specified by the RP in the Authorization Request. For completeness, we describe in the following figure the complete process from reception of Authorization Request until sending the Authorization Response.
+                </p>
+                <figure><img src='/builtassets/plantuml_089aed180d78fe7872d1120fafc45855.png' alt='Starting the authentication phase'>
+                <figcaption>Starting the authentication phase</figcaption></figure>
+
+<!-- ****** EXPLANATIONS **** -->
+
+                <ul class='plain'>
+                    <li id='13_1568'><b>13</b> The wallet creates an Authorization Response to be posted in the `redirect_uri` specified by GoodAir in the Authorization Request that was sent to the wallet. The contents of the Authorization Response are described below.
+<div>
+                        <p>The response is constructed as defined in section 6.1 of [[OpenID.VP]]. In particular, because the Authorization Request included only <code>vp_token</code> as the <code>response_type</code>, the VP Token is provided directly in the Authorization Response and a separate <code>id_token</code> is not needed.
+                        </p>
+                        <p>The contents of the Authorization Response in our specific use case are:
+                        </p>
+
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#008080">presentation_submission</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">[see definition below]</span>
+<span style="color:#008080">&amp;vp_token</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">[see definition below]</span>
+</pre></td></tr></table>
+
+                        <p>The content of the <code>presentation_submission</code> parameter in the above Authorization Response is:
+                        </p>
+
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;definition_id&#34;</span>: <span style="color:#d14">&#34;OnboardingPresentationDefinition&#34;</span>,
+    <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;OnboardingPresentationSubmission&#34;</span>,
+    <span style="color:#000080">&#34;descriptor_map&#34;</span>: [
+    {
+        <span style="color:#000080">&#34;id&#34;</span>: <span style="color:#d14">&#34;id_credential&#34;</span>,
+        <span style="color:#000080">&#34;path&#34;</span>: <span style="color:#d14">&#34;$&#34;</span>,
+        <span style="color:#000080">&#34;format&#34;</span>: <span style="color:#d14">&#34;ldp_vp&#34;</span>,
+        <span style="color:#000080">&#34;path_nested&#34;</span>: {
+            <span style="color:#000080">&#34;format&#34;</span>: <span style="color:#d14">&#34;ldp_vc&#34;</span>,
+            <span style="color:#000080">&#34;path&#34;</span>: <span style="color:#d14">&#34;$.verifiableCredential[0]&#34;</span>
+        }
+    }
+    ]
+}
+</pre></td></tr></table>
+
+                        <p>Which complies with [[DIF.PresentationExchange]] and refers to the Verifiable Presentation in the <code>vp_token</code> parameter provided in the same response. In our example, the Verifiable Presentation includes the LEARCredential that was described in the previous sections.
+                        </p>
+</div>
+                    </li>
+                    <li id='14_1600'><b>14</b> The wallet sends the Authorization Response to the endpoint received in the `redirect_uri` parameter of the Authorization Request, sending an HTTP `POST` request using the encoding `application/x-www-form-urlencoded`.
+<div>
+
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#900;font-weight:bold">POST</span> <span style="color:#555">/api/siop/authorization_response</span> <span style="color:#000;font-weight:bold">HTTP</span><span style="color:#000;font-weight:bold">/</span><span style="color:#099">1.1</span>
+Host<span style="color:#000;font-weight:bold">:</span> verifier.dome-onboarding.org
+Content-Type<span style="color:#000;font-weight:bold">:</span> application/x-www-form-urlencoded
+
+presentation_submission=[see definition below]
+&amp;vp_token=[see definition below]
+</pre></td></tr></table>
+
+</div>
+                    </li>
+                </ul>
+            </section>
+            <section id='Authenticating the user with the LEARCredential1611'><h2>Authenticating the user with the LEARCredential</h2>
+
+                <p>We should remember that inside the LEARCredential the <code>credentialSubject</code> object has an <code>id</code> field with value <code>did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK</code> which is the DID of the user. It was generated during the creation of the LEARCredential, and the Relying Party should trust that the credential was generated in the proper way binding cryptographically the DID with the LEARCredential, as described in a previous section. It is the same trust that should be put in the generation of any other signed document, like a contract or invoice.
+                </p>
+                <p>The process of verifying the Authorization Response and authenticating the user with the LEARCredential is the following:
+                </p>
+                <figure><img src='/builtassets/plantuml_5e65e6b64889e67cad7ed8a938eee406.png' alt='Starting the authentication phase'>
+                <figcaption>Starting the authentication phase</figcaption></figure>
+
+<!-- ****** EXPLANATIONS **** -->
+
+                <ul class='plain'>
+                    <li id='15_and_16_1631'><b>15 and 16</b> The Verifier receives the Authorization Request and has to perform verifications, the standard ones being defined in [[DIF.PresentationExchange]]. In order to verify that the Verifiable Credential has been issued by a trusted entity, the Relying Party has to verify:
+<div>
+                        <ol>
+                            <li>That the DID of the entity which is the issuer of the VC is a trusted entity.
+                            </li>
+                            <li>That the VC was signed by that participant.
+                            </li>
+                        </ol>
+                        <p>Both verifications can be done by performing DID resolution, checking that the resulting DID Document contains the public key corresponding to the one specified in the Verifiable Credential, and by verifying the digital signature of the credential against that public key.
+                        </p>
+                        <p>In our case the LEARCredential was issued using the <code>did:elsi</code> method, so resolution is very simple and is specified in [[DID-ELSI]].
+                        </p>
+</div>
+                    </li>
+                    <li id='17_1642'><b>17</b> After verifying the credential, the Relying Party can also verify that the Verifiable Presentation including the Verifiable Credential is sent by the user and not by a malicious agent. To do so, it uses the public key associated to the `did:key` identifier `id` field inside the `credentialSubject` structure. That public key is cryptographically bound to the customer DID during the onboarding process that GoodAir performed with its employee.
+<div>
+</div>
+                    </li>
+                    <li id='18_1645'><b>18</b> The Verifier creates an Access Token for the user so it can be used later for access services provided by the Relying Party (in the case of onboarding, those services would be the ones related to the onboarding process implemented by the Onboarding portal). The Access Token is generated in JWT format and signed by the VC Verifier. The access token is intended for use as bearer token over HTTP [[RFC2616]] using Transport Layer Security (TLS) [[RFC5246]] to access protected resources, and it should use the JWT Profile profile described in [[RFC9068]].
+<div>
+                        <p>For our use case, the payload of the JWT access token looks like:
+                        </p>
+
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+{
+    <span style="color:#000080">&#34;iss&#34;</span>: <span style="color:#d14">&#34;did:elsi:VATFR-99999999&#34;</span>,
+    <span style="color:#000080">&#34;sub&#34;</span>: <span style="color:#d14">&#34;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&#34;</span>,
+    <span style="color:#000080">&#34;aud&#34;</span>:   <span style="color:#d14">&#34;https://dome-marketplace.eu/onboarding&#34;</span>,
+    <span style="color:#000080">&#34;exp&#34;</span>: <span style="color:#099">1639528912</span>,
+    <span style="color:#000080">&#34;iat&#34;</span>: <span style="color:#099">1618354090</span>,
+    <span style="color:#000080">&#34;jti&#34;</span> : <span style="color:#d14">&#34;dbe39bf3a3ba4238a513f51d6e1691c4&#34;</span>,
+    <span style="color:#000080">&#34;client_id&#34;</span>: <span style="color:#d14">&#34;did:elsi:VATFR-99999999&#34;</span>,
+    <span style="color:#000080">&#34;scope&#34;</span>: <span style="color:#d14">&#34;vp_token&#34;</span>,
+    <span style="color:#000080">&#34;verifiableCredential&#34;</span>: [<span style="color:#d14">&#34;the VC that was received inside the Verifiable Presentation&#34;</span>]
+}
+</pre></td></tr></table>
+
+                        <p>Where, according to [[RFC9068]]:
+                        </p>
+                        <ul>
+                            <li><code>iss</code> and <code>client_id</code> have the same value because the access token has been generated by the Verifier component of the DOME onboarding service, acting as the DOME legal person.
+                            </li>
+                            <li><code>sub</code> identifies the user (employee of GoodAir acting as LEAR of the company) using the DID inside the Verifiable Credential received
+                            </li>
+                            <li><code>aud</code> identifies the RS (Resource Server) component in Packet Delivery. In this case we assume that it is internal and does not have a DID assigned, so we use the URI of the component.
+                            </li>
+                            <li><code>kid</code> in the header identifies the key that is used to sign the JWT and which must be configured up-front and known by the RS (Resource Server.
+                            </li>
+                            <li><code>scope</code> has the same value as the equivalent <code>scope</code> parameter in the initial Authorization Request.
+                            </li>
+                            <li><code>verifiableCredential</code> contains the Verifiable Credential that was received, specifically the value of the first element of the field <code>verifiableCredential</code> of the Verifiable Presentation.
+                            </li>
+                        </ul>
+</div>
+                    </li>
+                    <li id='19_1678'><b>19</b> The Verifier sends a successful response to the POST request from the wallet. The wallet receives the response to the POST indicating the success or failure of the process. The Verifier continues processing because the web portal of Packet Delivery has to be refreshed with the services that this specific user can access, based on the information received in the Verifiable Credential and the access control policies implemented by the DOME portal.
+<div>
+</div>
+                    </li>
+                    <li id='20_1681'><b>20</b> The Verifier notifies the DOME portal to refresh the login page so it can present the services to the user. The notification includes the following:
+<div>
+                        <ul>
+                            <li>The <code>state</code> nonce that was generated by the portal when it generated the QR code. The portal uses the <code>state</code> nonce to know what login session is being notified.
+                            </li>
+                            <li>The access token generated before.
+                            </li>
+                        </ul>
+                        <p>The notification is a simple POST request with both parameters in the body:
+                        </p>
+
+<table style="width:100%;"><tr><td class="codecolor">
+<pre class='nohighlight precolor'>
+<span style="color:#900;font-weight:bold">POST</span> <span style="color:#555">/api/notify</span> <span style="color:#000;font-weight:bold">HTTP</span><span style="color:#000;font-weight:bold">/</span><span style="color:#099">1.1</span>
+Host<span style="color:#000;font-weight:bold">:</span> dome-marketplace.eu
+Content-Type<span style="color:#000;font-weight:bold">:</span> application/x-www-form-urlencoded
+
+access_token=[the access token]
+&amp;state=af0ifjsldkj
+</pre></td></tr></table>
+
+                        <p>The portal component replies immediately and continues processing.
+                        </p>
+</div>
+                    </li>
+                    <li id='21_1701'><b>21</b> The portal of the Relying Party refreshes the screen and displays the services available to users, sending the Access Token to the browser of the user. The Access Token will be sent back by the browser to the portal whenever the user tries to access a protected resource of the portal, and so access control can be performed using the data inside the token, in the same way as with any other access token in other authentication mechanisms.
+<div>
+</div>
+                    </li>
+                </ul>
+            </section>
         </section>
     </section>
     <section id='accesscontrol'><h2>Access control with Verifiable Credentials</h2>
 
-        <section id='Overview1523'><h2>Overview</h2>
+        <section id='Overview1707'><h2>Overview</h2>
 
             <p>This section assumes that authentication has already been performed and that the Relying Party receives a request to a protected resource, with a proper access token inside the request. If the request does not come with an access token, the request is rejected immediately (or the user is redirected to the Authentication service of the Relying Party, depending on the use case).
             </p>
@@ -1677,28 +2158,25 @@ access_token=[the access token]
             </p>
             <p>For the explanation we will use the following figure which is based on [[[NIST-AUTH]]] which describes a reference architecture with necessary functional components to achieve enforcement the authorization policies. The authorization process depends on four layers of functionality: <b>Enforcement</b>, <b>Decision</b>, <b>Access Control Data</b>, and <b>Administration</b>.
             </p>
-            <figure id='authn-reference'>
-                <p><img src="images/login_in_DOME/authn_architecture_authorization.drawio.png" alt="" />
-                </p>
-                <figcaption>High level Authentication logical architecture
-                </figcaption>
-            </figure>
+            <figure id='authn-reference'><img src='images/login_in_DOME/authn_architecture_authorization.drawio.png' alt='High level Authentication logical architecture'>
+            <figcaption>High level Authentication logical architecture</figcaption></figure>
+
         </section>
         <section id='Determine the Authorization Policies which apply to the request'><h2>Determine the Authorization Policies which apply to the request</h2>
 
             <p>Every request to a protected resource is intercepted by the PEP (Policy Enforcement Point), and to know if the request should be authorised or not, the PEP asks to the PDP (Policy Decision Point) for a decision. The PDP needs to know what are the policy rules that should be applied to the request, and it uses the PRP (Policy Retrieval Point) to retrieve those policies.
             </p>
-            <figure><img src='builtassets/plantuml_48aaffcb8cecf468dbf62950e963e714.png' alt=''>
+            <figure><img src='/builtassets/plantuml_48aaffcb8cecf468dbf62950e963e714.png' alt='Determine the Authorization Policies'>
             <figcaption>Determine the Authorization Policies</figcaption></figure>
 
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='1'> The user (natural person or machine) sends a request to access a protected resource, and the PEP (Policy Enforcement Point) component intercepts the call. The PEP is normally implemented as a reverse proxy or API gateway, so all calls to protected resources entering the organisation are intercepted and forwarded if they are accepted.
+                <li id='1_1750'><b>1</b> The user (natural person or machine) sends a request to access a protected resource, and the PEP (Policy Enforcement Point) component intercepts the call. The PEP is normally implemented as a reverse proxy or API gateway, so all calls to protected resources entering the organisation are intercepted and forwarded if they are accepted.
 <div>
 </div>
                 </li>
-                <x-li id='2'> If the request is not authenticated it is rejected with an error. Depending on the use case, the error returned can contain additional information that enables the user agent to be redirected to perform authentication.
+                <li id='2_1753'><b>2</b> If the request is not authenticated it is rejected with an error. Depending on the use case, the error returned can contain additional information that enables the user agent to be redirected to perform authentication.
 <div>
                     <p>After inspecting the request, the PEP requests a decision from the PDP passing a series of attributes. In general, the request from the PEP to the PDP consists of <b>subject</b> attributes (typically for the user who issued the request), <b>resource</b> attributes (the resource for which access is sought), <b>action</b> attributes (the operations to be performed on the resource), and <b>environment</b> attributes.
                     </p>
@@ -1778,11 +2256,11 @@ access_token=[the access token]
                     </p>
 </div>
                 </li>
-                <x-li id='3'> The PDP asks the PRP for the policy rules applicable to this request. The policy rules may be specified using different policy languages, like ODRL, XACML or Rego. It is very difficult to make the interface between the PDP and the PRP completely transparent and independent from the concrete policy language used in an implementation. However, The PDP can be modularised in order to minimise the dependency and reduce the cost of migration to other policy language in the future.
+                <li id='3_1828'><b>3</b> The PDP asks the PRP for the policy rules applicable to this request. The policy rules may be specified using different policy languages, like ODRL, XACML or Rego. It is very difficult to make the interface between the PDP and the PRP completely transparent and independent from the concrete policy language used in an implementation. However, The PDP can be modularised in order to minimise the dependency and reduce the cost of migration to other policy language in the future.
 <div>
 </div>
                 </li>
-                <x-li id='4'> The PDP receives the policy rules to apply for the current request.
+                <li id='4_1831'><b>4</b> The PDP receives the policy rules to apply for the current request.
 <div>
 </div>
                 </li>
@@ -1800,21 +2278,21 @@ access_token=[the access token]
             </p>
             <p>The PDP does not have hardcoded the actual Trusted Lists to query, but they are determined dynamically from the policies retrieved from the PRP. In simple use cases there may be one or two lists to query which are the same for all requests. But the mechanism described here can cater for very complex scenarios where the lists may be different depending on the requests and also from the dynamic environmental information retrieved from the PIP.
             </p>
-            <figure><img src='builtassets/plantuml_e9b5fd10a95e7efdd99361a716fd9818.png' alt=''>
+            <figure><img src='/builtassets/plantuml_e9b5fd10a95e7efdd99361a716fd9818.png' alt='Determine Trusted Issuer Lists to query'>
             <figcaption>Determine Trusted Issuer Lists to query</figcaption></figure>
 
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='4'> The PDP receives the policy rules to apply for the current request.
+                <li id='4_1860'><b>4</b> The PDP receives the policy rules to apply for the current request.
 <div>
 </div>
                 </li>
-                <x-li id='5'> The PDP performs an initial evaluation of the policy rules and if the attributes of the request are not sufficient for rule and policy evaluation, it determines the PIP stores to query, and also the set of Trusted Issuers Lists to query. The concrete Trusted Lists to query are dynamic and depend on the specific policies associated to the request.
+                <li id='5_1863'><b>5</b> The PDP performs an initial evaluation of the policy rules and if the attributes of the request are not sufficient for rule and policy evaluation, it determines the PIP stores to query, and also the set of Trusted Issuers Lists to query. The concrete Trusted Lists to query are dynamic and depend on the specific policies associated to the request.
 <div>
 </div>
                 </li>
-                <x-li id='6'> Based on the policies and the attributes of the request, the PDP queries the PIP for additional attributes needed for the policy evaluation.
+                <li id='6_1867'><b>6</b> Based on the policies and the attributes of the request, the PDP queries the PIP for additional attributes needed for the policy evaluation.
 <div>
                     <p>Now that the PDP has the policy rules to apply and the attributes from the request and the ones retrieved from the PIP, the PDP can determine the actual Trusted Lists that have to be queried in order to be able to evaluate the policies.
                     </p>
@@ -1844,17 +2322,17 @@ access_token=[the access token]
             </p>
             <p>For simplicity, the diagram below shows the query of the Trusted Issuer Lists as a single interaction to a single box, but the actual interactions can be very complex if required. In addition, the diagram does not specify whether the list is "private" or "global".
             </p>
-            <figure><img src='builtassets/plantuml_4e81c481b979246d42f8eac88fc5bb50.png' alt=''>
+            <figure><img src='/builtassets/plantuml_4e81c481b979246d42f8eac88fc5bb50.png' alt='Query the Trusted Issuer Lists'>
             <figcaption>Query the Trusted Issuer Lists</figcaption></figure>
 
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='6'> Based on the policies and the attributes of the request, the PDP queries the PIP for additional attributes needed for the policy evaluation.
+                <li id='6_1911'><b>6</b> Based on the policies and the attributes of the request, the PDP queries the PIP for additional attributes needed for the policy evaluation.
 <div>
 </div>
                 </li>
-                <x-li id='7'> Based on the policies and the attributes of the request, the PDP queries one or more Trusted Issuer Lists to check that the credentials received comply with the requirements specified in the policies.
+                <li id='7_1915'><b>7</b> Based on the policies and the attributes of the request, the PDP queries one or more Trusted Issuer Lists to check that the credentials received comply with the requirements specified in the policies.
 <div>
 </div>
                 </li>
@@ -1864,29 +2342,29 @@ access_token=[the access token]
 
             <p>Once the PDP has all the attributes required for policy evaluation, it computes a decision and returns that decision to the PEP which will enforce it.
             </p>
-            <figure><img src='builtassets/plantuml_be3b0ee126e5440e3c75eb214242be0d.png' alt=''>
+            <figure><img src='/builtassets/plantuml_be3b0ee126e5440e3c75eb214242be0d.png' alt='Compute the decision'>
             <figcaption>Compute the decision</figcaption></figure>
 
 <!-- ****** EXPLANATIONS **** -->
 
             <ul class='plain'>
-                <x-li id='8'> The PDP performs a final evaluation of the policy rules, taking into consideration the attributes received from the PEP, the attributes received from the PIP, and the Trusted Issuers Lists queried. After the evaluation the PDP computes a decision, either to accept or to reject the request.
+                <li id='8_1938'><b>8</b> The PDP performs a final evaluation of the policy rules, taking into consideration the attributes received from the PEP, the attributes received from the PIP, and the Trusted Issuers Lists queried. After the evaluation the PDP computes a decision, either to accept or to reject the request.
 <div>
 </div>
                 </li>
-                <x-li id='9'> The PDP returns the decision to the PEP, which will enforce it.
+                <li id='9_1941'><b>9</b> The PDP returns the decision to the PEP, which will enforce it.
 <div>
 </div>
                 </li>
-                <x-li id='10'> If the decision from the PDP is to reject the request, the PEP returns an error to the user. Otherwise, it forwards the original request to the Resource for execution.
+                <li id='10_1944'><b>10</b> If the decision from the PDP is to reject the request, the PEP returns an error to the user. Otherwise, it forwards the original request to the Resource for execution.
 <div>
 </div>
                 </li>
-                <x-li id='11'> The resource executes the request and returns the result.
+                <li id='11_1947'><b>11</b> The resource executes the request and returns the result.
 <div>
 </div>
                 </li>
-                <x-li id='12'> The PEP returns the result to the user.
+                <li id='12_1950'><b>12</b> The PEP returns the result to the user.
 <div>
 </div>
                 </li>
@@ -1896,7 +2374,7 @@ access_token=[the access token]
 
             <p>The following diagram combines all the steps in a single one to provide an overall view of the authorization process.
             </p>
-            <figure><img src='builtassets/plantuml_c8e7f45dfb37b5dfb38c586a43f43ac2.png' alt=''>
+            <figure><img src='/builtassets/plantuml_c8e7f45dfb37b5dfb38c586a43f43ac2.png' alt='Summary of the Authorization process'>
             <figcaption>Summary of the Authorization process</figcaption></figure>
 
         </section>
@@ -1912,7 +2390,7 @@ access_token=[the access token]
     </p>
     <p>The COO of GoodAir will issue a verifiable credential of type LEARCredential to an employee of GoodAir, signing the credential with his certificate for signatures.
     </p>
-    <figure><img src='builtassets/d2_36c71184cf20e51b32d23a987b6a6750.svg' alt=''>
+    <figure><img src='/builtassets/d2_36c71184cf20e51b32d23a987b6a6750.svg' alt=''>
     <figcaption></figcaption></figure>
 
     <section id='participant'><h2>GoodAir: the company that wants to perform the process</h2>
@@ -2080,86 +2558,86 @@ access_token=[the access token]
     </p>
     <p>This is the reason why in some definitions below the description refers to an article or section that does not exist in this document. We have decided to keep the definitions like in the original, as we think it does not limit the understanding of the concept.
     </p>
-    <ul class='plain'>
-        <li id='electronic identification'><b>electronic identification</b>:
-            <p>means the process of using person identification data in electronic form uniquely representing either a natural or legal person, or a natural person representing a legal person;
-            </p>
-        </li>
-        <li id='electronic identification means'><b>electronic identification means</b>:
-            <p>means a material and/or immaterial unit, including European Digital Identity Wallets or ID cards following Regulation 2019/1157, containing person identification data and which is used for authentication for an online or offline service:
-            </p>
-        </li>
-        <li id='person identification data'><b>person identification data</b>:
-            <p>means a set of data, issued in accordance with national law, enabling the identity of a natural or legal person, or a natural person representing a legal person to be established;
-            </p>
-        </li>
-        <li id='electronic identification scheme'><b>electronic identification scheme</b>:
-            <p>means a system for electronic identification under which electronic identification means, are issued to natural or legal persons or natural persons representing legal or natural persons;
-            </p>
-        </li>
-        <li id='user'><b>user</b>:
-            <p>means a natural or legal person, or a natural person representing a legal person using trust services, notified electronic identification means or European Digital Identity Wallets;
-            </p>
-        </li>
-        <li id='authentication'><b>authentication</b>:
-            <p>means an electronic process that enables the verification of the origin and integrity of data in electronic form;
-            </p>
-        </li>
-        <li id='identification'><b>identification</b>:
-            <p>means an electronic process that establish an unequivocal relationship between a set of data and a natural or legal person;
-            </p>
-        </li>
-        <li id='validation'><b>validation</b>:
-            <p>means the process of verifying that an electronic signature, an electronic seal, a European Digital Identity Wallet, an electronic identification mean, a relying party authorisation, person identification data, an electronic attestation of attributes or any electronic certificates for trust services is valid and has not been revoked;
-            </p>
-        </li>
-        <li id='zero knowledge proof'><b>zero knowledge proof</b>:
-            <p>means cryptographic methods by which a relying party can validate that a given statement based on the electronic attestation of attributes held in a user's European Digital Identity Wallet is true, without conveying any data related to those electronic attestation of attributes to the relying party;
-            </p>
-        </li>
-        <li id='relying party'><b>relying party</b>:
-            <p>means a natural or legal person that relies upon an electronic identification means, including European Digital Identity Wallets, or a trust service, directly or through an intermediary, in order to provide services;
-            </p>
-        </li>
-        <li id='public sector body'><b>public sector body</b>:
-            <p>means a state, regional or local authority, a body governed by public law or an association formed by one or several such authorities or one or several such bodies governed by public law, or  private entity mandated by at least one of those authorities, bodies or associations to provide public services, when acting under such a mandate;
-            </p>
-        </li>
-        <li id='body governed by public law'><b>body governed by public law</b>:
-            <p>means a body defined in point (4) of Article 2(1) of Directive 2014/24/EU of the European Parliament and of the Council (1);
-            </p>
-        </li>
-        <li id='signatory'><b>signatory</b>:
-            <p>means a natural person who creates an electronic signature;
-            </p>
-        </li>
-        <li id='electronic signature'><b>electronic signature</b>:
-            <p>means data in electronic form which is attached to or logically associated with other data in electronic form and which is used by the signatory to sign;
-            </p>
-        </li>
-        <li id='advanced electronic signature'><b>advanced electronic signature</b>:
-            <p>means an electronic signature which meets the requirements set out in Article 26;
-            </p>
-        </li>
-        <li id='qualified electronic signature'><b>qualified electronic signature</b>:
-            <p>means an advanced electronic signature that is created by a qualified electronic signature creation device, and which is based on a qualified certificate for electronic signatures;
-            </p>
-        </li>
-        <li id='electronic signature creation data'><b>electronic signature creation data</b>:
-            <p>means unique data which is used by the signatory to create an electronic signature;
-            </p>
-        </li>
-        <li id='certificate for electronic signature'><b>certificate for electronic signature</b>:
-            <p>means an electronic attestation which links electronic signature validation data to a natural person and confirms at least the name or the pseudonym of that person;
-            </p>
-        </li>
-        <li id='qualified certificate for electronic signature'><b>qualified certificate for electronic signature</b>:
-            <p>means a certificate for electronic signatures, that is issued by a qualified trust service provider and meets the requirements laid down in Annex I;
-            </p>
-        </li>
-        <li id='trust service'><b>trust service</b>:
-            <p>means an electronic service normally provided against payment which consists of:
-            </p>
+    <dl>
+        <dt id='electronic identification'>electronic identification
+        </dt>
+        <dd>means the process of using person identification data in electronic form uniquely representing either a natural or legal person, or a natural person representing a legal person;
+        </dd>
+        <dt id='electronic identification means'>electronic identification means
+        </dt>
+        <dd>means a material and/or immaterial unit, including European Digital Identity Wallets or ID cards following Regulation 2019/1157, containing person identification data and which is used for authentication for an online or offline service:
+        </dd>
+        <dt id='person identification data'>person identification data
+        </dt>
+        <dd>means a set of data, issued in accordance with national law, enabling the identity of a natural or legal person, or a natural person representing a legal person to be established;
+        </dd>
+        <dt id='electronic identification scheme'>electronic identification scheme
+        </dt>
+        <dd>means a system for electronic identification under which electronic identification means, are issued to natural or legal persons or natural persons representing legal or natural persons;
+        </dd>
+        <dt id='user'>user
+        </dt>
+        <dd>means a natural or legal person, or a natural person representing a legal person using trust services, notified electronic identification means or European Digital Identity Wallets;
+        </dd>
+        <dt id='authentication'>authentication
+        </dt>
+        <dd>means an electronic process that enables the verification of the origin and integrity of data in electronic form;
+        </dd>
+        <dt id='identification'>identification
+        </dt>
+        <dd>means an electronic process that establish an unequivocal relationship between a set of data and a natural or legal person;
+        </dd>
+        <dt id='validation'>validation
+        </dt>
+        <dd>means the process of verifying that an electronic signature, an electronic seal, a European Digital Identity Wallet, an electronic identification mean, a relying party authorisation, person identification data, an electronic attestation of attributes or any electronic certificates for trust services is valid and has not been revoked;
+        </dd>
+        <dt id='zero knowledge proof'>zero knowledge proof
+        </dt>
+        <dd>means cryptographic methods by which a relying party can validate that a given statement based on the electronic attestation of attributes held in a user's European Digital Identity Wallet is true, without conveying any data related to those electronic attestation of attributes to the relying party;
+        </dd>
+        <dt id='relying party'>relying party
+        </dt>
+        <dd>means a natural or legal person that relies upon an electronic identification means, including European Digital Identity Wallets, or a trust service, directly or through an intermediary, in order to provide services;
+        </dd>
+        <dt id='public sector body'>public sector body
+        </dt>
+        <dd>means a state, regional or local authority, a body governed by public law or an association formed by one or several such authorities or one or several such bodies governed by public law, or  private entity mandated by at least one of those authorities, bodies or associations to provide public services, when acting under such a mandate;
+        </dd>
+        <dt id='body governed by public law'>body governed by public law
+        </dt>
+        <dd>means a body defined in point (4) of Article 2(1) of Directive 2014/24/EU of the European Parliament and of the Council (1);
+        </dd>
+        <dt id='signatory'>signatory
+        </dt>
+        <dd>means a natural person who creates an electronic signature;
+        </dd>
+        <dt id='electronic signature'>electronic signature
+        </dt>
+        <dd>means data in electronic form which is attached to or logically associated with other data in electronic form and which is used by the signatory to sign;
+        </dd>
+        <dt id='advanced electronic signature'>advanced electronic signature
+        </dt>
+        <dd>means an electronic signature which meets the requirements set out in Article 26;
+        </dd>
+        <dt id='qualified electronic signature'>qualified electronic signature
+        </dt>
+        <dd>means an advanced electronic signature that is created by a qualified electronic signature creation device, and which is based on a qualified certificate for electronic signatures;
+        </dd>
+        <dt id='electronic signature creation data'>electronic signature creation data
+        </dt>
+        <dd>means unique data which is used by the signatory to create an electronic signature;
+        </dd>
+        <dt id='certificate for electronic signature'>certificate for electronic signature
+        </dt>
+        <dd>means an electronic attestation which links electronic signature validation data to a natural person and confirms at least the name or the pseudonym of that person;
+        </dd>
+        <dt id='qualified certificate for electronic signature'>qualified certificate for electronic signature
+        </dt>
+        <dd>means a certificate for electronic signatures, that is issued by a qualified trust service provider and meets the requirements laid down in Annex I;
+        </dd>
+        <dt id='trust service'>trust service
+        </dt>
+        <dd>means an electronic service normally provided against payment which consists of:
             <ul>
                 <li>(a) the creation, verification, and validation of electronic signatures, electronic seals or electronic time stamps, electronic registered delivery services, electronic attestation of attributes and certificates related to those services;
                 </li>
@@ -2172,128 +2650,128 @@ access_token=[the access token]
                 <li>(e) the management of remote electronic signature and seal creation devices;
                 </li>
             </ul>
-        </li>
-        <li id='qualified trust service'><b>qualified trust service</b>:
-            <p>means a trust service that meets the applicable requirements laid down in this Regulation;
-            </p>
-        </li>
-        <li id='conformity assessment body'><b>conformity assessment body</b>:
-            <p>means a body defined in point 13 of Article 2 of Regulation (EC) No 765/2008, which is accredited in accordance with that Regulation as competent to carry out conformity assessment of a qualified trust service provider and the qualified trust services it provides;
-            </p>
-        </li>
-        <li id='trust service provider'><b>trust service provider</b>:
-            <p>means a natural or a legal person who provides one or more trust services either as a qualified or as a non-qualified trust service provider;
-            </p>
-        </li>
-        <li id='qualified trust service provider'><b>qualified trust service provider</b>:
-            <p>means a trust service provider who provides one or more qualified trust services and is granted the qualified status by the supervisory body;
-            </p>
-        </li>
-        <li id='electronic seal'><b>electronic seal</b>:
-            <p>means data in electronic form, which is attached to or logically associated with other data in electronic form to ensure the latter’s origin and integrity;
-            </p>
-        </li>
-        <li id='advanced electronic seal'><b>advanced electronic seal</b>:
-            <p>means an electronic seal, which meets the requirements set out in Article 36;
-            </p>
-        </li>
-        <li id='qualified electronic seal'><b>qualified electronic seal</b>:
-            <p>means an advanced electronic seal, which is created by a qualified electronic seal creation device, and that is based on a qualified certificate for electronic seal;
-            </p>
-        </li>
-        <li id='electronic seal creation data'><b>electronic seal creation data</b>:
-            <p>means unique data, which is used by the creator of the electronic seal to create an electronic seal;
-            </p>
-        </li>
-        <li id='certificate for electronic seal'><b>certificate for electronic seal</b>:
-            <p>means an electronic attestation or set of attestations that links electronic seal validation data to a legal person and confirms the name of that person;
-            </p>
-        </li>
-        <li id='qualified certificate for electronic seal'><b>qualified certificate for electronic seal</b>:
-            <p>means a certificate for an electronic seal, that is issued by a qualified trust service provider and meets the requirements laid down in Annex III;
-            </p>
-        </li>
-        <li id='electronic seal creation device'><b>electronic seal creation device</b>:
-            <p>means configured software or hardware used to create an electronic seal;
-            </p>
-        </li>
-        <li id='qualified electronic seal creation device'><b>qualified electronic seal creation device</b>:
-            <p>means an electronic seal creation device that meets mutatis mutandis the requirements laid down in Annex II;
-            </p>
-        </li>
-        <li id='electronic time stamp'><b>electronic time stamp</b>:
-            <p>means data in electronic form which binds other data in electronic form to a particular time establishing evidence that the latter data existed at that time;
-            </p>
-        </li>
-        <li id='qualified electronic time stamp'><b>qualified electronic time stamp</b>:
-            <p>means an electronic time stamp which meets the requirements laid down in Article 42;
-            </p>
-        </li>
-        <li id='electronic document'><b>electronic document</b>:
-            <p>means any content stored in electronic form, in particular text or sound, visual or audiovisual recording;
-            </p>
-        </li>
-        <li id='electronic registered delivery service'><b>electronic registered delivery service</b>:
-            <p>means a service that makes it possible to transmit data between third parties by electronic means and provides evidence relating to the handling of the transmitted data, including proof of sending and receiving the data, and that protects transmitted data against the risk of loss, theft, damage or any unauthorised alterations;
-            </p>
-        </li>
-        <li id='qualified electronic registered delivery service'><b>qualified electronic registered delivery service</b>:
-            <p>means an electronic registered delivery service which meets the requirements laid down in Article 44;
-            </p>
-        </li>
-        <li id='European Digital Identity Wallet'><b>European Digital Identity Wallet</b>:
-            <p>means an electronic identification means which securely stores, manages and validates identity data and electronic attestations of attributes, to provide them to relying parties and other users of European Digital Identity Wallets on request, and which enables the creation of qualified electronic signatures and seals;
-            </p>
-        </li>
-        <li id='attribute'><b>attribute</b>:
-            <p>is a feature, characteristic or quality of a natural or legal person or of an entity;
-            </p>
-        </li>
-        <li id='electronic attestation of attributes'><b>electronic attestation of attributes</b>:
-            <p>means an attestation in electronic form that allows the presentation and authentication of attributes;
-            </p>
-        </li>
-        <li id='qualified electronic attestation of attributes'><b>qualified electronic attestation of attributes</b>:
-            <p>means an electronic attestation of attributes, which is issued by a qualified trust service provider and meets the requirements laid down in Annex V;
-            </p>
-        </li>
-        <li id='authentic source'><b>authentic source</b>:
-            <p>is a repository or system, held under the responsibility of a public sector body or private entity, that contains attributes about a natural or legal person and is considered to be the primary source of that information or recognised as authentic in Union or national law;
-            </p>
-        </li>
-        <li id='electronic archiving'><b>electronic archiving</b>:
-            <p>means a service ensuring preservation of electronic data or documents in order to guarantee their integrity, the accuracy of their origin and legal features throughout the conservation period;
-            </p>
-        </li>
-        <li id='qualified electronic archiving service'><b>qualified electronic archiving service</b>:
-            <p>means a service that meets the requirements laid down in Article 45g;
-            </p>
-        </li>
-        <li id='EU Digital Identity Wallet Trust Mark'><b>EU Digital Identity Wallet Trust Mark</b>:
-            <p>means an indication in a simple, recognisable and clear manner that a Digital Identity Wallet has been issued in accordance with this Regulation;
-            </p>
-        </li>
-        <li id='strong user authentication'><b>strong user authentication</b>:
-            <p>means an authentication based on the use of at least two authentication factors categorised as user knowledge , possession and inherence that are independent, in such a way that the breach of one does not compromise the reliability of the others, and is designed in such a way to protect the confidentiality of the authentication data;
-            </p>
-        </li>
-        <li id='user account'><b>user account</b>:
-            <p>means a mechanism that allows a user to access public or private services on the terms and conditions established by the service provider;
-            </p>
-        </li>
-        <li id='personal data'><b>personal data</b>:
-            <p>means any information as defined in point 1 of Article 4 of Regulation (EU) 2016/679;
-            </p>
-        </li>
-        <li id='identity matching'><b>identity matching</b>:
-            <p>means a process where person identification data or person identification means are matched with or linked to an existing account belonging to the same person;
-            </p>
-        </li>
-        <li id='offline service'><b>offline service</b>:
-            <p>means the capability of a user to electronically identify and authenticate with a third party with close proximity technologies irrespective of whether the device is connected to the internet or not in order to access a wide range of public and private services;
-            </p>
-        </li>
-    </ul>
+        </dd>
+        <dt id='qualified trust service'>qualified trust service
+        </dt>
+        <dd>means a trust service that meets the applicable requirements laid down in this Regulation;
+        </dd>
+        <dt id='conformity assessment body'>conformity assessment body
+        </dt>
+        <dd>means a body defined in point 13 of Article 2 of Regulation (EC) No 765/2008, which is accredited in accordance with that Regulation as competent to carry out conformity assessment of a qualified trust service provider and the qualified trust services it provides;
+        </dd>
+        <dt id='trust service provider'>trust service provider
+        </dt>
+        <dd>means a natural or a legal person who provides one or more trust services either as a qualified or as a non-qualified trust service provider;
+        </dd>
+        <dt id='qualified trust service provider'>qualified trust service provider
+        </dt>
+        <dd>means a trust service provider who provides one or more qualified trust services and is granted the qualified status by the supervisory body;
+        </dd>
+        <dt id='electronic seal'>electronic seal
+        </dt>
+        <dd>means data in electronic form, which is attached to or logically associated with other data in electronic form to ensure the latter’s origin and integrity;
+        </dd>
+        <dt id='advanced electronic seal'>advanced electronic seal
+        </dt>
+        <dd>means an electronic seal, which meets the requirements set out in Article 36;
+        </dd>
+        <dt id='qualified electronic seal'>qualified electronic seal
+        </dt>
+        <dd>means an advanced electronic seal, which is created by a qualified electronic seal creation device, and that is based on a qualified certificate for electronic seal;
+        </dd>
+        <dt id='electronic seal creation data'>electronic seal creation data
+        </dt>
+        <dd>means unique data, which is used by the creator of the electronic seal to create an electronic seal;
+        </dd>
+        <dt id='certificate for electronic seal'>certificate for electronic seal
+        </dt>
+        <dd>means an electronic attestation or set of attestations that links electronic seal validation data to a legal person and confirms the name of that person;
+        </dd>
+        <dt id='qualified certificate for electronic seal'>qualified certificate for electronic seal
+        </dt>
+        <dd>means a certificate for an electronic seal, that is issued by a qualified trust service provider and meets the requirements laid down in Annex III;
+        </dd>
+        <dt id='electronic seal creation device'>electronic seal creation device
+        </dt>
+        <dd>means configured software or hardware used to create an electronic seal;
+        </dd>
+        <dt id='qualified electronic seal creation device'>qualified electronic seal creation device
+        </dt>
+        <dd>means an electronic seal creation device that meets mutatis mutandis the requirements laid down in Annex II of [[eIDAS.Regulation]];
+        </dd>
+        <dt id='electronic time stamp'>electronic time stamp
+        </dt>
+        <dd>means data in electronic form which binds other data in electronic form to a particular time establishing evidence that the latter data existed at that time;
+        </dd>
+        <dt id='qualified electronic time stamp'>qualified electronic time stamp
+        </dt>
+        <dd>means an electronic time stamp which meets the requirements laid down in Article 42 of [[eIDAS.Regulation]];
+        </dd>
+        <dt id='electronic document'>electronic document
+        </dt>
+        <dd>means any content stored in electronic form, in particular text or sound, visual or audiovisual recording;
+        </dd>
+        <dt id='electronic registered delivery service'>electronic registered delivery service
+        </dt>
+        <dd>means a service that makes it possible to transmit data between third parties by electronic means and provides evidence relating to the handling of the transmitted data, including proof of sending and receiving the data, and that protects transmitted data against the risk of loss, theft, damage or any unauthorised alterations;
+        </dd>
+        <dt id='qualified electronic registered delivery service'>qualified electronic registered delivery service
+        </dt>
+        <dd>means an electronic registered delivery service which meets the requirements laid down in Article 44;
+        </dd>
+        <dt id='European Digital Identity Wallet'>European Digital Identity Wallet
+        </dt>
+        <dd>means an electronic identification means which securely stores, manages and validates identity data and electronic attestations of attributes, to provide them to relying parties and other users of European Digital Identity Wallets on request, and which enables the creation of qualified electronic signatures and seals;
+        </dd>
+        <dt id='attribute'>attribute
+        </dt>
+        <dd>is a feature, characteristic or quality of a natural or legal person or of an entity;
+        </dd>
+        <dt id='electronic attestation of attributes'>electronic attestation of attributes
+        </dt>
+        <dd>means an attestation in electronic form that allows the presentation and authentication of attributes;
+        </dd>
+        <dt id='qualified electronic attestation of attributes'>qualified electronic attestation of attributes
+        </dt>
+        <dd>means an electronic attestation of attributes, which is issued by a qualified trust service provider and meets the requirements laid down in Annex V;
+        </dd>
+        <dt id='authentic source'>authentic source
+        </dt>
+        <dd>is a repository or system, held under the responsibility of a public sector body or private entity, that contains attributes about a natural or legal person and is considered to be the primary source of that information or recognised as authentic in Union or national law;
+        </dd>
+        <dt id='electronic archiving'>electronic archiving
+        </dt>
+        <dd>means a service ensuring preservation of electronic data or documents in order to guarantee their integrity, the accuracy of their origin and legal features throughout the conservation period;
+        </dd>
+        <dt id='qualified electronic archiving service'>qualified electronic archiving service
+        </dt>
+        <dd>means a service that meets the requirements laid down in Article 45g;
+        </dd>
+        <dt id='EU Digital Identity Wallet Trust Mark'>EU Digital Identity Wallet Trust Mark
+        </dt>
+        <dd>means an indication in a simple, recognisable and clear manner that a Digital Identity Wallet has been issued in accordance with this Regulation;
+        </dd>
+        <dt id='strong user authentication'>strong user authentication
+        </dt>
+        <dd>means an authentication based on the use of at least two authentication factors categorised as user knowledge , possession and inherence that are independent, in such a way that the breach of one does not compromise the reliability of the others, and is designed in such a way to protect the confidentiality of the authentication data;
+        </dd>
+        <dt id='user account'>user account
+        </dt>
+        <dd>means a mechanism that allows a user to access public or private services on the terms and conditions established by the service provider;
+        </dd>
+        <dt id='personal data'>personal data
+        </dt>
+        <dd>means any information as defined in point 1 of Article 4 of Regulation (EU) 2016/679;
+        </dd>
+        <dt id='identity matching'>identity matching
+        </dt>
+        <dd>means a process where person identification data or person identification means are matched with or linked to an existing account belonging to the same person;
+        </dd>
+        <dt id='offline service'>offline service
+        </dt>
+        <dd>means the capability of a user to electronically identify and authenticate with a third party with close proximity technologies irrespective of whether the device is connected to the internet or not in order to access a wide range of public and private services;
+        </dd>
+    </dl>
 </section>
 <section id='references'>
 </section>
