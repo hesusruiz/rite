@@ -195,32 +195,32 @@
 
 
 <section id='abstract'>
-    <p>
+    <p>The core of <code>rite</code> syntax  is essentially semantic HTML5 with some simplifications to make it easier to write. It also allows a reduced set of Markdown features, described below.
     </p>
-    <p>
+    <p>The most important concept in <code>rite</code> is that indentation is relevant for the structure of the document. Indentation is used to eliminate the need to use the end tags.
     </p>
-    <p>
+    <p>By default, <code>rite</code> generates HTML prepared for <a href="https://respec.org/docs/">ReSpec</a>, the tool originally designed for writing W3C specifications, but which now supports many output formats. Via a flag <code>rite</code> can be instructed to generate HTML that does not depend from ReSpec functionalities so you can fully control the visual appearance of the final document.
     </p>
-    <p>
+    <p>This document is itself written in <code>rite</code> and you can see the source in <a href="https://github.com/hesusruiz/rite/blob/main/index.rite">index.rite</a>
     </p>
 </section>
 <section id='Structure'><h2>Structure</h2>
 
-    <p>
+    <p><code>rite</code> documents are documents which rely on HTML structural elements as in ReSpec, in particular <code>section</code>, <code>aside</code>, <code>h2-h6</code>, <code>dl</code>, <code>ol</code> etc. By default, <code>rite</code> converts the source document into an HTML ReSpec file.
     </p>
-    <p>
+    <p>In <code>rite</code> the convention is that when using those structural elements their start tag should be the at the beginning of a line and the content of the tag should be indented in the following lines. Because indentation is used, the corresponding end tag does not have to be specified (but <code>rite</code> ignores the end tag if it is used, to facilitate transition from standard HTML formatting).
     </p>
-    <p>
+    <p>In <code>rite</code> indentation is relevant, making the document source much easier to understand. The meaning of <i>relevant</i> is the same as in Python, Markdown lists or even natural language.
     </p>
-    <p>
+    <p>Block structure is evident from the indentation of the text and takes priority over inline structure.
     </p>
-    <p>
+    <p>Items of the same block are separated from one another by blank lines. For a given block item, all contiguous lines are processed as a single paragraph. Processing of paragraphs is explained below.
     </p>
-    <p>
+    <p>A line which is indented more than the previous one starts a new, indented block.
     </p>
-    <p>
+    <p>In addition, <code>rite</code> provides shorthands for the most common attributes inside the start tag, simplifying their usage.
     </p>
-    <p>
+    <p>A very small example document would be:
     </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -266,7 +266,7 @@ editors:
         - Second item
 </pre></td></tr></table>
 
-    <p>
+    <p>Which corresponds to the following ReSpec HTML code:
     </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -362,7 +362,7 @@ function someJavaScript(){}&lt;/<span style="color:#000080">code</span>&gt;&lt;/
 
     <section id='Header of a document'><h2>Header of a document</h2>
 
-        <p>
+        <p>A <code>rite</code> document may start with a metadata header in YAML format, started by a line of minimum three dashes and ended by another line of minimum three dashes. The <code>title</code> item is compulsory, like this:
         </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -372,9 +372,9 @@ function someJavaScript(){}&lt;/<span style="color:#000080">code</span>&gt;&lt;/
 </span><span style="color:#bbb"></span><span style="color:#555">---</span><span style="color:#bbb">
 </span></pre></td></tr></table>
 
-        <p>
+        <p>The metadata section can contain many more elements, specially the ones required by the <a href="https://respec.org/docs/#respecConfig">ReSpec configuration object</a>, which uses JSON. Any valid JSON is also valid YAML, however the convention in <code>rite</code> is to use the 'natural' YAML format.
         </p>
-        <p>
+        <p>An example header specifying more ReSpec configuration data would be:
         </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -411,7 +411,8 @@ function someJavaScript(){}&lt;/<span style="color:#000080">code</span>&gt;&lt;/
     </section>
     <section id='Title of the document'><h2>Title of the document</h2>
 
-        <p>
+        <p>The <code>title</code> in the header of the document is converted to the <code>&lttitle&gt</code> tag in the <code>&lthead&gt</code> section of the generated HTML ReSpec document. ReSpec will reuse it for the resulting document's h1, so they are always in sync and you need not worry about specifying it twice.
+As in ReSpec, if you need to add additional markup to the title, you can use a <code>&lth1&gt</code> with <code>id="title"</code> at the beginning of the document and after the metadata.
         </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -422,12 +423,12 @@ function someJavaScript(){}&lt;/<span style="color:#000080">code</span>&gt;&lt;/
     </section>
     <section id='Editors & Authors'><h2>Editors & Authors</h2>
 
-        <p>
+        <p>As any ReSpec document, a <code>rite</code> document can specify editors (at least one) and/or authors as part of the metadata. See the Person objects in ReSpec for the full list of properties you can assign.
         </p>
     </section>
     <section id='Sections'><h2>Sections</h2>
 
-        <p>
+        <p>Like in ReSpec, your content should be wrapped in <code>&ltsection&gt</code> elements. Sections, subsections, appendices, and whatever other structural items are marked up using <code>&ltsection&gt</code> elements.
         </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -439,27 +440,27 @@ function someJavaScript(){}&lt;/<span style="color:#000080">code</span>&gt;&lt;/
     Sub-section text
 </pre></td></tr></table>
 
-        <p>
+        <p>You can specify any standard HTML attribute inside the <code>&ltsection&gt</code> element or any other HTML tag, whith the semantics exactly as defined in ReSpec. To simplify writing, <code>rite</code> defines a small set of shorthands for some of the more common attributes:
         </p>
         <ul>
-            <li id='class_246'>
+            <li id='class_246'><b>class</b> The <code>class</code> attribute <code>class="a_class"</code> can be shortened to <code>.a_class</code> where the <code>class</code> is specified without quotes and so it can be only one word. For several classes you can use the shorthand several times, or just use the standard HTML syntax.
             </li>
-            <li id='id_248'>
+            <li id='id_248'><b>id</b> The <code>id</code> attribute <code>id="an_ID"</code> can be shortened to <code>#an_ID</code> where the <code>id</code> is specified without quotes and so it can be only one word.
             </li>
-            <li id='src_250'>
+            <li id='src_250'><b>src</b> The <code>src</code> attribute <code>src="an_src"</code> can be shortened to <code>@an_src</code> where the <code>src</code> is specified without quotes and so it can be only one word.
             </li>
-            <li id='href_252'>
+            <li id='href_252'><b>href</b> The <code>href</code> attribute <code>src="an_href"</code> can be shortened to <code>@an_href</code> where the <code>href</code> is specified without quotes and so it can be only one word.
             </li>
         </ul>
-        <p>
+        <p>In addition to the above shorthands, <code>rite</code> provides two additional shorthands that do not correspond to standard HTML attributes but that can be useful in many circumstances:
         </p>
         <ul>
-            <li id='type_258'>
+            <li id='type_258'><b>type</b> The shorthand is the prefix <code>:</code> and is useful for item classification and counters, for example for figures and tables.
             </li>
-            <li id='number_260'>
+            <li id='number_260'><b>number</b> The shorthand is the prefix <code>=</code> and it is useful for lists in order to assign a bullet text to each item in the list.
             </li>
         </ul>
-        <p>
+        <p>An example using the classes "example" and "html" for a <code>code</code> section in HTML from ReSpec would be:
         </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -468,7 +469,7 @@ function someJavaScript(){}&lt;/<span style="color:#000080">code</span>&gt;&lt;/
     Some text for the example.
 </pre></td></tr></table>
 
-        <p>
+        <p>The above would be translated into the following:
         </p>
 
 <table style="width:100%;"><tr><td class="codecolor">
@@ -483,7 +484,7 @@ function someJavaScript(){}&lt;/<span style="color:#000080">code</span>&gt;&lt;/
     </section>
     <section id='Examples'><h2>Examples</h2>
 
-        <p>
+        <p>Any <code>&ltx-code .example&gt</code> <code>&ltpre .example&gt</code> or <code>&ltaside .example&gt</code> gets the additional example header and style. Content inside <code>&ltpre&gt/&ltcode&gt</code> elements is syntax highlighted. You can specify the language in the class attribute, for example <code>&ltx-code .example .js&gt</code>.
         </p>
     </section>
 </section>
