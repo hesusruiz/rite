@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -734,9 +735,25 @@ func (p *Parser) ParseBlock(parent *Node) {
 
 			}
 
+			// Process the inclusion of another file at this point
 			if newNode.Type == IncludeNode {
 
+				// If the file name specified by the user is relative, it is treated as relative to the location of
+				// the file including it, so it should exist either in the same directory of in a subdirectory.
+				// TODO: the name can be a URL
 				fileName := string(newNode.Src)
+
+				// Get the base name of the parent node
+				baseDir, _ := filepath.Split(parent.p.fileName)
+
+				// Get the target file name based on the parent
+				targetPath, err := filepath.Rel(baseDir, filepath.Join(baseDir, fileName))
+
+				if err != nil {
+					stdlog.Fatalf("%s (line %d) error: invalid path in include directive: %s - %s", parent.p.fileName, newNode.LineNumber, baseDir, fileName)
+				}
+				fileName = filepath.Join(baseDir, targetPath)
+
 				fmt.Println("processing include file", fileName)
 
 				// Open the file and parse it

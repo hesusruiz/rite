@@ -477,7 +477,7 @@ localBiblioFile: "localbiblio.yaml"
 
             For our example, we use the same that are used for accessing the European Commission portal. The claims in the credential are the digital equivalent of their analog counterparts, displayed here for illustration.
 
-            <x-img #lear-appointment-letter-1 @images/lear-appointment-letter-1.png>LEAR subject identification data.
+            <x-img #lear-appointment-letter-1 @/images/lear-appointment-letter-1.png>LEAR subject identification data.
 
             From the above form we can derive the following claims using the example data:
 
@@ -566,7 +566,7 @@ localBiblioFile: "localbiblio.yaml"
 
             The LEARCredential should include a formal description with the roles and duties of the LEAR. This is the digital equivalent to the analog description in our example, which uses natural language:
 
-            <x-img #lear-appointment-letter-2 @images/lear-appointment-letter-2.png>LEAR roles and duties.
+            <x-img #lear-appointment-letter-2 @/images/lear-appointment-letter-2.png>LEAR roles and duties.
 
             <x-note>
                 We do not yet have defined the actual mechanism that will be used for describing formally the roles and duties of the LEAR. The way we specify them below is just an example. There is work ongoing to define the detailed mechanism formally (e.g. with ODRL), and it is expected to change. This example is intended only to describe the concepts in detail.
@@ -654,7 +654,7 @@ localBiblioFile: "localbiblio.yaml"
 
             The description of the issuance process is general enough to be used for many types of credentials, but the text includes notes describing the concrete application of the process to the case of the LEARCredential.
 
-            <x-img #iss-overview @images/issuance/issuance_background.svg>Overview of participants.
+            <x-img #iss-overview @/images/issuance/issuance_background.svg>Overview of participants.
 
             <b>End user</b>
 
@@ -691,7 +691,7 @@ localBiblioFile: "localbiblio.yaml"
 
         <section>Authentication
 
-            <x-img #iss-authentication @images/issuance/issuance_authentication.svg>Issuance authentication.
+            <x-img #iss-authentication @/images/issuance/issuance_authentication.svg>Issuance authentication.
 
             Before requesting a new credential, the End User has to authenticate with the Issuer with whatever mechanism is already implemented by the Issuer. This profile does not require that it is based on OIDC, Verifiable Credentials or any other specific mechanism.
 
@@ -705,7 +705,7 @@ localBiblioFile: "localbiblio.yaml"
 
         <section>Credential Offer
 
-            <x-img #iss-credentialoffer @images/issuance/issuance_credentialoffer.svg>Credential offer.
+            <x-img #iss-credentialoffer @/images/issuance/issuance_credentialoffer.svg>Credential offer.
 
             In this profile the wallet does not have to implement the Credential Offer Endpoint described in section 4 of [[OpenID.VCI]].
 
@@ -783,7 +783,7 @@ localBiblioFile: "localbiblio.yaml"
 
             The retrieval of the Credential Issuer configuration is illustrated below.
 
-            <x-img #iss-issuermetadata @images/issuance/issuance_issuermetadata.svg>Issuer metadata.
+            <x-img #iss-issuermetadata @/images/issuance/issuance_issuermetadata.svg>Issuer metadata.
 
             <section>Credential Issuer Metadata Parameters
 
@@ -818,7 +818,7 @@ localBiblioFile: "localbiblio.yaml"
 
         <section>Access Token
 
-            <x-img #issuance_accesstoken @images/issuance/issuance_accesstoken.svg>Access Token.
+            <x-img #issuance_accesstoken @/images/issuance/issuance_accesstoken.svg>Access Token.
 
             The Wallet invokes the Token Endpoint implemented by the Authorization Server, which issues an Access Token and, optionally, a Refresh Token in exchange for the Pre-authorized Code that the wallet obtained in the Credential Offer.
 
@@ -880,7 +880,7 @@ localBiblioFile: "localbiblio.yaml"
 
         <section>Request and receive Credential
 
-            <x-img #issuance_requestcredential @images/issuance/issuance_requestcredential.svg>Request and receive Credential.
+            <x-img #issuance_requestcredential @/images/issuance/issuance_requestcredential.svg>Request and receive Credential.
 
 
             The Wallet backend invokes the Credential Endpoint, which issues a Credential as approved by the End-User upon presentation of a valid Access Token representing this approval.
@@ -1045,7 +1045,7 @@ localBiblioFile: "localbiblio.yaml"
 
         At this moment, we are interested in the overall flows and the details will be explained later in the corresponding sections.
 
-        <x-img #fig-general-architecture @images/login_in_DOME/authn_architecture-GeneralArchitecture.drawio.png>General architecture, remote cross-device flow
+        <x-img #fig-general-architecture @/images/login_in_DOME/authn_architecture-GeneralArchitecture.drawio.png>General architecture, remote cross-device flow
 
 
         The system supports both Human-To-Machine (H2M) and Machine-To-Machine (M2M) flows. They share a lot of things, but the H2M flows may be more interactive.
@@ -1097,7 +1097,7 @@ localBiblioFile: "localbiblio.yaml"
 
                 For the explanation we will use an expanded version of [[[#fig-general-architecture]]], which can be seen in [[[#fig-authentication]]].
                 
-                <x-img #fig-authentication @images/login_in_DOME/authn_architecture_authentication.drawio.png>Authentication, H2M flow
+                <x-img #fig-authentication @/images/login_in_DOME/authn_architecture_authentication.drawio.png>Authentication, H2M flow
 
                 The high level flow is the following:
 
@@ -1198,7 +1198,7 @@ localBiblioFile: "localbiblio.yaml"
 
                     # -(5) The QR code is displayed in the user browser with instructions to scan it and go to the URL inside it.
 
-                        <x-img #qr_code_authreq @images/qrcode-authreq.png>QR code with the example Authorization Request endpoint inside
+                        <x-img #qr_code_authreq @/images/qrcode-authreq.png>QR code with the example Authorization Request endpoint inside
 
                     verifier -> browser --: **(5)** Display QR code
 
@@ -1488,7 +1488,7 @@ localBiblioFile: "localbiblio.yaml"
 
                 We assume, like in the H2M case, that the legal entity operating the application issues a LEARCredential to the application, and that the application uses a so-called `enterprise wallet` to store and manage Verifiable Credentials and their associated private keys.
 
-                <x-img #arch-overview @images/login_in_DOME/authn_architecture_numbered.drawio.png>Architecture overview
+                <x-img #arch-overview @/images/login_in_DOME/authn_architecture_numbered.drawio.png>Architecture overview
 
                 The high level flow is the following:
 
@@ -1726,7 +1726,7 @@ localBiblioFile: "localbiblio.yaml"
 
             For the explanation we will use the following figure which is based on [[[NIST-AUTH]]] which describes a reference architecture with necessary functional components to achieve enforcement the authorization policies. The authorization process depends on four layers of functionality: <b>Enforcement</b>, <b>Decision</b>, <b>Access Control Data</b>, and <b>Administration</b>.
 
-            <x-img #authn-reference @images/login_in_DOME/authn_architecture_authorization.drawio.png>High level Authentication logical architecture
+            <x-img #authn-reference @/images/login_in_DOME/authn_architecture_authorization.drawio.png>High level Authentication logical architecture
 
 
         <section>Determine the Authorization Policies which apply to the request 

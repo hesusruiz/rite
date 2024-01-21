@@ -180,7 +180,7 @@ func processDirectory(absInputPath string, indexFileName string) error {
 			return nil
 			// fmt.Println("Directory", path)
 		} else {
-			_, fileName := filepath.Split(path)
+			dirName, fileName := filepath.Split(path)
 			if fileName == indexFileName {
 				var outputFileName string
 
@@ -193,7 +193,7 @@ func processDirectory(absInputPath string, indexFileName string) error {
 					outputFileName = strings.Replace(path, ext, ".html", 1)
 				}
 
-				html := NewParseAndRender(fileName)
+				html := NewParseAndRender(filepath.Join(dirName, fileName))
 
 				// Write the HTML to the output file
 				err = os.WriteFile(outputFileName, []byte(html), 0664)
