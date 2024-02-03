@@ -248,7 +248,11 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 
 			// If the referenced node has a description, we will use it for the text of the link.
 			// Otherwise we will use the plain ID of the referenced node
-			referencedNode := n.p.xref[sub1]
+			referencedNode := n.p.Xref[sub1]
+			if referencedNode == nil {
+				stdlog.Fatalf("%s (line %d) error: nil xref for '%s'", n.p.fileName, n.LineNumber, sub1)
+			}
+
 			var description string
 			if referencedNode.Name == "x-li" {
 				description = string(referencedNode.Id)

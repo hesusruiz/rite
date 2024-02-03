@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"text/template"
 	"time"
@@ -23,15 +24,31 @@ import (
 )
 
 var norespec bool
-var debug bool
+var debugflag bool
 
 const defaultIndexFileName = "index.rite"
 
 func main() {
 
+	version := "v0.08"
+
+	rtinfo, ok := debug.ReadBuildInfo()
+	if ok {
+		buildSettings := rtinfo.Settings
+		for _, setting := range buildSettings {
+			if setting.Key == "vcs.time" {
+				version = version + ", built on " + setting.Value
+			}
+			if setting.Key == "vcs.revision" {
+				version = version + ", revision " + setting.Value
+			}
+		}
+
+	}
+
 	app := &cli.App{
 		Name:     "rite",
-		Version:  "v0.08",
+		Version:  version,
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
 			{
@@ -98,7 +115,7 @@ func processCommandLineAndExecute(c *cli.Context) error {
 	// Dry run
 	dryrun := c.Bool("dryrun")
 
-	debug = c.Bool("debug")
+	debugflag = c.Bool("debug")
 
 	// For plain HTML (maybe to integrate in document build chains)
 	norespec = c.Bool("norespec")
