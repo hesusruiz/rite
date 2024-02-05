@@ -439,10 +439,6 @@ func (p *Parser) ReadAnyParagraph(min_indentation int) *Text {
 	// Trim the paragraph to make sure we do not have spurious carriage returns at the end
 	para.Content = bytes.TrimSpace(para.Content)
 
-	// Preprocess the paragraph
-	if len(para.Content) == 0 {
-		fmt.Printf("debug")
-	}
 	para = p.PreprocesLine(para)
 
 	return para
@@ -609,6 +605,10 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 	// Extract the name of the tag from the tagSpec
 	name, tagString := ReadTagName(tagString)
 
+	if len(name) == 0 {
+		stdlog.Fatalf("NewNode, line %d: tag name is blank", text.LineNumber)
+	}
+
 	// Set the name of the node with the tag name
 	n.Name = string(name)
 
@@ -637,6 +637,8 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 
 	// Process all the attributes in the tag
 	for {
+
+		tagString = SkipWhiteSpace(tagString)
 
 		// We have finished the loop if there is no more data
 		if len(tagString) == 0 {
