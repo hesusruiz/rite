@@ -337,6 +337,11 @@ func (n *Node) addAttributes2(st *ByteRenderer, attrs ...AttrType) {
 			st.Render(" class='", n.Class, "'")
 		}
 		if attr == Src && len(n.Src) > 0 {
+			// If the path starts with a '.', replace it with the full path from the root of the project
+			if bytes.HasPrefix(n.Src, []byte("./")) {
+				// TODO: replace path with full relative path
+				fmt.Println("TODO replace image path")
+			}
 			st.Render(" src='", n.Src, "'")
 		}
 		if attr == Href && len(n.Href) > 0 {
