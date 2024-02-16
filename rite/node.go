@@ -721,7 +721,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 
 	sectionIndentStr := strings.Repeat(" ", n.Indentation)
 
-	br.Render(sectionIndentStr, "<figure><img src='/"+fileName+"' alt='", n.RestLine, "'>\n")
+	br.Render(sectionIndentStr, "<figure><img src='"+fileName+"' alt='", n.RestLine, "'>\n")
 
 	br.Render(sectionIndentStr, "<figcaption>", n.RestLine, "</figcaption></figure>\n\n")
 
