@@ -482,6 +482,32 @@ As in ReSpec, if you need to add additional markup to the title, you can use a <
 </pre></td></tr></table>
 
     </section>
+</section>
+<section id='Text elements'><h2>Text elements</h2>
+
+    <section id='Ordered and unordered lists'><h2>Ordered and unordered lists</h2>
+
+        <p>Like in HTML, a list starts with the tag <code>&ltol&gt</code> or <code>&ltul&gt</code>, for ordered and unordered lists, respectively.
+Each list item starts with a hyphen <code>-</code> followed by a blank space and the text of the item. As usual, the text of the item is a paragraph consisting of one or more contiguous lines of text at the same indentation (in this case, the indentation of the hyphen).
+        </p>
+        <p>All list items MUST have the hyphen at the same indentation, and the list ends when some text is found at a lower indentation. A line of text not starting with hyphen, and with the same indentation as the hyphen of the previous line item is an error.
+        </p>
+        <p>Apart from the above special rules, a list item is a block element, and as such it can contain any other type of block element, like sub-lists, images, complex blocks, etc. The rule for sub-blocks applies: the block MUST be more indented than the list item, that is, the indentation of the hyphen.
+        </p>
+        <p>If required, any list item of a list can start with the normal HTML tag <code>&ltli&gt</code>, which can include any standard HTML attributes. In a given list, list items starting with hyphens and with HTML tags can be mixed.
+        </p>
+    </section>
+    <section id='Block quotes'><h2>Block quotes</h2>
+
+        <p>A block quote uses the standard <code>&ltblockquote&gt</code> HTML element.
+        </p>
+    </section>
+    <section id='Bold text'><h2>Bold text</h2>
+
+        <p>Text can be made bold by surrounding it with the standard HTML tags <code>&ltb&gt</code> and <code>&lt\b&gt</code>. Remember that this is an inline tag, so you should use both start and end tags.
+Alternatively, you can use the Markdown mechanism by surrounding the text with double asterisks <code>**</code>.
+        </p>
+    </section>
     <section id='Examples'><h2>Examples</h2>
 
         <p>Any <code>&ltx-code .example&gt</code> <code>&ltpre .example&gt</code> or <code>&ltaside .example&gt</code> gets the additional example header and style. Content inside <code>&ltpre&gt/&ltcode&gt</code> elements is syntax highlighted. You can specify the language in the class attribute, for example <code>&ltx-code .example .js&gt</code>.

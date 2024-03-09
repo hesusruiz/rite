@@ -275,9 +275,32 @@ github: "https://github.com/hesusruiz/rite"
             </pre>
 
 
+<section>Text elements
+
+    <section>Ordered and unordered lists
+
+        Like in HTML, a list starts with the tag `\<ol\>` or `\<ul\>`, for ordered and unordered lists, respectively.
+        Each list item starts with a hyphen `-` followed by a blank space and the text of the item. As usual, the text of the item is a paragraph consisting of one or more contiguous lines of text at the same indentation (in this case, the indentation of the hyphen).
+
+        All list items MUST have the hyphen at the same indentation, and the list ends when some text is found at a lower indentation. A line of text not starting with hyphen, and with the same indentation as the hyphen of the previous line item is an error.
+
+        Apart from the above special rules, a list item is a block element, and as such it can contain any other type of block element, like sub-lists, images, complex blocks, etc. The rule for sub-blocks applies: the block MUST be more indented than the list item, that is, the indentation of the hyphen.
+
+        If required, any list item of a list can start with the normal HTML tag `\<li\>`, which can include any standard HTML attributes. In a given list, list items starting with hyphens and with HTML tags can be mixed.
+
+    <section>Block quotes
+
+        A block quote uses the standard `\<blockquote\>` HTML element.
+
+    <section>Bold text
+
+        Text can be made bold by surrounding it with the standard HTML tags `\<b\>` and `\<\b\>`. Remember that this is an inline tag, so you should use both start and end tags.
+        Alternatively, you can use the Markdown mechanism by surrounding the text with double asterisks `**`.
+
     <section>Examples
 
         Any `\<x-code .example\>` `\<pre .example\>` or `\<aside .example\>` gets the additional example header and style. Content inside `\<pre\>/\<code\>` elements is syntax highlighted. You can specify the language in the class attribute, for example `\<x-code .example .js\>`.
+
 
 
 <section>(Documentation in progress)

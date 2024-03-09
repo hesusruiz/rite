@@ -47,7 +47,7 @@ type Parser struct {
 	// This is true when we have read the whole file
 	atEOF bool
 
-	// Contains the last error encountered. When this is set, parsin stops
+	// Contains the last error encountered. When this is set, parsing stops
 	lastError error
 
 	Ids  map[string]int // To provide numbering of different entity classes
@@ -126,7 +126,7 @@ func (p *Parser) ParseIncludeFile(parent *Node, fileName string, processYAML boo
 	fmt.Println("processing include file", fileName)
 	defer fmt.Println("end of include file", fileName)
 
-	// Read the whole file into memory
+	// Open the file to process each line one at a time
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
@@ -363,6 +363,8 @@ func (p *Parser) UnreadParagraph(para *Text) {
 	p.bufferedPara = para
 }
 
+// ReadAnyParagraph reads all contiguous lines with the same indentation, if their indentation
+// equal or greater than min_indentation. It skips all blank lines at the beginning.
 func (p *Parser) ReadAnyParagraph(min_indentation int) *Text {
 
 	// Do nothing if there was a non-recoverable error in parsing
@@ -393,6 +395,7 @@ func (p *Parser) ReadAnyParagraph(min_indentation int) *Text {
 		stdlog.Fatalf("no paragraph read, line: %d\n", p.currentLineNum())
 	}
 
+	// We expect lines with at least the same indentation as specified
 	if line.Indentation < min_indentation {
 		p.UnreadLine(line)
 		return nil
@@ -627,7 +630,7 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 		fmt.Println("line ", n.LineNumber, text)
 	case "x-diagram":
 		n.Type = DiagramNode
-	case "x-code", "pre":
+	case "x-code", "x-example", "pre":
 		n.Type = VerbatimNode
 	case "x-include":
 		n.Type = IncludeNode
@@ -814,7 +817,7 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 func (p *Parser) ParseBlock(parent *Node) {
 	var paragraph *Text
 
-	// Read without consuming the next paragraph
+	// Read without consuming the next paragraph, to calculate indentation
 	paragraph = p.PeekParagraphFirstLine()
 
 	// If no paragraph, we have reached the end of the block or the file
@@ -822,16 +825,21 @@ func (p *Parser) ParseBlock(parent *Node) {
 		return
 	}
 
-	// // Document nodes are virtual and are an exception to indentation
+	// Document nodes are virtual and are an exception to indentation
+	if parent.Type == DocumentNode {
+		if paragraph.Indentation != parent.Indentation {
+			// When parsing the block representing the Document, we expect the first paragraph
+			// to have the same indentation as the Document node (normally zero)
+			return
+		}
+	}
+
+	// For any other block different to Document, we parse only paragraphs more indented than the Block
 	if parent.Type != DocumentNode && paragraph.Indentation <= parent.Indentation {
 		return
 	}
 
-	if parent.Type == DocumentNode && paragraph.Indentation != parent.Indentation {
-		return
-	}
-
-	// Read a paragraph which should be more indented than the parent, skipping all blank lines if needed
+	// Read the first paragraph of the Block
 	paragraph = p.ReadAnyParagraph(paragraph.Indentation)
 
 	// The first line determines the indentation of the block
@@ -1028,7 +1036,12 @@ func (p *Parser) parseVerbatimExplanation(node *Node) {
 
 }
 
-func (p *Parser) ParseVerbatim(parent *Node) bool {
+func (p *Parser) ParseVerbatim(parent *Node) error {
+
+	if len(parent.Src) > 0 {
+		p.ParseVerbatimIncluded(parent)
+		return nil
+	}
 
 	// The first line will determine the indentation of the block
 	sectionIndent := parent.Indentation
@@ -1069,7 +1082,7 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 			break
 		}
 
-		// Process normal lines
+		// Process normal lines (those not starting with the special prefix "# -")
 		if !bytes.HasPrefix(line.Content, []byte("# -")) {
 
 			// Update minimum indentation if needed
@@ -1119,7 +1132,38 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 
 	parent.InnerText = br.Bytes()
 
-	return true
+	return nil
+
+}
+
+func (p *Parser) ParseVerbatimIncluded(parent *Node) error {
+
+	// If the file name specified by the user is relative, it is treated as relative to the location of
+	// the file including it, so it should exist either in the same directory of in a subdirectory.
+	// TODO: the name can be a URL
+	fileName := string(parent.Src)
+
+	// Get the base name of the file
+	baseDir, _ := filepath.Split(p.fileName)
+
+	// Get the target file name
+	targetPath, err := filepath.Rel(baseDir, filepath.Join(baseDir, fileName))
+
+	if err != nil {
+		stdlog.Fatalf("%s (line %d) error: invalid path in include directive: %s - %s", p.fileName, parent.LineNumber, baseDir, fileName)
+	}
+	fileName = filepath.Join(baseDir, targetPath)
+
+	// Read the whole file into memory
+	fileContents, err := os.ReadFile(fileName)
+	if err != nil {
+		p.lastError = err
+		return err
+	}
+
+	parent.InnerText = fileContents
+
+	return nil
 }
 
 func (p *Parser) RenderHTML() []byte {

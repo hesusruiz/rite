@@ -162,7 +162,7 @@ func (n *Node) AddClass(newClass []byte) {
 
 func (n *Node) AddClassString(newClass string) {
 
-	// More than one class can be specified and all are accumulated, separated by a spece
+	// More than one class can be specified and all are accumulated, separated by a space
 	if len(n.Class) > 0 {
 		n.Class = append(n.Class, ' ')
 	}
@@ -196,7 +196,7 @@ func (n *Node) RenderHTML(br *ByteRenderer) error {
 		}
 
 	case VerbatimNode:
-		if err := n.RenderCodeNode(br); err != nil {
+		if err := n.RenderExampleNode(br); err != nil {
 			return err
 		}
 
@@ -421,7 +421,7 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 
 		et.Render("</td></tr>")
 
-	case "x-code":
+	case "x-code", "x-example":
 		st.Render("<pre")
 		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
 		st.Render("><code>")
@@ -448,6 +448,7 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 	case "x-img":
 		// Handle the 'x-img' special tag
 		st.Render("<figure")
+		n.AddClassString("figureshadow")
 		n.addAttributes2(st, Id, Class, Href, Attrs)
 		st.Render("><img")
 		n.addAttributes2(st, Src)
@@ -490,7 +491,7 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 // 	return `</pre>`
 // }
 
-func (n *Node) RenderCodeNode(br *ByteRenderer) error {
+func (n *Node) RenderExampleNode(br *ByteRenderer) error {
 
 	contentLines := string(n.InnerText)
 
@@ -726,7 +727,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 
 	sectionIndentStr := strings.Repeat(" ", n.Indentation)
 
-	br.Render(sectionIndentStr, "<figure><img src='"+fileName+"' alt='", n.RestLine, "'>\n")
+	br.Render(sectionIndentStr, "<figure class='figureshadow'><img src='"+fileName+"' alt='", n.RestLine, "'>\n")
 
 	br.Render(sectionIndentStr, "<figcaption>", n.RestLine, "</figcaption></figure>\n\n")
 
