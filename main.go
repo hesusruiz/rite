@@ -30,7 +30,7 @@ const defaultIndexFileName = "index.rite"
 
 func main() {
 
-	version := "v0.08"
+	version := "v0.10.1"
 
 	rtinfo, ok := debug.ReadBuildInfo()
 	if ok {
