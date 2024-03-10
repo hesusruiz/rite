@@ -162,7 +162,7 @@ func (n *Node) AddClass(newClass []byte) {
 
 func (n *Node) AddClassString(newClass string) {
 
-	// More than one class can be specified and all are accumulated, separated by a spece
+	// More than one class can be specified and all are accumulated, separated by a space
 	if len(n.Class) > 0 {
 		n.Class = append(n.Class, ' ')
 	}
@@ -196,7 +196,7 @@ func (n *Node) RenderHTML(br *ByteRenderer) error {
 		}
 
 	case VerbatimNode:
-		if err := n.RenderCodeNode(br); err != nil {
+		if err := n.RenderExampleNode(br); err != nil {
 			return err
 		}
 
@@ -248,7 +248,11 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 
 			// If the referenced node has a description, we will use it for the text of the link.
 			// Otherwise we will use the plain ID of the referenced node
-			referencedNode := n.p.xref[sub1]
+			referencedNode := n.p.Xref[sub1]
+			if referencedNode == nil {
+				stdlog.Fatalf("%s (line %d) error: nil xref for '%s'", n.p.fileName, n.LineNumber, sub1)
+			}
+
 			var description string
 			if referencedNode.Name == "x-li" {
 				description = string(referencedNode.Id)
@@ -333,6 +337,11 @@ func (n *Node) addAttributes2(st *ByteRenderer, attrs ...AttrType) {
 			st.Render(" class='", n.Class, "'")
 		}
 		if attr == Src && len(n.Src) > 0 {
+			// If the path starts with a '.', replace it with the full path from the root of the project
+			if bytes.HasPrefix(n.Src, []byte("./")) {
+				// TODO: replace path with full relative path
+				fmt.Println("TODO replace image path")
+			}
 			st.Render(" src='", n.Src, "'")
 		}
 		if attr == Href && len(n.Href) > 0 {
@@ -412,7 +421,7 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 
 		et.Render("</td></tr>")
 
-	case "x-code":
+	case "x-code", "x-example":
 		st.Render("<pre")
 		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
 		st.Render("><code>")
@@ -439,6 +448,7 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 	case "x-img":
 		// Handle the 'x-img' special tag
 		st.Render("<figure")
+		n.AddClassString("figureshadow")
 		n.addAttributes2(st, Id, Class, Href, Attrs)
 		st.Render("><img")
 		n.addAttributes2(st, Src)
@@ -481,7 +491,7 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 // 	return `</pre>`
 // }
 
-func (n *Node) RenderCodeNode(br *ByteRenderer) error {
+func (n *Node) RenderExampleNode(br *ByteRenderer) error {
 
 	contentLines := string(n.InnerText)
 
@@ -717,7 +727,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 
 	sectionIndentStr := strings.Repeat(" ", n.Indentation)
 
-	br.Render(sectionIndentStr, "<figure><img src='/"+fileName+"' alt='", n.RestLine, "'>\n")
+	br.Render(sectionIndentStr, "<figure class='figureshadow'><img src='"+fileName+"' alt='", n.RestLine, "'>\n")
 
 	br.Render(sectionIndentStr, "<figcaption>", n.RestLine, "</figcaption></figure>\n\n")
 

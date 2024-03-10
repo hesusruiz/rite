@@ -1093,6 +1093,24 @@ localBiblioFile: "localbiblio.yaml"
 
         <section>Authentication in Human-To-Machine scenarios
 
+            <x-code .json>
+                {
+                    "field1": "This is field one",
+                    "field2": "This is field one",
+                    "field3": "This is field one",
+                    "field4": "This is field one"
+                }
+
+            <x-example .json>
+                {
+                    "field1": "This is field one",
+                    "field2": "This is field one",
+                    "field3": "This is field one",
+                    "field4": "This is field one"
+                }
+
+            <x-example @anexample.json .json>
+
             <section>Overview
 
                 For the explanation we will use an expanded version of [[[#fig-general-architecture]]], which can be seen in [[[#fig-authentication]]].

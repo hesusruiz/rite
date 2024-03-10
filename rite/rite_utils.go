@@ -46,14 +46,14 @@ type Text struct {
 	Content     []byte
 }
 
-// String represents the Text with the 10 first characters
+// String represents the Text with the 20 first characters
 func (para *Text) String() string {
 	// This is helpful for debugging
 	if para == nil {
 		return "<nil>"
 	}
 
-	numChars := 10
+	numChars := 20
 	if len(para.Content) < numChars {
 		numChars = len(para.Content)
 	}

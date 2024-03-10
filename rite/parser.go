@@ -47,12 +47,12 @@ type Parser struct {
 	// This is true when we have read the whole file
 	atEOF bool
 
-	// Contains the last error encountered. When this is set, parsin stops
+	// Contains the last error encountered. When this is set, parsing stops
 	lastError error
 
 	Ids  map[string]int // To provide numbering of different entity classes
-	figs map[string]int // To provide numbering of figs of different types in the document
-	xref map[string]*Node
+	Figs map[string]int // To provide numbering of figs of different types in the document
+	Xref map[string]*Node
 
 	Config *yaml.YAML
 
@@ -73,16 +73,16 @@ func NewParser(fileName string, linescanner *bufio.Scanner) *Parser {
 
 	// Create the maps
 	p.Ids = make(map[string]int)
-	p.figs = make(map[string]int)
-	p.xref = make(map[string]*Node)
+	p.Figs = make(map[string]int)
+	p.Xref = make(map[string]*Node)
 
 	// All nodes have a reference to its parser to access some info
 	p.doc.p = p
 
-	// This trick is needed so the actual file contents are at indentation 0,
-	// complying with the rule that the block indentation should be greater than the
-	// indentation of the containing node.
-	p.doc.Indentation = -1
+	// // This trick is needed so the actual file contents are at indentation 0,
+	// // complying with the rule that the block indentation should be greater than the
+	// // indentation of the containing node.
+	// p.doc.Indentation = 0
 
 	return p
 
@@ -122,9 +122,11 @@ func ParseFromFile(fileName string, processYAML bool) (*Parser, error) {
 }
 
 // ParseFromFile reads a file and preprocesses it in memory
-func (p *Parser) ParseIncludeFile(fileName string, processYAML bool) (*Parser, error) {
+func (p *Parser) ParseIncludeFile(parent *Node, fileName string, processYAML bool) (*Parser, error) {
+	fmt.Println("processing include file", fileName)
+	defer fmt.Println("end of include file", fileName)
 
-	// Read the whole file into memory
+	// Open the file to process each line one at a time
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
@@ -140,10 +142,20 @@ func (p *Parser) ParseIncludeFile(fileName string, processYAML bool) (*Parser, e
 	// Set the configuration from the parent parser
 	subParser.Config = p.Config
 
+	// Pass the maps for references from the parent parser, so the subparser can update them
+	subParser.Ids = p.Ids
+	subParser.Figs = p.Figs
+	subParser.Xref = p.Xref
+
 	// Perform the actual parsing
 	if err := subParser.Parse(); err != nil {
 		return nil, err
 	}
+
+	// Retrieve the updated maps
+	p.Ids = subParser.Ids
+	p.Figs = subParser.Figs
+	p.Xref = subParser.Xref
 
 	return subParser, nil
 
@@ -180,7 +192,7 @@ func (p *Parser) SkipBlankLines() bool {
 		return true
 	}
 
-	// All lines of the file were processed without finding a blank line
+	// All lines of the file were processed without finding a non-blank line
 	return false
 }
 
@@ -210,12 +222,13 @@ func (p *Parser) ReadLine() *Text {
 
 		// Get a rawLine from the file
 		rawLine := bytes.Clone(p.s.Bytes())
+
 		p.currentLineCounter++
 
 		// Strip blanks at the beginning of the line and calculate indentation
 		// We do not support other whitespace like tabs
-		// p.line = bytes.TrimLeft(rawLine, " ")
 		p.currentIndentation, p.currentLine = TrimLeft(rawLine, blank)
+		p.currentLine = bytes.TrimSpace(p.currentLine)
 		if len(p.currentLine) == 0 {
 			return nil
 		}
@@ -253,9 +266,9 @@ func (p *Parser) UnreadLine(line *Text) {
 // ReadParagraph is like ReadLine but returns all contiguous lines at the same level of indentation.
 // The paragraph starts at the first non-blank line with more indentation than the specified one.
 // A line starting with a block tag is considered a different paragraph, and stops the current paragraph.
-func (p *Parser) ReadParagraph(min_indentation int) *Text {
+func (p *Parser) ReadParagraph(indentation int) *Text {
 
-	// Do nothinbg if there was a non-recoverable error in parsing
+	// Do nothing if there was a non-recoverable error in parsing
 	if p.lastError != nil {
 		return nil
 	}
@@ -290,7 +303,7 @@ func (p *Parser) ReadParagraph(min_indentation int) *Text {
 		}
 
 		// If the line read is not more indented than the min_indentation, we have finished the paragraph
-		if line.Indentation <= min_indentation {
+		if line.Indentation < indentation {
 			p.UnreadLine(line)
 			break
 		}
@@ -348,6 +361,115 @@ func (p *Parser) UnreadParagraph(para *Text) {
 		stdlog.Fatalf("UnreadParagraph: too many calls in line: %d\n", p.currentLineNum())
 	}
 	p.bufferedPara = para
+}
+
+// ReadAnyParagraph reads all contiguous lines with the same indentation, if their indentation
+// equal or greater than min_indentation. It skips all blank lines at the beginning.
+func (p *Parser) ReadAnyParagraph(min_indentation int) *Text {
+
+	// Do nothing if there was a non-recoverable error in parsing
+	if p.lastError != nil {
+		return nil
+	}
+
+	// If there is a paragraph alredy buffered, return it
+	if p.bufferedPara != nil {
+		para := p.bufferedPara
+		p.bufferedPara = nil
+		return para
+	}
+
+	// Skip all blank lines until EOF or another error
+	if !p.SkipBlankLines() {
+		return nil
+	}
+
+	// Read all lines accumulating them until a blank line, EOF or another error
+	var br ByteRenderer
+
+	// Read the first line (can not be blank)
+	line := p.ReadLine()
+
+	if line == nil {
+		// Sanity check
+		stdlog.Fatalf("no paragraph read, line: %d\n", p.currentLineNum())
+	}
+
+	// We expect lines with at least the same indentation as specified
+	if line.Indentation < min_indentation {
+		p.UnreadLine(line)
+		return nil
+	}
+
+	// Initialize the Paragraph.
+	// The indentation of the paragraph is the indentation of the firat line.
+	para := &Text{}
+	para.LineNumber = p.currentLineNum()
+	para.Indentation = line.Indentation
+
+	// Add the contents of the line to the paragraph
+	br.Renderln(line.Content)
+
+	// Read and process any possible additional lines
+	for line != nil {
+
+		// Read the next line
+		line = p.ReadLine()
+		if line == nil {
+			break
+		}
+
+		// If the line has different indentation, the paragraph has finished
+		if line.Indentation != para.Indentation {
+			p.UnreadLine(line)
+			break
+		}
+
+		// A line starting with a block tag is considered a different paragraph
+		if (line.Content[0] == '-') || (len(getStartSectionTagName(line)) > 0) {
+			p.UnreadLine(line)
+			break
+		}
+
+		// Add the contents of the line to the paragraph
+		br.Renderln(line.Content)
+
+	}
+
+	// Get the accumulated contents of all lines
+	para.Content = br.Bytes()
+
+	// Trim the paragraph to make sure we do not have spurious carriage returns at the end
+	para.Content = bytes.TrimSpace(para.Content)
+
+	para = p.PreprocesLine(para)
+
+	return para
+
+}
+
+func (p *Parser) PeekParagraphFirstLine() *Text {
+
+	// Do nothing if there was a non-recoverable error in parsing
+	if p.lastError != nil {
+		return nil
+	}
+
+	// If there is a paragraph alredy buffered, return it
+	if p.bufferedPara != nil {
+		return p.bufferedPara
+	}
+
+	// Skip all blank lines until EOF or another error
+	if !p.SkipBlankLines() {
+		return nil
+	}
+
+	// Read the first line (can not be blank)
+	line := p.ReadLine()
+	p.UnreadLine(line)
+
+	return line
 }
 
 // This regex detects the Markdown backticks, double asterisks and double underscores that need special processing
@@ -486,6 +608,10 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 	// Extract the name of the tag from the tagSpec
 	name, tagString := ReadTagName(tagString)
 
+	if len(name) == 0 {
+		stdlog.Fatalf("NewNode, line %d: tag name is blank", text.LineNumber)
+	}
+
 	// Set the name of the node with the tag name
 	n.Name = string(name)
 
@@ -501,9 +627,10 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 	switch n.Name {
 	case "section":
 		n.Type = SectionNode
+		fmt.Println("line ", n.LineNumber, text)
 	case "x-diagram":
 		n.Type = DiagramNode
-	case "x-code", "pre":
+	case "x-code", "x-example", "pre":
 		n.Type = VerbatimNode
 	case "x-include":
 		n.Type = IncludeNode
@@ -513,6 +640,8 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 
 	// Process all the attributes in the tag
 	for {
+
+		tagString = SkipWhiteSpace(tagString)
 
 		// We have finished the loop if there is no more data
 		if len(tagString) == 0 {
@@ -661,7 +790,7 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 			// n.Id = encodeOnPlaceWithUnderscore(bytes.Clone(n.RestLine))
 			n.Id = bytes.Clone(n.RestLine)
 			// If the id already exists, make it unique
-			if p.xref[string(n.Id)] != nil {
+			if p.Xref[string(n.Id)] != nil {
 				n.Id = strconv.AppendInt(n.Id, int64(n.LineNumber), 10)
 			}
 
@@ -673,11 +802,11 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 	if len(n.Id) > 0 {
 
 		// We enforce uniqueness of ids
-		if p.xref[string(n.Id)] != nil {
+		if p.Xref[string(n.Id)] != nil {
 			stdlog.Panicf("id already used, processing line %d: %s\n", n.LineNumber, n)
 		}
 		// Include the 'id' in the table and also the text for references
-		p.xref[string(n.Id)] = n
+		p.Xref[string(n.Id)] = n
 	}
 
 	return n
@@ -686,24 +815,38 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 // ParseBlock parses the segment of the document that belongs to the block represented by the node.
 // The node will have as child nodes all elements that are at the same indentation
 func (p *Parser) ParseBlock(parent *Node) {
+	var paragraph *Text
 
-	// The first line will determine the indentation of the block
-	blockIndentation := -1
+	// Read without consuming the next paragraph, to calculate indentation
+	paragraph = p.PeekParagraphFirstLine()
 
-	for {
+	// If no paragraph, we have reached the end of the block or the file
+	if paragraph == nil {
+		return
+	}
 
-		// Read a paragraph which should be more indented than the parent, skipping all blank lines if needed
-		paragraph := p.ReadParagraph(parent.Indentation)
-
-		// If no paragraph, we have reached the end of the block or the file
-		if paragraph == nil {
+	// Document nodes are virtual and are an exception to indentation
+	if parent.Type == DocumentNode {
+		if paragraph.Indentation != parent.Indentation {
+			// When parsing the block representing the Document, we expect the first paragraph
+			// to have the same indentation as the Document node (normally zero)
 			return
 		}
+	}
 
-		// Set the indentation of the first line of the inner block
-		if blockIndentation == -1 {
-			blockIndentation = paragraph.Indentation
-		}
+	// For any other block different to Document, we parse only paragraphs more indented than the Block
+	if parent.Type != DocumentNode && paragraph.Indentation <= parent.Indentation {
+		return
+	}
+
+	// Read the first paragraph of the Block
+	paragraph = p.ReadAnyParagraph(paragraph.Indentation)
+
+	// The first line determines the indentation of the block
+	blockIndentation := paragraph.Indentation
+
+	// Process the paragraphs until there is not more in the block
+	for {
 
 		// This line belongs to this block
 		if paragraph.Indentation == blockIndentation {
@@ -754,22 +897,21 @@ func (p *Parser) ParseBlock(parent *Node) {
 				}
 				fileName = filepath.Join(baseDir, targetPath)
 
-				fmt.Println("processing include file", fileName)
-
 				// Open the file and parse it
-				subParser, err := p.ParseIncludeFile(fileName, false)
+				subParser, err := p.ParseIncludeFile(parent, fileName, false)
 				if err != nil {
 					fmt.Printf("error processing %s: %s\n", fileName, err.Error())
 					os.Exit(1)
 				}
 
-				// Convert include node to the root of the included document
-				newNode = subParser.doc
+				// Add all top nodes of the included document as childs of the current parent
+				ReparentChildren(parent, subParser.doc)
+
+			} else {
+				// Add the new node as a child of the parent node
+				parent.AppendChild(newNode)
 
 			}
-
-			// Add the new node as a child of the parent node
-			parent.AppendChild(newNode)
 
 			// If the node is of verbatim type, perform special processing of its content
 			if newNode.Type == DiagramNode {
@@ -778,9 +920,6 @@ func (p *Parser) ParseBlock(parent *Node) {
 			if newNode.Type == VerbatimNode {
 				p.ParseVerbatim(newNode)
 			}
-
-			// Go to next paragraph
-			continue
 
 		}
 
@@ -797,8 +936,18 @@ func (p *Parser) ParseBlock(parent *Node) {
 
 			// Parse the interior block using the child node as its parent
 			p.ParseBlock(parent.LastChild)
-			continue
 		}
+
+		// Check if the next paragraph is less indented, so the block ends
+		paragraph = p.PeekParagraphFirstLine()
+
+		// If no paragraph or less indentation, we have reached the end of the block or the file
+		if (paragraph == nil) || (paragraph.Indentation < blockIndentation) {
+			return
+		}
+
+		// Read the next paragraph and loop again
+		paragraph = p.ReadAnyParagraph(blockIndentation)
 
 	}
 
@@ -887,7 +1036,12 @@ func (p *Parser) parseVerbatimExplanation(node *Node) {
 
 }
 
-func (p *Parser) ParseVerbatim(parent *Node) bool {
+func (p *Parser) ParseVerbatim(parent *Node) error {
+
+	if len(parent.Src) > 0 {
+		p.ParseVerbatimIncluded(parent)
+		return nil
+	}
 
 	// The first line will determine the indentation of the block
 	sectionIndent := parent.Indentation
@@ -928,7 +1082,7 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 			break
 		}
 
-		// Process normal lines
+		// Process normal lines (those not starting with the special prefix "# -")
 		if !bytes.HasPrefix(line.Content, []byte("# -")) {
 
 			// Update minimum indentation if needed
@@ -978,7 +1132,38 @@ func (p *Parser) ParseVerbatim(parent *Node) bool {
 
 	parent.InnerText = br.Bytes()
 
-	return true
+	return nil
+
+}
+
+func (p *Parser) ParseVerbatimIncluded(parent *Node) error {
+
+	// If the file name specified by the user is relative, it is treated as relative to the location of
+	// the file including it, so it should exist either in the same directory of in a subdirectory.
+	// TODO: the name can be a URL
+	fileName := string(parent.Src)
+
+	// Get the base name of the file
+	baseDir, _ := filepath.Split(p.fileName)
+
+	// Get the target file name
+	targetPath, err := filepath.Rel(baseDir, filepath.Join(baseDir, fileName))
+
+	if err != nil {
+		stdlog.Fatalf("%s (line %d) error: invalid path in include directive: %s - %s", p.fileName, parent.LineNumber, baseDir, fileName)
+	}
+	fileName = filepath.Join(baseDir, targetPath)
+
+	// Read the whole file into memory
+	fileContents, err := os.ReadFile(fileName)
+	if err != nil {
+		p.lastError = err
+		return err
+	}
+
+	parent.InnerText = fileContents
+
+	return nil
 }
 
 func (p *Parser) RenderHTML() []byte {
