@@ -1,4 +1,4 @@
-// Copyright 2023 Jesus Ruiz. All rights reserved.
+// Copyright 2023-2024 Jesus Ruiz. All rights reserved.
 // Use of this source code is governed by an Apache 2.0
 // license that can be found in the LICENSE file.
 
@@ -30,8 +30,9 @@ const defaultIndexFileName = "index.rite"
 
 func main() {
 
-	version := "v0.10.1"
+	version := "v0.10.4"
 
+	// Get the version control info, to embed in the program version
 	rtinfo, ok := debug.ReadBuildInfo()
 	if ok {
 		buildSettings := rtinfo.Settings
@@ -57,7 +58,7 @@ func main() {
 			},
 		},
 		Usage:     "process a rite document and produce HTML",
-		UsageText: "rite [options] [INPUT_FILE] (default input file is index.txt)",
+		UsageText: "rite [options] [INPUT_FILE] (default input file is index.rite)",
 		Action:    processCommandLineAndExecute,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
@@ -104,7 +105,7 @@ func main() {
 func processCommandLineAndExecute(c *cli.Context) error {
 
 	// Default input file name
-	var inputFileName = "index.rite"
+	var inputFileName = defaultIndexFileName
 
 	// Output file name command line parameter
 	outputFileName := c.String("output")
@@ -186,39 +187,44 @@ func processCommandLineAndExecute(c *cli.Context) error {
 	return nil
 }
 
+// processDirectory visits recursively a directory tree, processing each index file found in each directory.
 func processDirectory(absInputPath string, indexFileName string) error {
 
+	// Visit recursively all entries (files and directories) in the specified directory and its subdirectories
+	// We will process only the files which match exactly the name specified in 'indexFileName'
 	return filepath.WalkDir(absInputPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if d.IsDir() {
+			// Do nothing with a directory, continue visiting other entries
 			return nil
-			// fmt.Println("Directory", path)
 		} else {
+			// Do nothing if the file does not have the proper name
 			dirName, fileName := filepath.Split(path)
-			if fileName == indexFileName {
-				var outputFileName string
-
-				fmt.Println("File", path)
-				// Generate the output file name, changing the extension or adding it
-				ext := filepath.Ext(fileName)
-				if (len(ext) == 0) || (ext != ".rite") {
-					outputFileName = path + ".html"
-				} else {
-					outputFileName = strings.Replace(path, ext, ".html", 1)
-				}
-
-				html := NewParseAndRender(filepath.Join(dirName, fileName))
-
-				// Write the HTML to the output file
-				err = os.WriteFile(outputFileName, []byte(html), 0664)
-				if err != nil {
-					return err
-				}
-
+			if fileName != indexFileName {
+				return nil
 			}
+
+			// Generate the output file name, derived from the input file name
+			var outputFileName string
+			ext := filepath.Ext(fileName)
+			if (len(ext) == 0) || (ext != ".rite") {
+				outputFileName = path + ".html"
+			} else {
+				outputFileName = strings.Replace(path, ext, ".html", 1)
+			}
+
+			// Parse the input file and get the HTML
+			html := NewParseAndRender(filepath.Join(dirName, fileName))
+
+			// Write the HTML to the output file
+			err = os.WriteFile(outputFileName, []byte(html), 0664)
+			if err != nil {
+				return err
+			}
+
 		}
 		return nil
 
@@ -272,22 +278,24 @@ var assets embed.FS
 func NewParseAndRender(fileName string) string {
 
 	// Open the file and parse it
-	p, err := rite.ParseFromFile(fileName, true)
+	parser, err := rite.ParseFromFile(fileName, true)
 	if err != nil {
 		fmt.Printf("error processing %s: %s\n", fileName, err.Error())
 		os.Exit(1)
 	}
 
 	// Generate the HTML by visiting all the nodes in the parse tree
-	fragmentHTML := p.RenderHTML()
+	fragmentHTML := parser.RenderHTML()
 
 	// Initialise the template system. Use the templates specified in the document header,
 	// or the default if not specified (assets/templates/respec or assets/templates/standard)
 	defaultTemplate := "assets/templates/respec"
-	if p.Config.Bool("rite.noReSpec") {
+
+	// If the user has configured not to use the 'respec' template, we use the 'standard' template
+	if parser.Config.Bool("rite.noReSpec") {
 		defaultTemplate = "assets/templates/standard"
 	}
-	templateDir := p.Config.String("template", defaultTemplate)
+	templateDir := parser.Config.String("template", defaultTemplate)
 
 	// First check if the user has a local template, otherwise use the embedded one
 	var t *template.Template
@@ -309,12 +317,12 @@ func NewParseAndRender(fileName string) string {
 	// Get the bibliography for the references, in the tag "localBiblio"
 	// It can be specified in the YAML header or in a separate file in the "localBiblioFile" tag.
 	// If both "localBiblio" and "localBiblioFile" exists in the header, only "localBiblio" is used.
-	bibData := p.Config.Map("localBiblio", nil)
+	bibData := parser.Config.Map("localBiblio", nil)
 	if bibData == nil {
 
 		// Read the bibliography file if it exists
 		// First try reading the file specified in the YAML header, otherwise use the default name
-		bd, err := yaml.ParseYamlFile(p.Config.String("localBiblioFile", "localbiblio.yaml"))
+		bd, err := yaml.ParseYamlFile(parser.Config.String("localBiblioFile", "localbiblio.yaml"))
 		if err == nil {
 			bibData = bd.Map("")
 		}
@@ -322,7 +330,7 @@ func NewParseAndRender(fileName string) string {
 
 	// Set the data that will be available for the templates
 	var data = map[string]any{
-		"Config": p.Config.Data(),
+		"Config": parser.Config.Data(),
 		"Biblio": bibData,
 		"HTML":   string(fragmentHTML),
 	}
@@ -340,7 +348,7 @@ func NewParseAndRender(fileName string) string {
 	edBuf := sliceedit.NewBuffer(rawHtml)
 
 	// For all IDs that were detected, store the intented changes
-	for idName, idNumber := range p.Ids {
+	for idName, idNumber := range parser.Ids {
 		searchString := "{#" + idName + ".num}"
 		newValue := fmt.Sprint(idNumber)
 		edBuf.ReplaceAllString(searchString, newValue)

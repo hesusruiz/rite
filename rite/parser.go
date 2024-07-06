@@ -121,7 +121,7 @@ func ParseFromFile(fileName string, processYAML bool) (*Parser, error) {
 
 }
 
-// ParseFromFile reads a file and preprocesses it in memory
+// ParseIncludeFile reads an included file and preprocesses it in memory
 func (p *Parser) ParseIncludeFile(parent *Node, fileName string, processYAML bool) (*Parser, error) {
 	fmt.Println("processing include file", fileName)
 	defer fmt.Println("end of include file", fileName)

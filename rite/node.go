@@ -282,9 +282,6 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 			fmt.Println("indentation negative", theNode)
 		}
 
-		if n.Name == "li" {
-			br.Renderln(indent(theNode.Indentation), "<div>")
-		}
 		if theNode == n.FirstChild {
 			if n.Name != "ul" && n.Name != "ol" {
 				if theNode.Name == "li" {
@@ -292,11 +289,17 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 				}
 			}
 		}
+		if n.Name == "li" {
+			br.Renderln(indent(theNode.Indentation), "<div>")
+		}
 
 		if err := theNode.RenderHTML(br); err != nil {
 			return err
 		}
 
+		if n.Name == "li" {
+			br.Renderln(indent(theNode.Indentation), "</div>")
+		}
 		if theNode == n.LastChild {
 			if n.Name != "ul" && n.Name != "ol" {
 				if theNode.Name == "li" {
@@ -305,9 +308,6 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 			}
 		}
 
-		if n.Name == "li" {
-			br.Renderln(indent(theNode.Indentation), "</div>")
-		}
 	}
 
 	// Render the end tag of the node
@@ -448,9 +448,9 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 	case "x-img":
 		// Handle the 'x-img' special tag
 		st.Render("<figure")
-		n.AddClassString("figureshadow")
+		// n.AddClassString("figureshadow")
 		n.addAttributes2(st, Id, Class, Href, Attrs)
-		st.Render("><img")
+		st.Render("><img class='figureshadow'")
 		n.addAttributes2(st, Src)
 		st.Render(" alt='", n.RestLine, "'>")
 
@@ -727,7 +727,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 
 	sectionIndentStr := strings.Repeat(" ", n.Indentation)
 
-	br.Render(sectionIndentStr, "<figure class='figureshadow'><img src='"+fileName+"' alt='", n.RestLine, "'>\n")
+	br.Render(sectionIndentStr, "<figure><img class='figureshadow' src='"+fileName+"' alt='", n.RestLine, "'>\n")
 
 	br.Render(sectionIndentStr, "<figcaption>", n.RestLine, "</figcaption></figure>\n\n")
 
