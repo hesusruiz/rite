@@ -1,0 +1,69 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Rite",
+	"patterns": [
+		{
+			"include": "#sections"
+		},
+		{
+			"include": "#blocktags"
+		},
+		{
+			"include": "#boldtags"
+		},
+		{
+			"include": "#othertags"
+		},
+		{
+			"include": "#bold"
+		},
+		{
+			"include": "#strings"
+		}
+	],
+	"repository": {
+		"strings": {
+			"name": "string.quoted.double.rite",
+			"begin": "\"",
+			"end": "\""
+		},
+		"sections": {
+			"name": "keyword.control.rite",
+			"begin": "^\\s*<section",
+			"end": "(>)(.*)",
+			"endCaptures": {
+				"2": { "name": "string.quoted.double.rite" }
+			},
+			"patterns": [{ "include": "#identifier" },{ "include": "#strings" }]
+		},
+		"blocktags": {
+			"name": "entity.other.attribute-name.html",
+			"begin": "^\\s*<",
+			"end": "(>)(.*)",
+			"endCaptures": {
+				"2": { "name": "string.quoted.double.rite" }
+			},
+			"patterns": [{ "include": "#strings" }]
+		},
+		"othertags": {
+			"name": "entity.other.attribute-name.html",
+			"begin": "<",
+			"end": ">",
+			"patterns": [{ "include": "#strings" }]
+		},
+		"bold": {
+			"name": "markup.bold.rite",
+			"match": "\\*\\*.*?\\*\\*"
+		},
+		"boldtags": {
+			"name": "markup.bold.rite",
+			"begin": "<b>",
+			"end": "</b>"
+		},
+		"identifier": {
+			"name": "entity.name.function.rite",
+			"match": "#[\\w|-]*"
+		}
+	},
+	"scopeName": "source.rite"
+}

@@ -631,7 +631,7 @@
             </p>
             <p>For our example, we use the same that are used for accessing the European Commission portal. The claims in the credential are the digital equivalent of their analog counterparts, displayed here for illustration.
             </p>
-            <figure id='lear-appointment-letter-1' class='figureshadow'><img src='/images/lear-appointment-letter-1.png' alt='LEAR subject identification data.'>
+            <figure id='lear-appointment-letter-1'><img class='figureshadow' src='/images/lear-appointment-letter-1.png' alt='LEAR subject identification data.'>
             <figcaption>LEAR subject identification data.</figcaption></figure>
 
             <p>From the above form we can derive the following claims using the example data:
@@ -734,7 +734,7 @@
 
             <p>The LEARCredential should include a formal description with the roles and duties of the LEAR. This is the digital equivalent to the analog description in our example, which uses natural language:
             </p>
-            <figure id='lear-appointment-letter-2' class='figureshadow'><img src='/images/lear-appointment-letter-2.png' alt='LEAR roles and duties.'>
+            <figure id='lear-appointment-letter-2'><img class='figureshadow' src='/images/lear-appointment-letter-2.png' alt='LEAR roles and duties.'>
             <figcaption>LEAR roles and duties.</figcaption></figure>
 
             <table style='width:100%;margin:1em 0;'><tr><td class='xnotet'><aside class='xnotea'>
@@ -835,7 +835,7 @@
             </p>
             <p>The description of the issuance process is general enough to be used for many types of credentials, but the text includes notes describing the concrete application of the process to the case of the LEARCredential.
             </p>
-            <figure id='iss-overview' class='figureshadow'><img src='/images/issuance/issuance_background.svg' alt='Overview of participants.'>
+            <figure id='iss-overview'><img class='figureshadow' src='/images/issuance/issuance_background.svg' alt='Overview of participants.'>
             <figcaption>Overview of participants.</figcaption></figure>
 
             <p><b>End user</b>
@@ -875,7 +875,7 @@
         </section>
         <section id='Authentication'><h2>Authentication</h2>
 
-            <figure id='iss-authentication' class='figureshadow'><img src='/images/issuance/issuance_authentication.svg' alt='Issuance authentication.'>
+            <figure id='iss-authentication'><img class='figureshadow' src='/images/issuance/issuance_authentication.svg' alt='Issuance authentication.'>
             <figcaption>Issuance authentication.</figcaption></figure>
 
             <p>Before requesting a new credential, the End User has to authenticate with the Issuer with whatever mechanism is already implemented by the Issuer. This profile does not require that it is based on OIDC, Verifiable Credentials or any other specific mechanism.
@@ -891,7 +891,7 @@
         </section>
         <section id='Credential Offer'><h2>Credential Offer</h2>
 
-            <figure id='iss-credentialoffer' class='figureshadow'><img src='/images/issuance/issuance_credentialoffer.svg' alt='Credential offer.'>
+            <figure id='iss-credentialoffer'><img class='figureshadow' src='/images/issuance/issuance_credentialoffer.svg' alt='Credential offer.'>
             <figcaption>Credential offer.</figcaption></figure>
 
             <p>In this profile the wallet does not have to implement the Credential Offer Endpoint described in section 4 of [[OpenID.VCI]].
@@ -986,7 +986,7 @@
             </p>
             <p>The retrieval of the Credential Issuer configuration is illustrated below.
             </p>
-            <figure id='iss-issuermetadata' class='figureshadow'><img src='/images/issuance/issuance_issuermetadata.svg' alt='Issuer metadata.'>
+            <figure id='iss-issuermetadata'><img class='figureshadow' src='/images/issuance/issuance_issuermetadata.svg' alt='Issuer metadata.'>
             <figcaption>Issuer metadata.</figcaption></figure>
 
             <section id='Credential Issuer Metadata Parameters'><h2>Credential Issuer Metadata Parameters</h2>
@@ -1026,7 +1026,7 @@
         </section>
         <section id='Access Token'><h2>Access Token</h2>
 
-            <figure id='issuance_accesstoken' class='figureshadow'><img src='/images/issuance/issuance_accesstoken.svg' alt='Access Token.'>
+            <figure id='issuance_accesstoken'><img class='figureshadow' src='/images/issuance/issuance_accesstoken.svg' alt='Access Token.'>
             <figcaption>Access Token.</figcaption></figure>
 
             <p>The Wallet invokes the Token Endpoint implemented by the Authorization Server, which issues an Access Token and, optionally, a Refresh Token in exchange for the Pre-authorized Code that the wallet obtained in the Credential Offer.
@@ -1099,7 +1099,7 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
         </section>
         <section id='Request and receive Credential'><h2>Request and receive Credential</h2>
 
-            <figure id='issuance_requestcredential' class='figureshadow'><img src='/images/issuance/issuance_requestcredential.svg' alt='Request and receive Credential.'>
+            <figure id='issuance_requestcredential'><img class='figureshadow' src='/images/issuance/issuance_requestcredential.svg' alt='Request and receive Credential.'>
             <figcaption>Request and receive Credential.</figcaption></figure>
 
             <p>The Wallet backend invokes the Credential Endpoint, which issues a Credential as approved by the End-User upon presentation of a valid Access Token representing this approval.
@@ -1297,7 +1297,7 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
         </p>
         <p>At this moment, we are interested in the overall flows and the details will be explained later in the corresponding sections.
         </p>
-        <figure id='fig-general-architecture' class='figureshadow'><img src='/images/login_in_DOME/authn_architecture-GeneralArchitecture.drawio.png' alt='General architecture, remote cross-device flow'>
+        <figure id='fig-general-architecture'><img class='figureshadow' src='/images/login_in_DOME/authn_architecture-GeneralArchitecture.drawio.png' alt='General architecture, remote cross-device flow'>
         <figcaption>General architecture, remote cross-device flow</figcaption></figure>
 
         <p>The system supports both Human-To-Machine (H2M) and Machine-To-Machine (M2M) flows. They share a lot of things, but the H2M flows may be more interactive.
@@ -1397,7 +1397,7 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
 
                 <p>For the explanation we will use an expanded version of [[[#fig-general-architecture]]], which can be seen in [[[#fig-authentication]]].
                 </p>
-                <figure id='fig-authentication' class='figureshadow'><img src='/images/login_in_DOME/authn_architecture_authentication.drawio.png' alt='Authentication, H2M flow'>
+                <figure id='fig-authentication'><img class='figureshadow' src='/images/login_in_DOME/authn_architecture_authentication.drawio.png' alt='Authentication, H2M flow'>
                 <figcaption>Authentication, H2M flow</figcaption></figure>
 
                 <p>The high level flow is the following:
@@ -1608,7 +1608,7 @@ Cache-Control<span style="color:#000;font-weight:bold">:</span> no-store
                     </li>
                     <li id='5_1217'><b>5</b> The QR code is displayed in the user browser with instructions to scan it and go to the URL inside it.
 <div>
-                        <figure id='qr_code_authreq' class='figureshadow'><img src='/images/qrcode-authreq.png' alt='QR code with the example Authorization Request endpoint inside'>
+                        <figure id='qr_code_authreq'><img class='figureshadow' src='/images/qrcode-authreq.png' alt='QR code with the example Authorization Request endpoint inside'>
                         <figcaption>QR code with the example Authorization Request endpoint inside</figcaption></figure>
 
 </div>
@@ -1914,7 +1914,7 @@ access_token=[the access token]
                 </p>
                 <p>We assume, like in the H2M case, that the legal entity operating the application issues a LEARCredential to the application, and that the application uses a so-called <code>enterprise wallet</code> to store and manage Verifiable Credentials and their associated private keys.
                 </p>
-                <figure id='arch-overview' class='figureshadow'><img src='/images/login_in_DOME/authn_architecture_numbered.drawio.png' alt='Architecture overview'>
+                <figure id='arch-overview'><img class='figureshadow' src='/images/login_in_DOME/authn_architecture_numbered.drawio.png' alt='Architecture overview'>
                 <figcaption>Architecture overview</figcaption></figure>
 
                 <p>The high level flow is the following:
@@ -2190,7 +2190,7 @@ access_token=[the access token]
             </p>
             <p>For the explanation we will use the following figure which is based on [[[NIST-AUTH]]] which describes a reference architecture with necessary functional components to achieve enforcement the authorization policies. The authorization process depends on four layers of functionality: <b>Enforcement</b>, <b>Decision</b>, <b>Access Control Data</b>, and <b>Administration</b>.
             </p>
-            <figure id='authn-reference' class='figureshadow'><img src='/images/login_in_DOME/authn_architecture_authorization.drawio.png' alt='High level Authentication logical architecture'>
+            <figure id='authn-reference'><img class='figureshadow' src='/images/login_in_DOME/authn_architecture_authorization.drawio.png' alt='High level Authentication logical architecture'>
             <figcaption>High level Authentication logical architecture</figcaption></figure>
 
         </section>
