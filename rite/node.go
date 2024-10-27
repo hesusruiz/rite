@@ -173,6 +173,7 @@ func (n *Node) AddClassString(newClass string) {
 // RenderHTML renders recursively to HTML this node and its children (if any)
 func (n *Node) RenderHTML(br *ByteRenderer) error {
 
+	// The DocumentNode is the root node of the document, so we treat it as special
 	if n.Type == DocumentNode {
 		fmt.Printf("Document: %s %d\n", n.p.fileName, n.LineNumber)
 		// We visit depth-first the children of the node
@@ -184,9 +185,7 @@ func (n *Node) RenderHTML(br *ByteRenderer) error {
 		return nil
 	}
 
-	indentStr := indent(n.Indentation)
-
-	// fmt.Printf("%d %s (%s) %d\n", n.Indentation, n.Type, n.Name, n.LineNumber)
+	// Now we know that the node is a descendant of the DocumentNode
 
 	switch n.Type {
 
@@ -201,6 +200,9 @@ func (n *Node) RenderHTML(br *ByteRenderer) error {
 		}
 
 	case ExplanationNode:
+		// Prepare the indentation prefix (blanks) of the line for rendering
+		indentStr := indent(n.Indentation)
+
 		// Render the start tag of this node
 		br.Renderln(indentStr, n.RawText.Content)
 		br.Render("<div>\n")
@@ -228,6 +230,7 @@ func (n *Node) RenderHTML(br *ByteRenderer) error {
 
 // var reXRef = regexp.MustCompile(`<x-ref +([0-9a-zA-Z-_\.]+) *>`)
 var reXRef = regexp.MustCompile(`<x-ref +"(.+?)" *>`)
+var reBiblioRef = regexp.MustCompile(`\[\[(.+?)\]\]`)
 
 func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 
@@ -250,7 +253,8 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 			// Otherwise we will use the plain ID of the referenced node
 			referencedNode := n.p.Xref[sub1]
 			if referencedNode == nil {
-				stdlog.Fatalf("%s (line %d) error: nil xref for '%s'", n.p.fileName, n.LineNumber, sub1)
+				stdlog.Printf("%s (line %d) error: nil xref for '%s'\n", n.p.fileName, n.LineNumber, sub1)
+				continue
 			}
 
 			var description string
@@ -265,10 +269,33 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 				replacement = []byte("<a href=\"#" + sub1 + "\" class=\"xref\">" + string(description) + "</a>")
 			} else {
 				replacement = []byte("<a href=\"#" + sub1 + "\" class=\"xref\">[${1}]</a>")
-
 			}
 			original := submatchs[0]
 			rest = bytes.ReplaceAll(rest, original, replacement)
+		}
+	}
+
+	// Handle cross-references in the line
+	if allsubmatches := reBiblioRef.FindAllSubmatch(rest, -1); len(allsubmatches) > 0 {
+
+		for _, submatchs := range allsubmatches {
+
+			sub1 := string(bytes.Clone(submatchs[1]))
+
+			// If the referenced node has a description, we will use it for the text of the link.
+			// Otherwise we will use the plain ID of the referenced node
+			referencedNode := n.p.Bibdata.Map(sub1)
+			if referencedNode == nil {
+				stdlog.Printf("%s (line %d) error: nil Biblio reference for '%s'\n", n.p.fileName, n.LineNumber, sub1)
+				continue
+			}
+
+			n.p.MyBibdata[sub1] = referencedNode
+
+			replacement := []byte("<a href=\"#bib_" + sub1 + "\" class=\"xref\">[" + sub1 + "]</a>")
+			original := submatchs[0]
+			rest = bytes.ReplaceAll(rest, original, replacement)
+
 		}
 	}
 
@@ -368,7 +395,7 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		st.Render(">")
 
 		if len(n.RestLine) > 0 {
-			if n.p.Config.Bool("rite.noReSpec") {
+			if n.p.Config.Bool("rite.noReSpec") || n.p.Config.Bool("rite.norespec") {
 				st.Render("<h2>", n.Outline, " ", n.RestLine, "</h2>\n")
 			} else {
 				st.Render("<h2>", n.RestLine, "</h2>\n")

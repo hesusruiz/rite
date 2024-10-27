@@ -56,6 +56,9 @@ type Parser struct {
 
 	Config *yaml.YAML
 
+	Bibdata   *yaml.YAML
+	MyBibdata map[string]any
+
 	//	log *zap.SugaredLogger
 }
 
@@ -75,14 +78,13 @@ func NewParser(fileName string, linescanner *bufio.Scanner) *Parser {
 	p.Ids = make(map[string]int)
 	p.Figs = make(map[string]int)
 	p.Xref = make(map[string]*Node)
+	p.MyBibdata = make(map[string]any)
 
 	// All nodes have a reference to its parser to access some info
 	p.doc.p = p
 
-	// // This trick is needed so the actual file contents are at indentation 0,
-	// // complying with the rule that the block indentation should be greater than the
-	// // indentation of the containing node.
-	// p.doc.Indentation = 0
+	// Initialise the config just in case we do not find a suitable one
+	p.Config, _ = yaml.ParseYaml("")
 
 	return p
 
@@ -110,6 +112,85 @@ func ParseFromBytes(fileName string, src []byte) (*Parser, error) {
 	}
 
 	return p, nil
+
+}
+
+func (p *Parser) RetrieveBliblioData(baseDir string) *yaml.YAML {
+
+	// Get the bibliography for the references, in the tag "localBiblio"
+	// It can be specified in the YAML header or in a separate file in the "localBiblioFile" tag.
+	// If both "localBiblio" and "localBiblioFile" exists in the header, only "localBiblio" is used.
+	bibData, _ := p.Config.Get("localBiblio")
+	if bibData != nil {
+		fmt.Println("found local biblio in the front matter")
+		p.Bibdata = bibData
+		return bibData
+	}
+
+	// Try with a file in the same directory as the content file being processed
+	dir, _ := filepath.Split(p.fileName)
+
+	fullFileName := filepath.Join(dir, "localbiblio.yaml")
+	bibData, err := yaml.ParseYamlFile(fullFileName)
+	if err == nil {
+		fmt.Println("reading Biblio data from", fullFileName)
+		p.Bibdata = bibData
+		return bibData
+	}
+
+	// Now, we will try in the directory specified by baseDir
+	fullFileName = filepath.Join(baseDir, "localbiblio.yaml")
+	bibData, err = yaml.ParseYamlFile(fullFileName)
+	if err == nil {
+		fmt.Println("reading Biblio data from", fullFileName)
+		p.Bibdata = bibData
+		return bibData
+	}
+
+	fmt.Println("bibli0graphy data not found")
+
+	return nil
+
+}
+
+func (p *Parser) RenderBibliography() []byte {
+
+	br := &ByteRenderer{}
+	br.Renderln()
+	br.Renderln("<section id='References'><h2>References</h2>")
+	br.Renderln("<dl>")
+
+	bibdataMap := p.MyBibdata
+	for key, v := range bibdataMap {
+
+		e := yaml.New(v)
+		title := e.String("title")
+		date := e.String("date")
+		href := e.String("href")
+
+		br.Renderln("<dt  id='bib_", key, "'>[", key, "]</dt>")
+		br.Renderln("<dd>")
+
+		if len(href) > 0 {
+			br.Render("<a href='", href, "'>", title, "</a>. ")
+		} else {
+			br.Render(title, ". ")
+		}
+
+		if len(date) > 0 {
+			br.Render("Date: ", date, ". ")
+		}
+
+		if len(href) > 0 {
+			br.Render("URL: <a href='", href, "'>", href, "</a>. ")
+		}
+		br.Renderln("</dd>")
+	}
+
+	br.Renderln("</dl>")
+	br.Renderln("</section>")
+
+	return br.Bytes()
 
 }
 
@@ -521,12 +602,12 @@ func (p *Parser) PreprocesLine(lineSt *Text) *Text {
 		lineSt.Content = reCodeBackticks.ReplaceAll(lineSt.Content, []byte("<code>${1}</code>"))
 	}
 
-	// Convert the MD '**' to 'b' markup
+	// Convert the Markdown '**' to 'b' markup
 	if bytes.Contains(lineSt.Content, []byte("*")) {
 		lineSt.Content = reMarkdownBold.ReplaceAll(lineSt.Content, []byte("<b>${1}</b>"))
 	}
 
-	// Convert the MD '__' to 'i' markup
+	// Convert the Markdown '__' to 'i' markup
 	if bytes.Contains(lineSt.Content, []byte("_")) {
 		lineSt.Content = reMarkdownItalics.ReplaceAll(lineSt.Content, []byte("<i>${1}</i>"))
 	}
@@ -559,8 +640,7 @@ func (p *Parser) PreprocesLine(lineSt *Text) *Text {
 }
 
 func getStartSectionTagName(text *Text) []byte {
-	// If the tag is less than 3 chars or the node does not start with '<', mark it as a paragraph
-	// and do not process it further.
+	// If the tag is less than 3 chars or the node does not start with '<', do not process it further.
 	if len(text.Content) < 3 || text.Content[0] != StartHTMLTag {
 		return nil
 	}
@@ -894,7 +974,7 @@ func (p *Parser) ParseBlock(parent *Node) {
 				// Calculate our sequence number for the parent section
 				numSections := 1
 				for theNode := parent.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-					if theNode.Type == SectionNode {
+					if theNode.Type == SectionNode && string(theNode.Id) != "abstract" {
 						numSections++
 					}
 				}
@@ -1213,59 +1293,49 @@ func (p *Parser) PreprocessYAMLHeader() error {
 		return err
 	}
 
-	s := p.s
-
-	// Find the first non-blank line
-	for s.Scan() {
-		// Line numbers start at 1
-		p.currentLineCounter++
-		if len(s.Bytes()) > 0 {
-			break
-		}
-	}
-
-	// Detect if there are no non-blank lines
-	if len(s.Bytes()) == 0 {
+	line := p.PeekParagraphFirstLine()
+	if line == nil || len(line.Content) == 0 {
 		return fmt.Errorf("empty file")
 	}
 
-	// Get the line, cloning to avoid overwrites
-	p.currentLine = bytes.Clone(s.Bytes())
-
 	// We accept YAML data only at the beginning of the file
-	if !bytes.HasPrefix(p.currentLine, []byte("---")) {
-		return fmt.Errorf("no YAML metadata found")
+	if !bytes.HasPrefix(line.Content, []byte("---")) {
+		return fmt.Errorf("no YAML metadata found in the file")
 	}
+
+	// Just discard the line
+	p.ReadLine()
 
 	// Build a string with all subsequent lines up to the next "---"
 	var yamlString strings.Builder
 	var endYamlFound bool
 
-	for s.Scan() {
+	for !p.atEOF {
 
-		// Get a line from the file
-		p.currentLine = bytes.Clone(s.Bytes())
-
-		// Calculate the line number
-		p.currentLineCounter++
+		line := p.ReadLine()
+		if line == nil {
+			continue
+		}
 
 		// Check for end of YAML section
-		if bytes.HasPrefix(p.currentLine, []byte("---")) {
+		if bytes.HasPrefix(line.Content, []byte("---")) {
 			endYamlFound = true
 			break
 		}
 
-		yamlString.Write(p.currentLine)
+		yamlString.WriteString(strings.Repeat(" ", line.Indentation) + string(line.Content))
 		yamlString.WriteString("\n")
 
 	}
+
+	frontMatter := yamlString.String()
 
 	if !endYamlFound {
 		return fmt.Errorf("end of file reached but no end of YAML section found")
 	}
 
 	// Parse the string that was built as YAML data
-	p.Config, err = yaml.ParseYaml(yamlString.String())
+	p.Config, err = yaml.ParseYaml(frontMatter)
 	if err != nil {
 		stdlog.Fatalf("malformed YAML metadata: %v\n", err)
 	}

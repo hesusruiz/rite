@@ -30,7 +30,7 @@ const defaultIndexFileName = "index.rite"
 
 func main() {
 
-	version := "v0.10.5"
+	version := "v0.10.6"
 
 	// Get the version control info, to embed in the program version
 	rtinfo, ok := debug.ReadBuildInfo()
@@ -292,7 +292,7 @@ func NewParseAndRender(fileName string) string {
 	defaultTemplate := "assets/templates/respec"
 
 	// If the user has configured not to use the 'respec' template, we use the 'standard' template
-	if parser.Config.Bool("rite.noReSpec") {
+	if parser.Config.Bool("rite.noReSpec") || parser.Config.Bool("rite.norespec") {
 		defaultTemplate = "assets/templates/standard"
 	}
 	templateDir := parser.Config.String("template", defaultTemplate)
