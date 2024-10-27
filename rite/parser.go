@@ -19,7 +19,7 @@ const commentPrefix = "//"
 
 var stdlog = log.New(os.Stdout, "", 0)
 
-var config *yaml.YAML
+// var config *yaml.YAML
 
 type Parser struct {
 	// The source of the document for scanning
@@ -89,9 +89,34 @@ func NewParser(fileName string, linescanner *bufio.Scanner) *Parser {
 }
 
 // ParseFromFile reads a file and preprocesses it in memory
+func ParseFromBytes(fileName string, src []byte) (*Parser, error) {
+
+	// Process the file one line at a time, creating a Document object in memory
+	buf := bytes.NewReader(src)
+	linescanner := bufio.NewScanner(buf)
+
+	// Create a new parser for the file
+	p := NewParser(fileName, linescanner)
+
+	// Process the YAML header if there is one. It should be at the beginning of the file
+	err := p.PreprocessYAMLHeader()
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	// Perform the actual parsing
+	if err := p.Parse(); err != nil {
+		return nil, err
+	}
+
+	return p, nil
+
+}
+
+// ParseFromFile reads a file and preprocesses it in memory
 func ParseFromFile(fileName string, processYAML bool) (*Parser, error) {
 
-	// Read the whole file into memory
+	// Open the file
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
@@ -106,7 +131,7 @@ func ParseFromFile(fileName string, processYAML bool) (*Parser, error) {
 
 	// Process the YAML header if there is one. It should be at the beginning of the file
 	if processYAML {
-		err = p.preprocessYAMLHeader()
+		err = p.PreprocessYAMLHeader()
 		if err != nil {
 			return nil, err
 		}
@@ -1179,26 +1204,38 @@ func (p *Parser) RenderHTML() []byte {
 	return theHTML
 }
 
-func (p *Parser) preprocessYAMLHeader() error {
+func (p *Parser) PreprocessYAMLHeader() error {
 	var err error
+
+	// Initialise the config just in case we do not find a suitable one
+	p.Config, err = yaml.ParseYaml("")
+	if err != nil {
+		return err
+	}
 
 	s := p.s
 
-	// We need at least one line
-	if !s.Scan() {
-		return fmt.Errorf("no YAML metadata found")
+	// Find the first non-blank line
+	for s.Scan() {
+		// Line numbers start at 1
+		p.currentLineCounter++
+		if len(s.Bytes()) > 0 {
+			break
+		}
 	}
 
-	// Get a line from the file
+	// Detect if there are no non-blank lines
+	if len(s.Bytes()) == 0 {
+		return fmt.Errorf("empty file")
+	}
+
+	// Get the line, cloning to avoid overwrites
 	p.currentLine = bytes.Clone(s.Bytes())
 
 	// We accept YAML data only at the beginning of the file
 	if !bytes.HasPrefix(p.currentLine, []byte("---")) {
 		return fmt.Errorf("no YAML metadata found")
 	}
-
-	// Line numbers start at 1
-	p.currentLineCounter++
 
 	// Build a string with all subsequent lines up to the next "---"
 	var yamlString strings.Builder
@@ -1233,7 +1270,7 @@ func (p *Parser) preprocessYAMLHeader() error {
 		stdlog.Fatalf("malformed YAML metadata: %v\n", err)
 	}
 
-	config = p.Config
+	// config = p.Config
 
 	return nil
 }

@@ -508,7 +508,8 @@ func (n *Node) RenderExampleNode(br *ByteRenderer) error {
 		l = chroma.Coalesce(l)
 
 		// Determine style from the config data, with "dracula" as default
-		styleName := config.String("rite.codeStyle", "github")
+		styleName := n.p.Config.String("rite.codeStyle", "github")
+		// styleName := config.String("rite.codeStyle", "github")
 		s := styles.Get(styleName)
 
 		// fore := s.Get(chroma.Text).Colour.String()
