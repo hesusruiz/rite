@@ -284,6 +284,10 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 
 			// If the referenced node has a description, we will use it for the text of the link.
 			// Otherwise we will use the plain ID of the referenced node
+			if n.p.Bibdata == nil {
+				stdlog.Printf("%s (line %d) error: nil Biblio reference for '%s'\n", n.p.fileName, n.LineNumber, sub1)
+				continue
+			}
 			referencedNode := n.p.Bibdata.Map(sub1)
 			if referencedNode == nil {
 				stdlog.Printf("%s (line %d) error: nil Biblio reference for '%s'\n", n.p.fileName, n.LineNumber, sub1)
@@ -885,6 +889,7 @@ var NoBlockElements = []string{
 }
 var HeadingElements = []string{"h1", "h2", "h3", "h4", "h5", "h6"}
 
+// contains determines if tagName is contained in set
 func contains(set []string, tagName []byte) bool {
 	for _, el := range set {
 		if string(tagName) == el {

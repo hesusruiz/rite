@@ -47,6 +47,7 @@ func main() {
 
 	}
 
+	// Define the commands of the CLI
 	app := &cli.App{
 		Name:     "rite",
 		Version:  version,
@@ -295,6 +296,8 @@ func NewParseAndRender(fileName string) string {
 	if parser.Config.Bool("rite.noReSpec") || parser.Config.Bool("rite.norespec") {
 		defaultTemplate = "assets/templates/standard"
 	}
+
+	// But the specific template in the command line overrides all of them
 	templateDir := parser.Config.String("template", defaultTemplate)
 
 	// First check if the user has a local template, otherwise use the embedded one
@@ -345,21 +348,21 @@ func NewParseAndRender(fileName string) string {
 	rawHtml := out.Bytes()
 
 	// Prepare the buffer for efficient editing operations minimizing allocations
-	edBuf := sliceedit.NewBuffer(rawHtml)
+	editBuffer := sliceedit.NewBuffer(rawHtml)
 
 	// For all IDs that were detected, store the intented changes
 	for idName, idNumber := range parser.Ids {
 		searchString := "{#" + idName + ".num}"
 		newValue := fmt.Sprint(idNumber)
-		edBuf.ReplaceAllString(searchString, newValue)
+		editBuffer.ReplaceAllString(searchString, newValue)
 	}
 
 	// Replace the HTML escaped codes
-	edBuf.ReplaceAllString("\\<", "&lt")
-	edBuf.ReplaceAllString("\\>", "&gt")
+	editBuffer.ReplaceAllString("\\<", "&lt")
+	editBuffer.ReplaceAllString("\\>", "&gt")
 
 	// Apply the changes to the buffer and get the HTML
-	html := edBuf.String()
+	html := editBuffer.String()
 
 	return html
 }

@@ -3,6 +3,7 @@ package rite
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -90,8 +91,14 @@ func NewParser(fileName string, linescanner *bufio.Scanner) *Parser {
 
 }
 
+var ErrorNoContent = errors.New("no content")
+
 // ParseFromFile reads a file and preprocesses it in memory
 func ParseFromBytes(fileName string, src []byte) (*Parser, error) {
+
+	if len(src) == 0 {
+		return nil, ErrorNoContent
+	}
 
 	// Process the file one line at a time, creating a Document object in memory
 	buf := bytes.NewReader(src)
@@ -147,7 +154,7 @@ func (p *Parser) RetrieveBliblioData(baseDir string) *yaml.YAML {
 		return bibData
 	}
 
-	fmt.Println("bibli0graphy data not found")
+	fmt.Println("bibliography data not found")
 
 	return nil
 
@@ -953,7 +960,7 @@ func (p *Parser) ParseBlock(parent *Node) {
 	// Process the paragraphs until there is not more in the block
 	for {
 
-		// This line belongs to this block
+		// This paragraph belongs to this block
 		if paragraph.Indentation == blockIndentation {
 
 			// Create a node for the paragraph
