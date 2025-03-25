@@ -26,16 +26,22 @@ import (
 var norespec bool
 var debugflag bool
 
-const defaultIndexFileName = "index.rite"
+const (
+	defaultIndexFileName    = "index.rite"
+	htmlExtension           = ".html"
+	indexTemplateName       = "index.html.tpl"
+	defaultRespecTemplate   = "assets/templates/respec"
+	defaultStandardTemplate = "assets/templates/standard"
+)
 
 func main() {
 
-	version := "v0.10.6"
+	version := "v0.10.7"
 
 	// Get the version control info, to embed in the program version
-	rtinfo, ok := debug.ReadBuildInfo()
+	buildInfo, ok := debug.ReadBuildInfo()
 	if ok {
-		buildSettings := rtinfo.Settings
+		buildSettings := buildInfo.Settings
 		for _, setting := range buildSettings {
 			if setting.Key == "vcs.time" {
 				version = version + ", built on " + setting.Value
@@ -132,13 +138,13 @@ func processCommandLineAndExecute(c *cli.Context) error {
 	// Get the absolute input path
 	absInputPath, err := filepath.Abs(inputFileName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get absolute path for %s: %w", inputFileName, err)
 	}
 
 	// Check if input path is a directory
 	finfo, err := os.Stat(absInputPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to stat %s: %w", absInputPath, err)
 	}
 
 	isDir := finfo.IsDir()
@@ -150,12 +156,7 @@ func processCommandLineAndExecute(c *cli.Context) error {
 
 	// Generate the output file name, changing the extension or adding it
 	if len(outputFileName) == 0 {
-		ext := path.Ext(inputFileName)
-		if (len(ext) == 0) || (ext != ".rite") {
-			outputFileName = inputFileName + ".html"
-		} else {
-			outputFileName = strings.Replace(inputFileName, ext, ".html", 1)
-		}
+		outputFileName = strings.TrimSuffix(inputFileName, path.Ext(inputFileName)) + htmlExtension
 	}
 
 	// Print a message
@@ -169,7 +170,7 @@ func processCommandLineAndExecute(c *cli.Context) error {
 	// If the user specified watch, loop forever processing the input file when modified
 	if c.Bool("watch") {
 		err := processWatch(inputFileName, outputFileName)
-		return err
+		return fmt.Errorf("running processWatch with %s and %s: %w", inputFileName, outputFileName, err)
 	}
 
 	html := NewParseAndRender(absInputPath)
@@ -182,7 +183,7 @@ func processCommandLineAndExecute(c *cli.Context) error {
 	// Write the HTML to the output file
 	err = os.WriteFile(outputFileName, []byte(html), 0664)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to write %s: %w", outputFileName, err)
 	}
 
 	return nil
@@ -201,32 +202,32 @@ func processDirectory(absInputPath string, indexFileName string) error {
 		if d.IsDir() {
 			// Do nothing with a directory, continue visiting other entries
 			return nil
-		} else {
-			// Do nothing if the file does not have the proper name
-			dirName, fileName := filepath.Split(path)
-			if fileName != indexFileName {
-				return nil
-			}
-
-			// Generate the output file name, derived from the input file name
-			var outputFileName string
-			ext := filepath.Ext(fileName)
-			if (len(ext) == 0) || (ext != ".rite") {
-				outputFileName = path + ".html"
-			} else {
-				outputFileName = strings.Replace(path, ext, ".html", 1)
-			}
-
-			// Parse the input file and get the HTML
-			html := NewParseAndRender(filepath.Join(dirName, fileName))
-
-			// Write the HTML to the output file
-			err = os.WriteFile(outputFileName, []byte(html), 0664)
-			if err != nil {
-				return err
-			}
-
 		}
+
+		// Do nothing if the file does not have the proper name
+		dirName, fileName := filepath.Split(path)
+		if fileName != indexFileName {
+			return nil
+		}
+
+		// Generate the output file name, derived from the input file name
+		var outputFileName string
+		ext := filepath.Ext(fileName)
+		if (len(ext) == 0) || (ext != ".rite") {
+			outputFileName = path + htmlExtension
+		} else {
+			outputFileName = strings.Replace(path, ext, htmlExtension, 1)
+		}
+
+		// Parse the input file and get the HTML
+		html := NewParseAndRender(filepath.Join(dirName, fileName))
+
+		// Write the HTML to the output file
+		err = os.WriteFile(outputFileName, []byte(html), 0664)
+		if err != nil {
+			return fmt.Errorf("failed to write HTML file %s: %w", outputFileName, err)
+		}
+
 		return nil
 
 	})
@@ -245,7 +246,10 @@ func processWatch(inputFileName string, outputFileName string) error {
 		// Get the modified timestamp of the input file
 		info, err := os.Stat(inputFileName)
 		if err != nil {
-			return err
+			fmt.Printf("Error getting file info for %s: %v\n", inputFileName, err)
+			// Continue the loop instead of returning
+			time.Sleep(1 * time.Second)
+			continue
 		}
 		current_timestamp = info.ModTime()
 
@@ -263,7 +267,10 @@ func processWatch(inputFileName string, outputFileName string) error {
 			// And write the new version of the HTML
 			err = os.WriteFile(outputFileName, []byte(html), 0664)
 			if err != nil {
-				return err
+				fmt.Printf("Error writing file %s: %v\n", outputFileName, err)
+				// Continue the loop instead of returning
+				time.Sleep(1 * time.Second)
+				continue
 			}
 		}
 
@@ -290,15 +297,15 @@ func NewParseAndRender(fileName string) string {
 
 	// Initialise the template system. Use the templates specified in the document header,
 	// or the default if not specified (assets/templates/respec or assets/templates/standard)
-	defaultTemplate := "assets/templates/respec"
+	templateDir := defaultRespecTemplate
 
 	// If the user has configured not to use the 'respec' template, we use the 'standard' template
 	if parser.Config.Bool("rite.noReSpec") || parser.Config.Bool("rite.norespec") {
-		defaultTemplate = "assets/templates/standard"
+		templateDir = defaultStandardTemplate
 	}
 
 	// But the specific template in the command line overrides all of them
-	templateDir := parser.Config.String("template", defaultTemplate)
+	templateDir = parser.Config.String("template", templateDir)
 
 	// First check if the user has a local template, otherwise use the embedded one
 	var t *template.Template
@@ -340,7 +347,7 @@ func NewParseAndRender(fileName string) string {
 
 	// Execute the template and store the result in memory
 	var out bytes.Buffer
-	if err := t.ExecuteTemplate(&out, "index.html.tpl", data); err != nil {
+	if err := t.ExecuteTemplate(&out, indexTemplateName, data); err != nil {
 		panic(err)
 	}
 
