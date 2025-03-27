@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -20,7 +21,16 @@ const commentPrefix = "//"
 
 var stdlog = log.New(os.Stdout, "", 0)
 
-// var config *yaml.YAML
+type SyntaxError struct {
+	Filename string
+	Line     int
+	Column   int
+	Msg      string
+}
+
+func (e *SyntaxError) Error() string {
+	return fmt.Sprintf("%s:%d:%d: %s", e.Filename, e.Line, e.Column, e.Msg)
+}
 
 type Parser struct {
 	// The source of the document for scanning
@@ -51,6 +61,8 @@ type Parser struct {
 	// Contains the last error encountered. When this is set, parsing stops
 	lastError error
 
+	syntaxErrors []*SyntaxError
+
 	Ids  map[string]int // To provide numbering of different entity classes
 	Figs map[string]int // To provide numbering of figs of different types in the document
 	Xref map[string]*Node
@@ -59,12 +71,15 @@ type Parser struct {
 
 	Bibdata   *yaml.YAML
 	MyBibdata map[string]any
+}
 
-	//	log *zap.SugaredLogger
+func (p *Parser) AddSyntaxError(se *SyntaxError) {
+	p.syntaxErrors = append(p.syntaxErrors, se)
 }
 
 // NewParser parses a document reading lines from linescanner.
 // filename is for logging/tracing purposes.
+// The parser has an initial node representing the document (or sub-document) being parsed.
 func NewParser(fileName string, linescanner *bufio.Scanner) *Parser {
 
 	p := &Parser{
@@ -93,14 +108,15 @@ func NewParser(fileName string, linescanner *bufio.Scanner) *Parser {
 
 var ErrorNoContent = errors.New("no content")
 
-// ParseFromFile reads a file and preprocesses it in memory
+// ParseFromBytes uses a byte array as the source and preprocesses it in memory
+// filename is for logging/tracing purposes.
 func ParseFromBytes(fileName string, src []byte) (*Parser, error) {
 
 	if len(src) == 0 {
 		return nil, ErrorNoContent
 	}
 
-	// Process the file one line at a time, creating a Document object in memory
+	// Create a scanner to process the file one line at a time, creating a Document object in memory
 	buf := bytes.NewReader(src)
 	linescanner := bufio.NewScanner(buf)
 
@@ -108,6 +124,7 @@ func ParseFromBytes(fileName string, src []byte) (*Parser, error) {
 	p := NewParser(fileName, linescanner)
 
 	// Process the YAML header if there is one. It should be at the beginning of the file
+	// An error here does not stop parsing.
 	err := p.PreprocessYAMLHeader()
 	if err != nil {
 		log.Println(err.Error())
@@ -162,10 +179,10 @@ func (p *Parser) RetrieveBliblioData(baseDir string) *yaml.YAML {
 
 func (p *Parser) RenderBibliography() []byte {
 
-	br := &ByteRenderer{}
-	br.Renderln()
-	br.Renderln("<section id='References'><h2>References</h2>")
-	br.Renderln("<dl>")
+	htmlBuilder := &ByteRenderer{}
+	htmlBuilder.Renderln()
+	htmlBuilder.Renderln("<section id='References'><h2>References</h2>")
+	htmlBuilder.Renderln("<dl>")
 
 	bibdataMap := p.MyBibdata
 	for key, v := range bibdataMap {
@@ -175,33 +192,34 @@ func (p *Parser) RenderBibliography() []byte {
 		date := e.String("date")
 		href := e.String("href")
 
-		br.Renderln("<dt  id='bib_", key, "'>[", key, "]</dt>")
-		br.Renderln("<dd>")
+		htmlBuilder.Renderln("<dt  id='bib_", key, "'>[", key, "]</dt>")
+		htmlBuilder.Renderln("<dd>")
 
 		if len(href) > 0 {
-			br.Render("<a href='", href, "'>", title, "</a>. ")
+			htmlBuilder.Render("<a href='", href, "'>", title, "</a>. ")
 		} else {
-			br.Render(title, ". ")
+			htmlBuilder.Render(title, ". ")
 		}
 
 		if len(date) > 0 {
-			br.Render("Date: ", date, ". ")
+			htmlBuilder.Render("Date: ", date, ". ")
 		}
 
 		if len(href) > 0 {
-			br.Render("URL: <a href='", href, "'>", href, "</a>. ")
+			htmlBuilder.Render("URL: <a href='", href, "'>", href, "</a>. ")
 		}
-		br.Renderln("</dd>")
+		htmlBuilder.Renderln("</dd>")
 	}
 
-	br.Renderln("</dl>")
-	br.Renderln("</section>")
+	htmlBuilder.Renderln("</dl>")
+	htmlBuilder.Renderln("</section>")
 
-	return br.Bytes()
+	return htmlBuilder.Bytes()
 
 }
 
 // ParseFromFile reads a file and preprocesses it in memory
+// processYAML indicates if we expect a metadata header in the file.
 func ParseFromFile(fileName string, processYAML bool) (*Parser, error) {
 
 	// Open the file
@@ -235,6 +253,7 @@ func ParseFromFile(fileName string, processYAML bool) (*Parser, error) {
 }
 
 // ParseIncludeFile reads an included file and preprocesses it in memory
+// parent is the Node of the parent file where we will include the parsing results.
 func (p *Parser) ParseIncludeFile(parent *Node, fileName string, processYAML bool) (*Parser, error) {
 	fmt.Println("processing include file", fileName)
 	defer fmt.Println("end of include file", fileName)
@@ -242,7 +261,7 @@ func (p *Parser) ParseIncludeFile(parent *Node, fileName string, processYAML boo
 	// Open the file to process each line one at a time
 	file, err := os.Open(fileName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("opening include file %s: %v", fileName, err)
 	}
 	defer file.Close()
 
@@ -262,10 +281,10 @@ func (p *Parser) ParseIncludeFile(parent *Node, fileName string, processYAML boo
 
 	// Perform the actual parsing
 	if err := subParser.Parse(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing include file %s: %v", fileName, err)
 	}
 
-	// Retrieve the updated maps
+	// Update the parent parser with the processed maps
 	p.Ids = subParser.Ids
 	p.Figs = subParser.Figs
 	p.Xref = subParser.Xref
@@ -320,7 +339,9 @@ func (p *Parser) ReadLine() *Text {
 
 	// Sanity check
 	if p.bufferedLine != nil && p.bufferedPara != nil {
-		stdlog.Fatalf("reading a line when both buffered line and paragraph exist")
+		// This is a fatal error which can not be recovered
+		p.lastError = fmt.Errorf("reading a line when both buffered line and paragraph exist")
+		panic(p.lastError)
 	}
 
 	// If there is a line alredy buffered, return it
@@ -334,6 +355,7 @@ func (p *Parser) ReadLine() *Text {
 	if p.s.Scan() {
 
 		// Get a rawLine from the file
+		// We do a Clone because the result will be modified later during preprocessing
 		rawLine := bytes.Clone(p.s.Bytes())
 
 		p.currentLineCounter++
@@ -358,8 +380,9 @@ func (p *Parser) ReadLine() *Text {
 
 	// Check if there were other errors apart from EOF
 	if err := p.s.Err(); err != nil {
+		// This is a fatal error which can not be recovered
 		p.lastError = err
-		stdlog.Fatalf("error scanning: %v", err)
+		panic(p.lastError)
 	}
 
 	// We have processed all lines of the file
@@ -370,8 +393,11 @@ func (p *Parser) ReadLine() *Text {
 
 // UnreadLine allows one-level backtracking by buffering one line that was already returned from bufio.Scanner
 func (p *Parser) UnreadLine(line *Text) {
+	// Sanity check
 	if p.bufferedLine != nil {
-		stdlog.Fatalf("UnreadLine: too many calls in line: %d\n", p.currentLineNum())
+		// This is a fatal error which can not be recovered
+		p.lastError = fmt.Errorf("unreadLine: too many calls in line: %d", p.currentLineNum())
+		panic(p.lastError)
 	}
 	p.bufferedLine = line
 }
@@ -394,7 +420,9 @@ func (p *Parser) ReadParagraph(indentation int) *Text {
 	}
 
 	// Skip all blank lines until EOF or another error
-	if !p.SkipBlankLines() {
+	found := p.SkipBlankLines()
+	if !found {
+		// No blank lines found, must be at EOF
 		return nil
 	}
 
@@ -409,7 +437,9 @@ func (p *Parser) ReadParagraph(indentation int) *Text {
 		if line == nil {
 			// Sanity check
 			if para == nil {
-				stdlog.Fatalf("no paragraph read, line: %d\n", p.currentLineNum())
+				// This is an unrecoverable error, should stop parsing
+				p.lastError = fmt.Errorf("no paragraph read, line: %d\n", p.currentLineNum())
+				panic(p.lastError)
 			}
 
 			break
@@ -470,8 +500,11 @@ func (p *Parser) ReadParagraph(indentation int) *Text {
 
 // UnreadParagraph allows one-level backtracking by buffering one paragraph that was already returned from bufio.Scanner
 func (p *Parser) UnreadParagraph(para *Text) {
+	// Sanity check
 	if p.bufferedPara != nil {
-		stdlog.Fatalf("UnreadParagraph: too many calls in line: %d\n", p.currentLineNum())
+		// This is a fatal error which can not be recovered
+		p.lastError = fmt.Errorf("unreadParagraph: too many calls in line: %d", p.currentLineNum())
+		panic(p.lastError)
 	}
 	p.bufferedPara = para
 }
@@ -503,9 +536,11 @@ func (p *Parser) ReadAnyParagraph(min_indentation int) *Text {
 	// Read the first line (can not be blank)
 	line := p.ReadLine()
 
+	// Sanity check
 	if line == nil {
-		// Sanity check
-		stdlog.Fatalf("no paragraph read, line: %d\n", p.currentLineNum())
+		// This is a fatal error which can not be recovered
+		p.lastError = fmt.Errorf("no paragraph read, line: %d", p.currentLineNum())
+		panic(p.lastError)
 	}
 
 	// We expect lines with at least the same indentation as specified
@@ -679,7 +714,6 @@ func getStartSectionTagName(text *Text) []byte {
 // The new node is set to the proper type and its attributes populated.
 // If the line starts with a proper tag, it is processed and the node is updated accordingly.
 func (p *Parser) NewNode(parent *Node, text *Text) *Node {
-	var tagString []byte
 
 	n := &Node{}
 
@@ -706,22 +740,30 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 	// The end bracket is optional if there is no more text in the line after the tag attributes
 	indexRightBracket := bytes.IndexByte(text.Content, EndHTMLTag)
 	if indexRightBracket == -1 {
-		tagString = text.Content[1:]
-	} else {
 
-		// Extract the whole tag spec
-		tagString = text.Content[1:indexRightBracket]
-
-		// And the remaining text in the line
-		n.RestLine = text.Content[indexRightBracket+1:]
+		// We did not find the end bracket for the tag, so we treat this as a paragraph
+		n.Type = BlockNode
+		n.Name = "p"
+		n.RestLine = text.Content
+		return n
 
 	}
 
-	// Extract the name of the tag from the tagSpec
-	name, tagString := ReadTagName(tagString)
+	// Extract the whole tag spec
+	tagString := text.Content[1:indexRightBracket]
 
+	// And the remaining text in the line
+	n.RestLine = text.Content[indexRightBracket+1:]
+
+	// Extract the name of the tag from the tagSpec
+	name, restOfTag := ReadTagName(tagString)
+
+	// If no tag was found, treat the line as a paragraph
 	if len(name) == 0 {
-		stdlog.Fatalf("NewNode, line %d: tag name is blank", text.LineNumber)
+		n.Type = BlockNode
+		n.Name = "p"
+		n.RestLine = text.Content
+		return n
 	}
 
 	// Set the name of the node with the tag name
@@ -753,25 +795,25 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 	// Process all the attributes in the tag
 	for {
 
-		tagString = SkipWhiteSpace(tagString)
+		restOfTag = SkipWhiteSpace(restOfTag)
 
 		// We have finished the loop if there is no more data
-		if len(tagString) == 0 {
+		if len(restOfTag) == 0 {
 			break
 		}
 
 		var attrVal []byte
 
-		switch tagString[0] {
+		switch restOfTag[0] {
 		case '#':
 			// Shortcut for id="xxxx"
 
-			if len(tagString) < 2 {
+			if len(restOfTag) < 2 {
 				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
 			}
 
 			// The identifier can be enclosed in single or double quotes if there are spaces
-			attrVal, tagString = ReadQuotedWords(tagString[1:])
+			attrVal, restOfTag = ReadQuotedWords(restOfTag[1:])
 
 			// Only the first id attribute is used, others are ignored
 			if len(n.Id) == 0 {
@@ -781,12 +823,12 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 		case '.':
 			// Shortcut for class="xxxx"
 
-			if len(tagString) < 2 {
+			if len(restOfTag) < 2 {
 				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
 			}
 
 			// The class name should be a single word
-			attrVal, tagString = ReadWord(tagString[1:])
+			attrVal, restOfTag = ReadWord(restOfTag[1:])
 
 			// The tag may specify more than one class and all are accumulated
 			if len(n.Class) > 0 {
@@ -797,12 +839,12 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 		case '@':
 			// Shortcut for src="xxxx"
 
-			if len(tagString) < 2 {
+			if len(restOfTag) < 2 {
 				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
 			}
 
 			// The identifier can be enclosed in single or double quotes if there are spaces
-			attrVal, tagString = ReadQuotedWords(tagString[1:])
+			attrVal, restOfTag = ReadQuotedWords(restOfTag[1:])
 
 			// Only the first attribute is used
 			if len(n.Src) == 0 {
@@ -812,12 +854,12 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 		case '-':
 			// Shortcut for href="xxxx"
 
-			if len(tagString) < 2 {
+			if len(restOfTag) < 2 {
 				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
 			}
 
 			// The identifier can be enclosed in single or double quotes if there are spaces
-			attrVal, tagString = ReadQuotedWords(tagString[1:])
+			attrVal, restOfTag = ReadQuotedWords(restOfTag[1:])
 
 			// Only the first attribute is used
 			if len(n.Href) == 0 {
@@ -827,12 +869,12 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 		case ':':
 			// Special attribute "type" for item classification and counters
 
-			if len(tagString) < 2 {
+			if len(restOfTag) < 2 {
 				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
 			}
 
 			// The attribute should be a single word
-			attrVal, tagString = ReadWord(tagString[1:])
+			attrVal, restOfTag = ReadWord(restOfTag[1:])
 
 			// Only the first attribute is used
 			if len(n.Bucket) == 0 {
@@ -842,12 +884,12 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 		case '=':
 			// Special attribute "number" for list items
 
-			if len(tagString) < 2 {
+			if len(restOfTag) < 2 {
 				stdlog.Fatalf("preprocessTagSpec, line %d: Length of attributes must be greater than 1", text.LineNumber)
 			}
 
 			// The attribute should be a single word
-			attrVal, tagString = ReadWord(tagString[1:])
+			attrVal, restOfTag = ReadWord(restOfTag[1:])
 
 			// Only the first attribute is used
 			if len(n.Number) == 0 {
@@ -857,11 +899,11 @@ func (p *Parser) NewNode(parent *Node, text *Text) *Node {
 		default:
 			// This should be a standard HTML attribute, in 'key=val' format
 			var attr Attribute
-			attr, tagString = ReadTagAttrKey(tagString)
+			attr, restOfTag = ReadTagAttrKey(restOfTag)
 
 			if len(attr.Key) == 0 {
 				// Set the tagSpec to nil to break of the loop
-				tagString = nil
+				restOfTag = nil
 			} else {
 
 				// Treat the most important attributes specially
@@ -939,22 +981,22 @@ func (p *Parser) ParseBlock(parent *Node) {
 
 	// Document nodes are virtual and are an exception to indentation
 	if parent.Type == DocumentNode {
+		// When parsing the block representing the Document, we expect the first paragraph
+		// to have the same indentation as the Document node (normally zero)
 		if paragraph.Indentation != parent.Indentation {
-			// When parsing the block representing the Document, we expect the first paragraph
-			// to have the same indentation as the Document node (normally zero)
+			return
+		}
+	} else {
+		// For any other block different to Document, we parse only paragraphs more indented than the Block
+		if paragraph.Indentation <= parent.Indentation {
 			return
 		}
 	}
 
-	// For any other block different to Document, we parse only paragraphs more indented than the Block
-	if parent.Type != DocumentNode && paragraph.Indentation <= parent.Indentation {
-		return
-	}
-
-	// Read the first paragraph of the Block
+	// Read the first paragraph of this Block
 	paragraph = p.ReadAnyParagraph(paragraph.Indentation)
 
-	// The first line determines the indentation of the block
+	// The first line determines the indentation of this block
 	blockIndentation := paragraph.Indentation
 
 	// Process the paragraphs until there is not more in the block
@@ -972,7 +1014,9 @@ func (p *Parser) ParseBlock(parent *Node) {
 
 				// Section nodes can only be children of other section nodes or of the root Document
 				if parent.Type != DocumentNode && parent.Type != SectionNode {
-					stdlog.Fatalf("%s (line %d) error: a section node should be top or child of other section node", parent.p.fileName, newNode.LineNumber)
+					// Abort the parsing
+					p.lastError = fmt.Errorf("%s (line %d) error: a section node should be top or child of other section node", parent.p.fileName, newNode.LineNumber)
+					panic(p.lastError)
 				}
 
 				// Increase the level
@@ -1005,15 +1049,18 @@ func (p *Parser) ParseBlock(parent *Node) {
 				targetPath, err := filepath.Rel(baseDir, filepath.Join(baseDir, fileName))
 
 				if err != nil {
-					stdlog.Fatalf("%s (line %d) error: invalid path in include directive: %s - %s", parent.p.fileName, newNode.LineNumber, baseDir, fileName)
+					// Abort parsing
+					p.lastError = fmt.Errorf("%s (line %d) error: invalid path in include directive: %s - %s", parent.p.fileName, newNode.LineNumber, baseDir, fileName)
+					panic(p.lastError)
 				}
 				fileName = filepath.Join(baseDir, targetPath)
 
 				// Open the file and parse it
 				subParser, err := p.ParseIncludeFile(parent, fileName, false)
 				if err != nil {
-					fmt.Printf("error processing %s: %s\n", fileName, err.Error())
-					os.Exit(1)
+					// Abort parsing
+					p.lastError = fmt.Errorf("parsing include file %s: %w", fileName, err)
+					panic(p.lastError)
 				}
 
 				// Add all top nodes of the included document as childs of the current parent
@@ -1043,7 +1090,8 @@ func (p *Parser) ParseBlock(parent *Node) {
 
 			// Sanity check: there should be at least a child node of the parent node
 			if parent.LastChild == nil {
-				stdlog.Fatalf("more indented paragraph without child node, line: %d\n", p.currentLineNum())
+				// Abort parsing
+				p.lastError = fmt.Errorf("more indented paragraph without child node, line: %d", p.currentLineNum())
 			}
 
 			// Parse the interior block using the child node as its parent
@@ -1070,7 +1118,7 @@ func (p *Parser) parseMdListItem(lineSt *Text) *Text {
 	const simplePrefix = "- "
 	const bulletPrefix = "-("
 	const additionalPrefix = "-+"
-	var r ByteRenderer
+	var htmlBuilder ByteRenderer
 
 	// We receive a list item in Markdown format and we convert to proper HTML
 
@@ -1090,14 +1138,14 @@ func (p *Parser) parseMdListItem(lineSt *Text) *Text {
 		restLine := line[len(simplePrefix):]
 
 		// Build the line
-		r.Render("<li>", restLine)
+		htmlBuilder.Render("<li>", restLine)
 
 	} else if bytes.HasPrefix(line, []byte(additionalPrefix)) {
 
 		restLine := line[len(additionalPrefix):]
 
 		// Build the line
-		r.Render("<div>", restLine, "</div>")
+		htmlBuilder.Render("<div>", restLine, "</div>")
 
 	} else if bytes.HasPrefix(line, []byte(bulletPrefix)) {
 
@@ -1126,11 +1174,11 @@ func (p *Parser) parseMdListItem(lineSt *Text) *Text {
 		// Build the line
 		// r.Render("<x-li id='", bulletTextEncoded, "'>", "<a href='#", bulletTextEncoded, "' class='selfref'>")
 		// r.Render("<b>", bulletText, "</b></a>", restLine)
-		r.Render("<li id='", id.Bytes(), "'><b>", bulletText, "</b>", restLine)
+		htmlBuilder.Render("<li id='", id.Bytes(), "'><b>", bulletText, "</b>", restLine)
 
 	}
 
-	l := r.Bytes()
+	l := htmlBuilder.Bytes()
 	lineSt.Content = l
 	return lineSt
 
@@ -1164,7 +1212,7 @@ func (p *Parser) ParseVerbatim(parent *Node) error {
 
 	// We are going to calculate the minimum indentation for the whole block.
 	// The starting point is a very big value which will be reduced to the correct value during the loop
-	minimumIndentation := 9999999
+	minimumIndentation := math.MaxInt
 
 	// This is to keep track of the last non-blank line in the diagram
 	// Because of the way we detect the end of the block, there may be spurious blank lines at the end

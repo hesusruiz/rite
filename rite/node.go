@@ -358,7 +358,7 @@ const (
 	Attrs
 )
 
-func (n *Node) addAttributes2(st *ByteRenderer, attrs ...AttrType) {
+func (n *Node) addAttributes(st *ByteRenderer, attrs ...AttrType) {
 
 	for _, attr := range attrs {
 		if attr == Id && len(n.Id) > 0 {
@@ -387,46 +387,54 @@ func (n *Node) addAttributes2(st *ByteRenderer, attrs ...AttrType) {
 
 }
 
+// preRenderTheTag returns for the current node:
+// - tagName: the naked tag name, e.g. 'section'
+// - startTag: the full rendered start tag, e.g. '<section id="the_section_name" class="theclass">'
+// - endTag: the rendered end tag, e.g. '</section>'
+// - rest: the unprocessed rest of the line where the tag was foun, if any
 func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte, rest []byte) {
-	st := &ByteRenderer{}
-	et := &ByteRenderer{}
+	startTagBuffer := &ByteRenderer{}
+	endTagBuffer := &ByteRenderer{}
 
 	switch n.Name {
 
 	case "section":
-		st.Render("<", n.Name)
-		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
-		st.Render(">")
+		startTagBuffer.Render("<", n.Name)
+		n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
+		startTagBuffer.Render(">")
 
+		// If the line has additional text, and we output for ReSpec, we use it to automatically generate a header,
+		// as described in https://respec.org/docs/#sections
 		if len(n.RestLine) > 0 {
 			if n.p.Config.Bool("rite.noReSpec") || n.p.Config.Bool("rite.norespec") {
-				st.Render("<h2>", n.Outline, " ", n.RestLine, "</h2>\n")
+				startTagBuffer.Render("<h2>", n.Outline, " ", n.RestLine, "</h2>\n")
 			} else {
-				st.Render("<h2>", n.RestLine, "</h2>\n")
+				startTagBuffer.Render("<h2>", n.RestLine, "</h2>\n")
 			}
 		}
 
-		et.Render("</", n.Name, ">")
+		endTagBuffer.Render("</", n.Name, ">")
 
 	case "pre":
 		// Handle the 'pre' tag, with special case when the section started with '<pre><code>
-		st.Render("<pre")
-		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
-		st.Render(">")
+		// When they appear together, we handle them specially
+		startTagBuffer.Render("<pre")
+		n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
+		startTagBuffer.Render(">")
 
 		if bytes.HasPrefix(n.RestLine, []byte("<code")) {
-			et.Render("</code>")
+			endTagBuffer.Render("</code>")
 		}
-		et.Render("</pre>")
+		endTagBuffer.Render("</pre>")
 
 		rest = bytes.Clone(n.RestLine)
 
 	case "x-li":
-		st.Render("<li")
-		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
-		st.Render(">")
+		startTagBuffer.Render("<li")
+		n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
+		startTagBuffer.Render(">")
 
-		et.Render("</li>")
+		endTagBuffer.Render("</li>")
 
 		if len(n.Id) > 0 {
 			rest = fmt.Appendf(rest, "<b>%s</b>", n.Id)
@@ -434,93 +442,85 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		rest = fmt.Appendf(rest, "%s", n.RestLine)
 
 	case "x-dl":
-		// We represent definition lists as tables, for compatibility when copying from HTML
+		// We represent definition lists as tables, for compatibility with Google Docs when copying from HTML
 		// and pasting to Google Docs.
-		// This is a class for table formatting
+		// This is a class for table formatting in the case of definitions.
 		n.AddClassString("deftable")
 
-		st.Render("<table")
-		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
-		st.Render(">")
+		startTagBuffer.Render("<table")
+		n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
+		startTagBuffer.Render(">")
 
-		et.Render("</table>")
+		endTagBuffer.Render("</table>")
 
 	case "x-dt":
-		st.Render(
-			"<tr><td style='padding-left: 0px;'><b>", bytes.TrimSpace(n.RestLine), "</b></td></tr><tr><td style='padding-left: 20px;'>",
+		// definition terms are represented as rows in the table for definitin list (see 'x-dl')
+		// TODO: move the style definitions to a class in the style sheet
+		startTagBuffer.Render(
+			"<tr><td style='padding-left: 0px;'><b>",
+			bytes.TrimSpace(n.RestLine),
+			"</b></td></tr><tr><td style='padding-left: 20px;'>",
 		)
 
-		et.Render("</td></tr>")
+		endTagBuffer.Render("</td></tr>")
 
 	case "x-code", "x-example":
-		st.Render("<pre")
-		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
-		st.Render("><code>")
+		// These are special tags to simplify writing examples and code sections
+		startTagBuffer.Render("<pre")
+		n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
+		startTagBuffer.Render("><code>")
 
-		et.Render("</code></pre>")
+		endTagBuffer.Render("</code></pre>")
 
 	case "x-note":
-		st.Render("<table style='width:100%;margin:1em 0;'><tr><td class='xnotet'><aside class='xnotea'>")
+		// Special tag for notes as aside blocks
+		// TODO: move styles to the class sheet
+		startTagBuffer.Render("<table style='width:100%;margin:1em 0;'><tr><td class='xnotet'><aside class='xnotea'>")
 		if len(n.RestLine) > 0 {
-			st.Render("<p class='xnotep'>NOTE: ", bytes.TrimSpace(n.RestLine), "</p>")
+			startTagBuffer.Render("<p class='xnotep'>NOTE: ", bytes.TrimSpace(n.RestLine), "</p>")
 		}
 
-		et.Render("</aside></td></tr></table>")
+		endTagBuffer.Render("</aside></td></tr></table>")
 
 	case "x-warning":
-		// Handle the 'x-note' special tag
-		st.Render("<table style='width:100%;'><tr><td class='xwarnt'><aside class='xwarna'>")
+		// Special tag for a warning note
+		// TODO: move styles to the section sheet
+		startTagBuffer.Render("<table style='width:100%;'><tr><td class='xwarnt'><aside class='xwarna'>")
 		if len(n.RestLine) > 0 {
-			st.Render("<p class='xnotep'>WARNING! ", bytes.TrimSpace(n.RestLine), "</p>")
+			startTagBuffer.Render("<p class='xnotep'>WARNING! ", bytes.TrimSpace(n.RestLine), "</p>")
 		}
 
-		et.Render("</aside></td></tr></table>")
+		endTagBuffer.Render("</aside></td></tr></table>")
 
 	case "x-img":
-		// Handle the 'x-img' special tag
-		st.Render("<figure")
-		// n.AddClassString("figureshadow")
-		n.addAttributes2(st, Id, Class, Href, Attrs)
-		st.Render("><img class='figureshadow'")
-		n.addAttributes2(st, Src)
-		st.Render(" alt='", n.RestLine, "'>")
+		// Special tag for easy writing of images as figures, with reference counts
+		startTagBuffer.Render("<figure")
+		n.addAttributes(startTagBuffer, Id, Class, Href, Attrs)
 
-		et.Render("<figcaption>", n.RestLine, "</figcaption></figure>\n")
+		// Render the image inside the figure tag
+		// TODO: remove the need for the class by moving it to the class sheet
+		startTagBuffer.Render("><img class='figureshadow'")
+		n.addAttributes(startTagBuffer, Src)
+
+		// The rest of the first line is used both for the alt description and for the caption of the figure
+		startTagBuffer.Render(" alt='", n.RestLine, "'>")
+		endTagBuffer.Render("<figcaption>", n.RestLine, "</figcaption></figure>\n")
 
 	default:
-		st.Render("<", n.Name)
-		n.addAttributes2(st, Id, Class, Src, Href, Attrs)
-		st.Render(">")
+		// Any other block tag is rendered in a standard way
+		startTagBuffer.Render("<", n.Name)
+		n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
+		startTagBuffer.Render(">")
 
 		rest = bytes.Clone(n.RestLine)
 
-		et.Render("</", n.Name, ">")
+		endTagBuffer.Render("</", n.Name, ">")
 
 	}
 
-	return n.Name, st.CloneBytes(), et.CloneBytes(), rest
+	return n.Name, startTagBuffer.CloneBytes(), endTagBuffer.CloneBytes(), rest
 
 }
-
-// type preWrapper struct {
-// 	s *chroma.Style
-// }
-
-// func (p preWrapper) Start(code bool, styleAttr string) string {
-// 	// <pre tabindex="0" style="background-color:#fff;">
-// 	if code {
-// 		//		return fmt.Sprintf(`<pre class="nohighlight"%s><div style="padding:0.5em;"><code>`, styleAttr)
-// 		return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
-// 	}
-// 	return fmt.Sprintf(`<pre class="nohighlight"%s>`, styleAttr)
-// }
-
-// func (p preWrapper) End(code bool) string {
-// 	if code {
-// 		return `</pre>`
-// 	}
-// 	return `</pre>`
-// }
 
 func (n *Node) RenderExampleNode(br *ByteRenderer) error {
 
