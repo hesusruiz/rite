@@ -40,7 +40,9 @@ type Parser struct {
 	doc *Node
 
 	// the file of the name being processed
+	// for memory-based sources, this name is used for logging/tracing
 	fileName string
+	baseDir  string
 
 	// To support one-level backtracking, which is enough for this parser
 	bufferedPara *Text
@@ -52,7 +54,7 @@ type Parser struct {
 	// currentLineCounter is the number of lines processed
 	currentLineCounter int
 
-	// currentIndentation is the current currentIndentation
+	// currentIndentation is the current indentation in chars
 	currentIndentation int
 
 	// This is true when we have read the whole file
@@ -61,12 +63,15 @@ type Parser struct {
 	// Contains the last error encountered. When this is set, parsing stops
 	lastError error
 
+	// Cumulative error found until processing stops
 	syntaxErrors []*SyntaxError
 
+	// These are needed to support numbering of entities and cross-references
 	Ids  map[string]int // To provide numbering of different entity classes
 	Figs map[string]int // To provide numbering of figs of different types in the document
 	Xref map[string]*Node
 
+	// The configuration read from the metadata of the file
 	Config *yaml.YAML
 
 	Bibdata   *yaml.YAML
@@ -80,10 +85,19 @@ func (p *Parser) AddSyntaxError(se *SyntaxError) {
 // NewParser parses a document reading lines from linescanner.
 // filename is for logging/tracing purposes.
 // The parser has an initial node representing the document (or sub-document) being parsed.
-func NewParser(fileName string, linescanner *bufio.Scanner) *Parser {
+func NewParser(fileName string, linescanner *bufio.Scanner) (*Parser, error) {
+
+	// Get the absolute name of the file, in preparation to get the directory and file name
+	absoluteFileName, err := filepath.Abs(fileName)
+	if err != nil {
+		return nil, fmt.Errorf("getting absolute file name for %s: %w", fileName, err)
+	}
+
+	directory, fileName := filepath.Split(absoluteFileName)
 
 	p := &Parser{
 		fileName: fileName,
+		baseDir:  directory,
 		s:        linescanner,
 		doc: &Node{
 			Type: DocumentNode,
@@ -99,10 +113,10 @@ func NewParser(fileName string, linescanner *bufio.Scanner) *Parser {
 	// All nodes have a reference to its parser to access some info
 	p.doc.p = p
 
-	// Initialise the config just in case we do not find a suitable one
+	// Initialise the config just in case we do not find metadata in the file
 	p.Config, _ = yaml.ParseYaml("")
 
-	return p
+	return p, nil
 
 }
 
@@ -121,11 +135,14 @@ func ParseFromBytes(fileName string, src []byte) (*Parser, error) {
 	linescanner := bufio.NewScanner(buf)
 
 	// Create a new parser for the file
-	p := NewParser(fileName, linescanner)
+	p, err := NewParser(fileName, linescanner)
+	if err != nil {
+		return nil, fmt.Errorf("creating parser: %w", err)
+	}
 
 	// Process the YAML header if there is one. It should be at the beginning of the file
 	// An error here does not stop parsing.
-	err := p.PreprocessYAMLHeader()
+	err = p.PreprocessYAMLHeader()
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -139,7 +156,44 @@ func ParseFromBytes(fileName string, src []byte) (*Parser, error) {
 
 }
 
-func (p *Parser) RetrieveBliblioData(baseDir string) *yaml.YAML {
+// ParseFromFile reads a file and preprocesses it in memory
+// processYAML indicates if we expect a metadata header in the file.
+func ParseFromFile(fileName string, processYAML bool) (*Parser, error) {
+
+	// Open the file
+	file, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// Process the file one line at a time, creating a Document object in memory
+	linescanner := bufio.NewScanner(file)
+
+	// Create a new parser for the file
+	p, err := NewParser(fileName, linescanner)
+	if err != nil {
+		return nil, fmt.Errorf("creating parser for %s: %w", fileName, err)
+	}
+
+	// Process the YAML header if there is one. It should be at the beginning of the file
+	if processYAML {
+		err = p.PreprocessYAMLHeader()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Perform the actual parsing
+	if err := p.Parse(); err != nil {
+		return nil, err
+	}
+
+	return p, nil
+
+}
+
+func (p *Parser) RetrieveBliblioData() (*yaml.YAML, error) {
 
 	// Get the bibliography for the references, in the tag "localBiblio"
 	// It can be specified in the YAML header or in a separate file in the "localBiblioFile" tag.
@@ -148,32 +202,23 @@ func (p *Parser) RetrieveBliblioData(baseDir string) *yaml.YAML {
 	if bibData != nil {
 		fmt.Println("found local biblio in the front matter")
 		p.Bibdata = bibData
-		return bibData
+		return bibData, nil
 	}
 
-	// Try with a file in the same directory as the content file being processed
-	dir, _ := filepath.Split(p.fileName)
+	// The data may be in a file specified in a tag
+	localBiblioFileName := p.Config.String("localBiblioFile", "localbiblio.yaml")
 
-	fullFileName := filepath.Join(dir, "localbiblio.yaml")
-	bibData, err := yaml.ParseYamlFile(fullFileName)
-	if err == nil {
-		fmt.Println("reading Biblio data from", fullFileName)
-		p.Bibdata = bibData
-		return bibData
+	// The path may be absolute or relative to the file being processed
+	if !filepath.IsAbs(localBiblioFileName) {
+		localBiblioFileName = filepath.Join(p.baseDir, localBiblioFileName)
 	}
 
-	// Now, we will try in the directory specified by baseDir
-	fullFileName = filepath.Join(baseDir, "localbiblio.yaml")
-	bibData, err = yaml.ParseYamlFile(fullFileName)
-	if err == nil {
-		fmt.Println("reading Biblio data from", fullFileName)
-		p.Bibdata = bibData
-		return bibData
+	bd, err := yaml.ParseYamlFile(localBiblioFileName)
+	if err != nil {
+		return nil, fmt.Errorf("parsing local biblio file %s: %w", localBiblioFileName, err)
 	}
 
-	fmt.Println("bibliography data not found")
-
-	return nil
+	return bd, nil
 
 }
 
@@ -218,40 +263,6 @@ func (p *Parser) RenderBibliography() []byte {
 
 }
 
-// ParseFromFile reads a file and preprocesses it in memory
-// processYAML indicates if we expect a metadata header in the file.
-func ParseFromFile(fileName string, processYAML bool) (*Parser, error) {
-
-	// Open the file
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	// Process the file one line at a time, creating a Document object in memory
-	linescanner := bufio.NewScanner(file)
-
-	// Create a new parser for the file
-	p := NewParser(fileName, linescanner)
-
-	// Process the YAML header if there is one. It should be at the beginning of the file
-	if processYAML {
-		err = p.PreprocessYAMLHeader()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Perform the actual parsing
-	if err := p.Parse(); err != nil {
-		return nil, err
-	}
-
-	return p, nil
-
-}
-
 // ParseIncludeFile reads an included file and preprocesses it in memory
 // parent is the Node of the parent file where we will include the parsing results.
 func (p *Parser) ParseIncludeFile(parent *Node, fileName string, processYAML bool) (*Parser, error) {
@@ -269,7 +280,10 @@ func (p *Parser) ParseIncludeFile(parent *Node, fileName string, processYAML boo
 	linescanner := bufio.NewScanner(file)
 
 	// Create a new parser for the file
-	subParser := NewParser(fileName, linescanner)
+	subParser, err := NewParser(fileName, linescanner)
+	if err != nil {
+		return nil, fmt.Errorf("creating parser for %s: %w", fileName, err)
+	}
 
 	// Set the configuration from the parent parser
 	subParser.Config = p.Config
@@ -1041,19 +1055,9 @@ func (p *Parser) ParseBlock(parent *Node) {
 				// the file including it, so it should exist either in the same directory of in a subdirectory.
 				// TODO: the name can be a URL
 				fileName := string(newNode.Src)
-
-				// Get the base name of the parent node
-				baseDir, _ := filepath.Split(parent.p.fileName)
-
-				// Get the target file name based on the parent
-				targetPath, err := filepath.Rel(baseDir, filepath.Join(baseDir, fileName))
-
-				if err != nil {
-					// Abort parsing
-					p.lastError = fmt.Errorf("%s (line %d) error: invalid path in include directive: %s - %s", parent.p.fileName, newNode.LineNumber, baseDir, fileName)
-					panic(p.lastError)
+				if !filepath.IsAbs(fileName) {
+					fileName = filepath.Join(p.baseDir, fileName)
 				}
-				fileName = filepath.Join(baseDir, targetPath)
 
 				// Open the file and parse it
 				subParser, err := p.ParseIncludeFile(parent, fileName, false)
