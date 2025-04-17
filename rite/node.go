@@ -33,10 +33,105 @@ type TreeNode struct {
 	Parent, FirstChild, LastChild, PrevSibling, NextSibling *Node
 }
 
+// InsertBefore inserts newChild as a child of n, immediately before oldChild
+// in the sequence of n's children. oldChild may be nil, in which case newChild
+// is appended to the end of n's children.
+//
+// It will panic if newChild already has a parent or siblings.
+func (n *Node) InsertBefore(newChild, oldChild *Node) {
+	if newChild.Parent != nil || newChild.PrevSibling != nil || newChild.NextSibling != nil {
+		panic("InsertBefore called for an attached child Node")
+	}
+	var prev, next *Node
+	if oldChild != nil {
+		prev, next = oldChild.PrevSibling, oldChild
+	} else {
+		prev = n.LastChild
+	}
+	if prev != nil {
+		prev.NextSibling = newChild
+	} else {
+		n.FirstChild = newChild
+	}
+	if next != nil {
+		next.PrevSibling = newChild
+	} else {
+		n.LastChild = newChild
+	}
+	newChild.Parent = n
+	newChild.PrevSibling = prev
+	newChild.NextSibling = next
+}
+
+// AppendChild adds a node child as a child of parent.
+//
+// It will panic if child already has a parent or siblings.
+func (parent *Node) AppendChild(child *Node) {
+	if child.Parent != nil || child.PrevSibling != nil || child.NextSibling != nil {
+		panic("AppendChild called for an already attached child Node")
+	}
+	last := parent.LastChild
+	if last != nil {
+		// If the parent has already childs, set the new node as next sibling of the current last child
+		last.NextSibling = child
+	} else {
+		// If the parent has no childs, set the new node as the first child
+		parent.FirstChild = child
+	}
+
+	// In any case, the new node will be the last child of the parent
+	parent.LastChild = child
+
+	// We also set the pointers in the new node to its parent and previous sibling
+	// If the new node is the only child, the previous sibling will be nil
+	child.Parent = parent
+	child.PrevSibling = last
+}
+
+// RemoveChild removes a node child that is a child of n. Afterwards, child will have
+// no parent and no siblings.
+//
+// It will panic if child's parent is not parent.
+func (parent *Node) RemoveChild(child *Node) {
+	if child.Parent != parent {
+		panic("RemoveChild called for a non-child Node")
+	}
+	if parent.FirstChild == child {
+		parent.FirstChild = child.NextSibling
+	}
+	if child.NextSibling != nil {
+		child.NextSibling.PrevSibling = child.PrevSibling
+	}
+	if parent.LastChild == child {
+		parent.LastChild = child.PrevSibling
+	}
+	if child.PrevSibling != nil {
+		child.PrevSibling.NextSibling = child.NextSibling
+	}
+
+	// Make the child alone in the universe ...
+	child.Parent = nil
+	child.PrevSibling = nil
+	child.NextSibling = nil
+}
+
+// ReparentChildren reparents all of src's child nodes to n.
+func (n *Node) ReparentChildren(src *Node) {
+	for {
+		child := src.FirstChild
+		if child == nil {
+			break
+		}
+		src.RemoveChild(child)
+		n.AppendChild(child)
+	}
+}
+
 type Node struct {
 	TreeNode
 	Type        NodeType
 	Level       int
+	OutlineInts []int
 	Outline     string
 	p           *Parser
 	RawText     *Text
@@ -80,23 +175,23 @@ const (
 func (n NodeType) String() string {
 	switch n {
 	case ErrorNode:
-		return "Error"
+		return "Error Node"
 	case DocumentNode:
-		return "Document"
+		return "Document Node"
 	case SectionNode:
-		return "Section"
+		return "Section Node"
 	case BlockNode:
-		return "Block"
+		return "Block Node"
 	case DiagramNode:
-		return "Diagram"
+		return "Diagram Node"
 	case VerbatimNode:
-		return "Verbatim"
+		return "Verbatim Node"
 	case ExplanationNode:
-		return "Explanations"
+		return "Explanations Node"
 	case IncludeNode:
-		return "Include"
+		return "Include Node"
 	}
-	return "Invalid(" + strconv.Itoa(int(n)) + ")"
+	return "Invalid Node (" + strconv.Itoa(int(n)) + ")"
 }
 
 // tagString returns a string representation of a tag Token's Data and Attr.
@@ -778,92 +873,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 	return nil
 }
 
-// InsertBefore inserts newChild as a child of n, immediately before oldChild
-// in the sequence of n's children. oldChild may be nil, in which case newChild
-// is appended to the end of n's children.
-//
-// It will panic if newChild already has a parent or siblings.
-func (n *Node) InsertBefore(newChild, oldChild *Node) {
-	if newChild.Parent != nil || newChild.PrevSibling != nil || newChild.NextSibling != nil {
-		panic("InsertBefore called for an attached child Node")
-	}
-	var prev, next *Node
-	if oldChild != nil {
-		prev, next = oldChild.PrevSibling, oldChild
-	} else {
-		prev = n.LastChild
-	}
-	if prev != nil {
-		prev.NextSibling = newChild
-	} else {
-		n.FirstChild = newChild
-	}
-	if next != nil {
-		next.PrevSibling = newChild
-	} else {
-		n.LastChild = newChild
-	}
-	newChild.Parent = n
-	newChild.PrevSibling = prev
-	newChild.NextSibling = next
-}
-
-// AppendChild adds a node c as a child of n.
-//
-// It will panic if c already has a parent or siblings.
-func (n *Node) AppendChild(c *Node) {
-	if c.Parent != nil || c.PrevSibling != nil || c.NextSibling != nil {
-		panic("AppendChild called for an attached child Node")
-	}
-	last := n.LastChild
-	if last != nil {
-		last.NextSibling = c
-	} else {
-		n.FirstChild = c
-	}
-	n.LastChild = c
-	c.Parent = n
-	c.PrevSibling = last
-}
-
-// RemoveChild removes a node c that is a child of n. Afterwards, c will have
-// no parent and no siblings.
-//
-// It will panic if c's parent is not n.
-func (n *Node) RemoveChild(c *Node) {
-	if c.Parent != n {
-		panic("RemoveChild called for a non-child Node")
-	}
-	if n.FirstChild == c {
-		n.FirstChild = c.NextSibling
-	}
-	if c.NextSibling != nil {
-		c.NextSibling.PrevSibling = c.PrevSibling
-	}
-	if n.LastChild == c {
-		n.LastChild = c.PrevSibling
-	}
-	if c.PrevSibling != nil {
-		c.PrevSibling.NextSibling = c.NextSibling
-	}
-	c.Parent = nil
-	c.PrevSibling = nil
-	c.NextSibling = nil
-}
-
-// ReparentChildren reparents all of src's child nodes to dst.
-func ReparentChildren(dst, src *Node) {
-	for {
-		child := src.FirstChild
-		if child == nil {
-			break
-		}
-		src.RemoveChild(child)
-		dst.AppendChild(child)
-	}
-}
-
-// Clone returns a new node with the same type, data and attributes.
+// Clone returns a new node with the same type, name and attributes.
 // The Clone has no parent, no siblings and no children.
 func (n *Node) Clone() *Node {
 	m := &Node{

@@ -308,7 +308,7 @@ func NewParseAndRender(fileName string) (string, error) {
 	directory, fileName := filepath.Split(absoluteFileName)
 
 	// Open the file and parse it
-	parser, err := rite.ParseFromFile(fileName, true)
+	parser, err := rite.ParseFromFile(fileName)
 	if err != nil {
 		return "", fmt.Errorf("processing %s: %w", fileName, err)
 	}
