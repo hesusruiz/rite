@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -54,6 +55,7 @@ type Parser struct {
 	// for memory-based sources, this name is used for logging/tracing
 	fileName string
 	baseDir  string
+	rootDir  string
 
 	// To support one-level backtracking, which is enough for this parser
 	bufferedPara *Text
@@ -98,7 +100,7 @@ func (p *Parser) AddSyntaxError(se *SyntaxError) {
 // NewParser parses a document reading lines from linescanner.
 // filename is for logging/tracing purposes.
 // The parser has an initial node representing the document (or sub-document) being parsed.
-func NewParser(fileName string, linescanner *bufio.Scanner) (*Parser, error) {
+func NewParser(fileName string, rootDir string, linescanner *bufio.Scanner, debug bool) (*Parser, error) {
 
 	// Get the absolute name of the file, in preparation to get the directory and file name
 	absoluteFileName, err := filepath.Abs(fileName)
@@ -107,14 +109,19 @@ func NewParser(fileName string, linescanner *bufio.Scanner) (*Parser, error) {
 	}
 
 	directory, fileName := filepath.Split(absoluteFileName)
+	if len(rootDir) == 0 {
+		rootDir = directory
+	}
 
 	p := &Parser{
 		fileName: fileName,
 		baseDir:  directory,
+		rootDir:  rootDir,
 		s:        linescanner,
 		doc: &Node{
 			Type: DocumentNode,
 		},
+		debug: debug,
 	}
 
 	// Create the maps
@@ -137,7 +144,7 @@ var ErrorNoContent = errors.New("no content")
 
 // ParseFromFile reads a file and preprocesses it in memory
 // processYAML indicates if we expect a metadata header in the file.
-func ParseFromFile(fileName string) (*Parser, error) {
+func ParseFromFile(fileName string, debug bool) (*Parser, error) {
 
 	// Open the file
 	file, err := os.Open(fileName)
@@ -146,13 +153,13 @@ func ParseFromFile(fileName string) (*Parser, error) {
 	}
 	defer file.Close()
 
-	return ParseFromReader(fileName, file)
+	return ParseFromReader(fileName, file, debug)
 
 }
 
 // ParseFromBytes uses a byte array as the source and preprocesses it in memory
 // filename is for logging/tracing purposes.
-func ParseFromBytes(fileName string, src []byte) (*Parser, error) {
+func ParseFromBytes(fileName string, src []byte, debug bool) (*Parser, error) {
 
 	if len(src) == 0 {
 		return nil, ErrorNoContent
@@ -161,17 +168,17 @@ func ParseFromBytes(fileName string, src []byte) (*Parser, error) {
 	// Create a scanner to process the file one line at a time, creating a Document object in memory
 	buf := bytes.NewReader(src)
 
-	return ParseFromReader(fileName, buf)
+	return ParseFromReader(fileName, buf, debug)
 
 }
 
-func ParseFromReader(fileName string, input io.Reader) (*Parser, error) {
+func ParseFromReader(fileName string, input io.Reader, debug bool) (*Parser, error) {
 
 	// Process the input one line at a time, creating a Document object in memory
 	linescanner := bufio.NewScanner(input)
 
 	// Create a new parser for the file
-	p, err := NewParser(fileName, linescanner)
+	p, err := NewParser(fileName, "", linescanner, debug)
 	if err != nil {
 		return nil, fmt.Errorf("creating parser: %w", err)
 	}
@@ -179,6 +186,11 @@ func ParseFromReader(fileName string, input io.Reader) (*Parser, error) {
 	// Process the YAML header if there is one. It should be at the beginning of the file
 	// An error here does not stop parsing.
 	err = p.PreprocessYAMLHeader()
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	_, err = p.RetrieveBliblioData()
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -265,7 +277,7 @@ func (p *Parser) RenderBibliography() []byte {
 
 // ParseIncludeFile reads an included file and preprocesses it in memory
 // parent is the Node of the parent file where we will include the parsing results.
-func (p *Parser) ParseIncludeFile(parent *Node, fileName string, processYAML bool) (*Parser, error) {
+func (p *Parser) ParseIncludeFile(parent *Node, fileName string) (*Parser, error) {
 	fmt.Println("processing include file", fileName)
 	defer fmt.Println("end of include file", fileName)
 
@@ -280,7 +292,7 @@ func (p *Parser) ParseIncludeFile(parent *Node, fileName string, processYAML boo
 	linescanner := bufio.NewScanner(file)
 
 	// Create a new parser for the file
-	subParser, err := NewParser(fileName, linescanner)
+	subParser, err := NewParser(fileName, p.rootDir, linescanner, p.debug)
 	if err != nil {
 		return nil, fmt.Errorf("creating parser for %s: %w", fileName, err)
 	}
@@ -776,7 +788,7 @@ func (p *Parser) NewNode(parent *Node, text *Text) (*Node, *SyntaxError) {
 	n.Name = string(name)
 
 	// If the tag is not a block element or it is a void one, wrap it in a paragraph and do not process it
-	if contains(NoBlockElements, name) || contains(VoidElements, name) {
+	if slices.Contains(NoBlockElements, string(name)) || slices.Contains(VoidElements, string(name)) {
 		n.Type = BlockNode
 		n.Name = "p"
 		n.RestLine = text.Content
@@ -1078,7 +1090,7 @@ func (p *Parser) ParseBlock(parent *Node) *SyntaxError {
 				}
 
 				// Open the file and parse it
-				subParser, err := p.ParseIncludeFile(parent, fileName, false)
+				subParser, err := p.ParseIncludeFile(parent, fileName)
 				if err != nil {
 					// Abort parsing
 					p.lastError = fmt.Errorf("parsing include file %s: %w", fileName, err)
@@ -1090,7 +1102,10 @@ func (p *Parser) ParseBlock(parent *Node) *SyntaxError {
 
 			case DiagramNode, VerbatimNode:
 
-				p.ParseVerbatim(newNode)
+				err := p.ParseVerbatim(newNode)
+				if err != nil {
+					return err
+				}
 
 				// Add the new node as a child of the parent node
 				parent.AppendChild(newNode)
@@ -1218,11 +1233,15 @@ func (p *Parser) parseVerbatimExplanation(node *Node) {
 
 }
 
-func (p *Parser) ParseVerbatim(parent *Node) error {
+func (p *Parser) ParseVerbatim(parent *Node) *SyntaxError {
 
+	// Check if the node specifies an external diagram that has to be included
+	// We detect this situation when the parent 'src' attribute is specified by the user
 	if len(parent.Src) > 0 {
-		p.ParseVerbatimIncluded(parent)
-		return nil
+		err := p.ParseVerbatimIncluded(parent)
+		if err != nil {
+			return NewSyntaxError(p, "processing included verbatim", p.currentIndentation)
+		}
 	}
 
 	// The first line will determine the indentation of the block
@@ -1318,29 +1337,22 @@ func (p *Parser) ParseVerbatim(parent *Node) error {
 
 }
 
-func (p *Parser) ParseVerbatimIncluded(parent *Node) error {
+func (p *Parser) ParseVerbatimIncluded(parent *Node) *SyntaxError {
 
 	// If the file name specified by the user is relative, it is treated as relative to the location of
 	// the file including it, so it should exist either in the same directory of in a subdirectory.
 	// TODO: the name can be a URL
 	fileName := string(parent.Src)
 
-	// Get the base name of the file
-	baseDir, _ := filepath.Split(p.fileName)
-
-	// Get the target file name
-	targetPath, err := filepath.Rel(baseDir, filepath.Join(baseDir, fileName))
-
-	if err != nil {
-		stdlog.Fatalf("%s (line %d) error: invalid path in include directive: %s - %s", p.fileName, parent.LineNumber, baseDir, fileName)
+	if !filepath.IsAbs(fileName) {
+		fileName = filepath.Join(p.baseDir, fileName)
 	}
-	fileName = filepath.Join(baseDir, targetPath)
 
-	// Read the whole file into memory
+	// Read the whole file into memory. We are in 2025 and the files I write are smaller than the computer memory ...
 	fileContents, err := os.ReadFile(fileName)
 	if err != nil {
 		p.lastError = err
-		return err
+		return NewSyntaxError(p, err.Error(), p.currentIndentation)
 	}
 
 	parent.InnerText = fileContents
@@ -1348,17 +1360,20 @@ func (p *Parser) ParseVerbatimIncluded(parent *Node) error {
 	return nil
 }
 
-func (p *Parser) RenderHTML() []byte {
+func (p *Parser) RenderHTML() ([]byte, error) {
 
 	// Prepare a buffer to receive the rendered bytes
 	br := &ByteRenderer{}
 
 	// Travel the parse tree rendering each node
-	p.doc.RenderHTML(br)
+	err := p.doc.RenderHTML(br)
+	if err != nil {
+		return nil, err
+	}
 
 	// Return the underlying byte slice
 	theHTML := br.Bytes()
-	return theHTML
+	return theHTML, nil
 }
 
 func (p *Parser) PreprocessYAMLHeader() error {

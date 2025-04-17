@@ -12,7 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime/debug"
+	debugpkg "runtime/debug"
 	"strings"
 	"text/template"
 	"time"
@@ -24,7 +24,7 @@ import (
 )
 
 var norespec bool
-var debugflag bool
+var debug bool
 
 const (
 	defaultIndexFileName    = "index.rite"
@@ -39,7 +39,7 @@ func main() {
 	version := "v0.10.7"
 
 	// Get the version control info, to embed in the program version
-	buildInfo, ok := debug.ReadBuildInfo()
+	buildInfo, ok := debugpkg.ReadBuildInfo()
 	if ok {
 		buildSettings := buildInfo.Settings
 		for _, setting := range buildSettings {
@@ -120,7 +120,7 @@ func processCommandLineAndExecute(c *cli.Context) error {
 	// Dry run
 	dryrun := c.Bool("dryrun")
 
-	debugflag = c.Bool("debug")
+	debug = c.Bool("debug")
 
 	// For plain HTML (for example, to integrate in document build chains)
 	norespec = c.Bool("norespec")
@@ -150,7 +150,7 @@ func processCommandLineAndExecute(c *cli.Context) error {
 	// If the user specified a directory, process it and return
 	if isDir {
 		fmt.Println("processing directory", absInputPath)
-		return processDirectory(absInputPath, indexFileName)
+		return processDirectory(absInputPath, indexFileName, debug)
 	}
 
 	// At this moment, we know that the user specified a file
@@ -174,7 +174,7 @@ func processCommandLineAndExecute(c *cli.Context) error {
 		return fmt.Errorf("running processWatch with %s and %s: %w", inputFileName, outputFileName, err)
 	}
 
-	html, err := NewParseAndRender(absInputPath)
+	html, err := NewParseAndRender(absInputPath, debug)
 	if err != nil {
 		return fmt.Errorf("parsing %s: %w", absInputPath, err)
 	}
@@ -194,7 +194,7 @@ func processCommandLineAndExecute(c *cli.Context) error {
 }
 
 // processDirectory visits recursively a directory tree, processing each index file found in each directory.
-func processDirectory(absInputPath string, indexFileName string) error {
+func processDirectory(absInputPath string, indexFileName string, debug bool) error {
 
 	// Visit recursively all entries (files and directories) in the specified directory and its subdirectories
 	// We will process only the files which match exactly the name specified in 'indexFileName'
@@ -223,10 +223,14 @@ func processDirectory(absInputPath string, indexFileName string) error {
 			outputFileName = strings.Replace(path, ext, htmlExtension, 1)
 		}
 
+		fileToParse := filepath.Join(dirName, fileName)
 		// Parse the input file and get the HTML
-		html, err := NewParseAndRender(filepath.Join(dirName, fileName))
+		if debug {
+			fmt.Println("Going to parse and render:", fileToParse)
+		}
+		html, err := NewParseAndRender(fileToParse, debug)
 		if err != nil {
-			return fmt.Errorf("parsing %s: %w", filepath.Join(dirName, fileName), err)
+			return fmt.Errorf("parsing %s: %w", fileToParse, err)
 		}
 
 		// Write the HTML to the output file
@@ -269,7 +273,7 @@ func processWatch(inputFileName string, outputFileName string) error {
 			fmt.Println("************Processing*************")
 
 			// Parse and render the document
-			html, err := NewParseAndRender(inputFileName)
+			html, err := NewParseAndRender(inputFileName, debug)
 			if err != nil {
 				fmt.Printf("Error parsing file %s: %v\n", inputFileName, err)
 				// Continue the loop instead of returning
@@ -297,7 +301,7 @@ func processWatch(inputFileName string, outputFileName string) error {
 var assets embed.FS
 
 // NewParseAndRender processes a file named fileName, and all assets referenced from it
-func NewParseAndRender(fileName string) (string, error) {
+func NewParseAndRender(fileName string, debug bool) (string, error) {
 
 	// Get the absolute name of the file, in preparation to get the directory and file name
 	absoluteFileName, err := filepath.Abs(fileName)
@@ -305,16 +309,21 @@ func NewParseAndRender(fileName string) (string, error) {
 		return "", fmt.Errorf("getting absolute file name for %s: %w", fileName, err)
 	}
 
-	directory, fileName := filepath.Split(absoluteFileName)
+	directory, _ := filepath.Split(absoluteFileName)
 
 	// Open the file and parse it
-	parser, err := rite.ParseFromFile(fileName)
+	parser, err := rite.ParseFromFile(absoluteFileName, debug)
 	if err != nil {
-		return "", fmt.Errorf("processing %s: %w", fileName, err)
+		return "", fmt.Errorf("processing %s: %w", absoluteFileName, err)
 	}
 
 	// Generate the HTML by visiting all the nodes in the parse tree
-	fragmentHTML := parser.RenderHTML()
+	fragmentHTML, err := parser.RenderHTML()
+	if err != nil {
+		return "", err
+	}
+
+	plainBiblioHTML := parser.RenderBibliography()
 
 	// Initialise the template system. Use the templates specified in the document header,
 	// or the default if not specified (assets/templates/respec or assets/templates/standard)
@@ -371,15 +380,16 @@ func NewParseAndRender(fileName string) (string, error) {
 
 	// Set the data that will be available for the templates
 	var data = map[string]any{
-		"Config": parser.Config.Data(),
-		"Biblio": bibData,
-		"HTML":   string(fragmentHTML),
+		"Config":   parser.Config.Data(),
+		"Biblio":   bibData,
+		"MyBiblio": string(plainBiblioHTML),
+		"HTML":     string(fragmentHTML),
 	}
 
 	// Execute the template and store the result in memory
 	var out bytes.Buffer
 	if err := t.ExecuteTemplate(&out, indexTemplateName, data); err != nil {
-		return "", fmt.Errorf("processing template %s with file: %s: %w", indexTemplateName, fileName, err)
+		return "", fmt.Errorf("processing template %s with file: %s: %w", indexTemplateName, absoluteFileName, err)
 	}
 
 	// Get the raw HTML where we still have to perform some processing

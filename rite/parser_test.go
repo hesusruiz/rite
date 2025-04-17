@@ -56,11 +56,11 @@ rite:
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseFromBytes(tt.args.fileName, tt.args.src)
+			got, err := ParseFromBytes(tt.args.fileName, tt.args.src, false)
 			got.RetrieveBliblioData()
 
 			// Render to HTML
-			fragmentHTML := got.RenderHTML()
+			fragmentHTML, err := got.RenderHTML()
 			biblio := got.RenderBibliography()
 
 			fragmentHTML = append(fragmentHTML, biblio...)
