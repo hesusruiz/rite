@@ -1,6 +1,5 @@
 ---
 title: DID ETSI Legal Semantic Person Identifier Method Specification (did:elsi)
-template: "assets/templates/respec"
 
 editors:
    - name: "Jesus Ruiz"
@@ -187,30 +186,29 @@ localBiblio:
         There is no need to invent new identifiers or have a central entity assign
         identifiers to participants.
 
-<section>
-    ## DID method operations
+<section>DID method operations
 
-        The following section describes the DID operations for the did:elsi method. This DID Method is purely derivative, based on the current Trust Framework of eIDAS and so it does not require look ups in any additional registry.
+    The following section describes the DID operations for the did:elsi method. This DID Method is purely derivative, based on the current Trust Framework of eIDAS and so it does not require look ups in any additional registry.
 
-     <section>
-        ## Create
+    <section>
+    ## Create
 
-        If a legal person can digitally sign a document using an advanced or
-        qualified e-seal in the EU, then it already has a valid digital
-        certificate. Digital certificates are provided by over 200 Trust Service
-        Providers in the EU.
+    If a legal person can digitally sign a document using an advanced or
+    qualified e-seal in the EU, then it already has a valid digital
+    certificate. Digital certificates are provided by over 200 Trust Service
+    Providers in the EU.
 
-        If the legal entity can not perform those digital signatures, then it does
-        not make sense that it wants an ELSI DID, because it is not really
-        transacting digitally and most probably is performing most processes
-        manually and with paper. Before entering the world of digital transactions
-        with Verifiable Credentials, the legal entity has to become digital at least
-        until it can digitally sign legally-binding documents.
+    If the legal entity can not perform those digital signatures, then it does
+    not make sense that it wants an ELSI DID, because it is not really
+    transacting digitally and most probably is performing most processes
+    manually and with paper. Before entering the world of digital transactions
+    with Verifiable Credentials, the legal entity has to become digital at least
+    until it can digitally sign legally-binding documents.
 
-        So any legal person than can digitally sign a document using an advanced or
-        qualified e-seal in the EU already has an ELSI DID without any further
-        action, using the `organizationIdentifier` in the certificate
-        used to sign.
+    So any legal person than can digitally sign a document using an advanced or
+    qualified e-seal in the EU already has an ELSI DID without any further
+    action, using the `organizationIdentifier` in the certificate
+    used to sign.
 
     <section>
         ## Read (Resolve)

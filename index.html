@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <title>Rite, a simple syntax for writing documents in HTML</title>
@@ -7,192 +8,290 @@
 
     <!-- Opengraph Facebook Meta Tags -->
     <meta property="og:title" content="Rite, a simple syntax for writing documents in HTML">
-    <meta property="og:type" content="website">
+    <meta property="og:type" content=" website">
     <meta property="og:url" content="https://hesusruiz.github.io/rite">
 
     <script src="https://www.w3.org/Tools/respec/respec-w3c" async="" class="remove"></script>
     <script class="remove">
         var respecConfig = {
-            latestVersion: "https://hesusruiz.github.io/rite",
-            github: "https://github.com/hesusruiz/rite",
-            editors: [
-                {
-                    company: "JesusRuiz",
-                    email: "hesusruiz@gmail.com",
-                    name: "Jesus Ruiz",
-                    url: "https://www.linkedin.com/in/jesus-ruiz-martinez/",
+        latestVersion: "https://hesusruiz.github.io/rite",
+        github: "https://github.com/hesusruiz/rite",
+        editors: [
+            {
+            company: "JesusRuiz",
+            email: "hesusruiz@gmail.com",
+            name: "Jesus Ruiz",
+            url: "https://www.linkedin.com/in/jesus-ruiz-martinez/",
                 },
-            ],
-            localBiblio: {
-                "Actor-DataSpaces": {
-                        date: "April 2023",
-                        href: "https://dl.acm.org/doi/pdf/10.1145/3543873.3587645",
-                        title: "Extending Actor Models in Data Spaces",
-                },
-                "Cryptographic Hyperlinks": {
-                        date: "May 2021",
-                        href: "https://w3c-ccg.github.io/hashlink/",
-                        title: "Cryptographic Hyperlinks",
-                },
-                "DEP-DSS": {
-                        date: "2019-10",
-                        href: "https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/Qualified+electronic+signature+-+QES+validation+algorithm",
-                        publisher: "European Commission",
-                        title: "Algorithm for Validation of qualified and advanced signatures and seals",
-                },
-                "DID-DNS": {
-                        href: "https://tools.ietf.org/html/draft-mayrhofer-did-dns-01",
-                        publisher: "IETF",
-                        status: "Internet Draft",
-                        title: "The Decentralized Identifier (DID) in the DNS",
-                },
-                "DID-ELSI": {
-                        date: "04 June 2023",
-                        href: "https://alastria.github.io/did-method-elsi/",
-                        title: "DID ETSI Legal person Semantic Identifier Method Specification (did:elsi)",
-                },
-                "DID-ONBOARDING": {
-                        date: "04 June 2023",
-                        href: "https://alastria.github.io/did-method-elsi/onboarding.html",
-                        title: "Onboarding example with LEARCredential using did:elsi",
-                },
-                "DID-PRIMER": {
-                        href: "https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md",
-                        publisher: "Rebooting the Web of Trust 2017",
-                        title: "DID Primer",
-                },
-                "DIF.PresentationExchange": {
-                        href: "https://identity.foundation/presentation-exchange/spec/v2.0.0/",
-                        title: "Presentation Exchange 2.0.0",
-                },
-                "EDIW.ARF": {
-                        date: "20 April 2023",
-                        href: "https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework/blob/main/docs/arf.md",
-                        title: "EUDI Wallet Architecture and Reference Framework 1.1.0",
-                },
-                "ENISA-Qualified Electronic Seals": {
-                        date: "June 2017",
-                        href: "https://www.enisa.europa.eu/publications/security-guidelines-on-the-appropriate-use-of-qualified-electronic-seals",
-                        title: "Security guidelines on the appropriate use of qualified electronic seals",
-                },
-                "ENISA-Qualified Electronic Signatures": {
-                        date: "December 2016",
-                        href: "https://www.enisa.europa.eu/publications/security-guidelines-on-the-appropriate-use-of-qualified-electronic-signatures",
-                        title: "Security guidelines on the appropriate use of qualified electronic signatures",
-                },
-                "ETSI-CERTOVERVIEW": {
-                        date: "2020-07",
-                        href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.04.02_20/en_31941201v010402a.pdf",
-                        publisher: "ETSI",
-                        title: "ETSI EN 319 412-1 V1.4.2 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 1: Overview and common data structures",
-                },
-                "ETSI-LEGALPERSON": {
-                        date: "2020-07",
-                        href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941203/01.02.01_60/en_31941203v010201p.pdf",
-                        publisher: "ETSI",
-                        title: "ETSI EN 319 412-3 V1.2.1 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 3: Certificate profile for certificates issued to legal persons",
-                },
-                "EU_Trusted_Lists": {
-                        href: "https://digital-strategy.ec.europa.eu/en/policies/eu-trusted-lists",
-                        title: "EU Trusted Lists",
-                },
-                "JAdES": {
-                        date: "2021-03",
-                        href: "https://www.etsi.org/deliver/etsi_ts/119100_119199/11918201/01.01.01_60/ts_11918201v010101p.pdf",
-                        publisher: "ETSI",
-                        title: "ETSI TS 119 182-1 V1.1.1 (2021-03) - Electronic Signatures and Infrastructures (ESI); JAdES digital signatures; Part 1: Building blocks and JAdES baseline signatures",
-                },
-                "NIST-AUTH": {
-                        date: "October 2016",
-                        href: "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-178.pdf",
-                        title: "NIST Special Publication 800-178: A Comparison of Attribute Based Access Control (ABAC) Standards for Data Service Applications",
-                },
-                "ODRL": {
-                        date: "February 2018",
-                        href: "https://www.w3.org/TR/odrl-model/",
-                        title: "ODRL Information Model 2.2",
-                },
-                "OWASP-TRANSPORT": {
-                        href: "https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet",
-                        title: "Transport Layer Protection Cheatsheet",
-                },
-                "OpenID.Core": {
-                        date: "8 November 2014",
-                        href: "http://openid.net/specs/openid-connect-core-1_0.html",
-                        title: "OpenID Connect Core 1.0 incorporating errata set 1",
-                },
-                "OpenID.SIOP2": {
-                        date: "28 January 2022",
-                        href: "https://openid.bitbucket.io/connect/openid-connect-self-issued-v2-1_0.html",
-                        title: "Self-Issued OpenID Provider v2",
-                },
-                "OpenID.VCI": {
-                        date: "3 February 2023",
-                        href: "https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html",
-                        title: "OpenID for Verifiable Credential Issuance",
-                },
-                "OpenID.VP": {
-                        date: "21 April 2023",
-                        href: "https://openid.net/specs/openid-4-verifiable-presentations-1_0.html",
-                        title: "OpenID for Verifiable Presentations",
-                },
-                "RFC6749": {
-                        href: "https://www.rfc-editor.org/rfc/rfc6749.html",
-                        title: "The OAuth 2.0 Authorization Framework",
-                },
-                "RFC7515": {
-                        href: "https://www.rfc-editor.org/rfc/rfc7515",
-                        title: "JSON Web Signature (JWS)",
-                },
-                "RFC7519": {
-                        href: "https://www.rfc-editor.org/rfc/rfc7519",
-                        title: "JSON Web Token (JWT)",
-                },
-                "RFC8414": {
-                        href: "https://www.rfc-editor.org/rfc/rfc8414",
-                        title: "OAuth 2.0 Authorization Server Metadata",
-                },
-                "RFC8725": {
-                        href: "https://www.rfc-editor.org/rfc/rfc8725",
-                        title: "JSON Web Token Best Current Practices",
-                },
-                "STORK2.MandateReport": {
-                        date: "2012",
-                        href: "https://ec.europa.eu/digital-building-blocks/wikis/display/EIDCOMMUNITY/STORK+2.0+WP3+-+Legal+and+Trust+Analysis?preview=/84415420/84415378/STORK_2_0_D3_3_MandateAttribute_Management_Report_v_1_0.pdf",
-                        title: "STORK 2.0: D.3.3 – Mandate/Attribute Management Report",
-                },
-                "eIDAS": {
-                        href: "https://digital-strategy.ec.europa.eu/en/policies/discover-eidas",
-                        title: "Discover eIDAS",
-                },
-                "eIDAS-SAML_V1.2": {
-                        date: "August 2019",
-                        href: "https://ec.europa.eu/digital-building-blocks/wikis/download/attachments/467109280/eIDAS%20SAML%20Attribute%20Profile%20v1.2%20Final.pdf",
-                        title: "eIDAS SAML Attribute Profile. Version 1.2",
-                },
-                "eIDAS.Regulation": {
-                        date: "23 July 2014",
-                        href: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=uriserv%3AOJ.L_.2014.257.01.0073.01.ENG",
-                        title: "Regulation (EU) No 910/2014 of the European Parliament and of the Council of 23 July 2014 on electronic identification and trust services for electronic transactions in the internal market and repealing Directive 1999/93/EC",
-                },
-                "eIDAS2.Regulation": {
-                        date: "March 2023",
-                        href: "https://www.europarl.europa.eu/doceo/document/A-9-2023-0038_EN.html",
-                        title: "REPORT on the proposal for a regulation of the European Parliament and of the Council amending Regulation (EU) No 910/2014 as regards establishing a framework for a European Digital Identity",
-                },
+        ],
+        localBiblio: {
+            "Actor-DataSpaces": {
+                date: "April 2023",
+                href: "https://dl.acm.org/doi/pdf/10.1145/3543873.3587645",
+                title: "Extending Actor Models in Data Spaces",
+        },
+            "Cryptographic Hyperlinks": {
+                date: "May 2021",
+                href: "https://w3c-ccg.github.io/hashlink/",
+                title: "Cryptographic Hyperlinks",
+        },
+            "DEP-DSS": {
+                date: "2019-10",
+                href: "https://ec.europa.eu/digital-building-blocks/wikis/display/DIGITAL/Qualified+electronic+signature+-+QES+validation+algorithm",
+                publisher: "European Commission",
+                title: "Algorithm for Validation of qualified and advanced signatures and seals",
+        },
+            "DID-DNS": {
+                href: "https://tools.ietf.org/html/draft-mayrhofer-did-dns-01",
+                publisher: "IETF",
+                status: "Internet Draft",
+                title: "The Decentralized Identifier (DID) in the DNS",
+        },
+            "DID-ELSI": {
+                date: "04 June 2023",
+                href: "https://alastria.github.io/did-method-elsi/",
+                title: "DID ETSI Legal person Semantic Identifier Method Specification (did:elsi)",
+        },
+            "DID-ONBOARDING": {
+                date: "04 June 2023",
+                href: "https://alastria.github.io/did-method-elsi/onboarding.html",
+                title: "Onboarding example with LEARCredential using did:elsi",
+        },
+            "DID-PRIMER": {
+                href: "https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md",
+                publisher: "Rebooting the Web of Trust 2017",
+                title: "DID Primer",
+        },
+            "DIF.PresentationExchange": {
+                href: "https://identity.foundation/presentation-exchange/spec/v2.0.0/",
+                title: "Presentation Exchange 2.0.0",
+        },
+            "EDIW.ARF": {
+                date: "20 April 2023",
+                href: "https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework/blob/main/docs/arf.md",
+                title: "EUDI Wallet Architecture and Reference Framework 1.1.0",
+        },
+            "ENISA-Qualified Electronic Seals": {
+                date: "June 2017",
+                href: "https://www.enisa.europa.eu/publications/security-guidelines-on-the-appropriate-use-of-qualified-electronic-seals",
+                title: "Security guidelines on the appropriate use of qualified electronic seals",
+        },
+            "ENISA-Qualified Electronic Signatures": {
+                date: "December 2016",
+                href: "https://www.enisa.europa.eu/publications/security-guidelines-on-the-appropriate-use-of-qualified-electronic-signatures",
+                title: "Security guidelines on the appropriate use of qualified electronic signatures",
+        },
+            "ETSI-CERTOVERVIEW": {
+                date: "2020-07",
+                href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.04.02_20/en_31941201v010402a.pdf",
+                publisher: "ETSI",
+                title: "ETSI EN 319 412-1 V1.4.2 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 1: Overview and common data structures",
+        },
+            "ETSI-LEGALPERSON": {
+                date: "2020-07",
+                href: "https://www.etsi.org/deliver/etsi_en/319400_319499/31941203/01.02.01_60/en_31941203v010201p.pdf",
+                publisher: "ETSI",
+                title: "ETSI EN 319 412-3 V1.2.1 (2020-07) - Electronic Signatures and Infrastructures (ESI); Certificate Profiles; Part 3: Certificate profile for certificates issued to legal persons",
+        },
+            "EU_Trusted_Lists": {
+                href: "https://digital-strategy.ec.europa.eu/en/policies/eu-trusted-lists",
+                title: "EU Trusted Lists",
+        },
+            "JAdES": {
+                date: "2021-03",
+                href: "https://www.etsi.org/deliver/etsi_ts/119100_119199/11918201/01.01.01_60/ts_11918201v010101p.pdf",
+                publisher: "ETSI",
+                title: "ETSI TS 119 182-1 V1.1.1 (2021-03) - Electronic Signatures and Infrastructures (ESI); JAdES digital signatures; Part 1: Building blocks and JAdES baseline signatures",
+        },
+            "NIST-AUTH": {
+                date: "October 2016",
+                href: "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-178.pdf",
+                title: "NIST Special Publication 800-178: A Comparison of Attribute Based Access Control (ABAC) Standards for Data Service Applications",
+        },
+            "ODRL": {
+                date: "February 2018",
+                href: "https://www.w3.org/TR/odrl-model/",
+                title: "ODRL Information Model 2.2",
+        },
+            "OWASP-TRANSPORT": {
+                href: "https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet",
+                title: "Transport Layer Protection Cheatsheet",
+        },
+            "OpenID.Core": {
+                date: "8 November 2014",
+                href: "http://openid.net/specs/openid-connect-core-1_0.html",
+                title: "OpenID Connect Core 1.0 incorporating errata set 1",
+        },
+            "OpenID.SIOP2": {
+                date: "28 January 2022",
+                href: "https://openid.bitbucket.io/connect/openid-connect-self-issued-v2-1_0.html",
+                title: "Self-Issued OpenID Provider v2",
+        },
+            "OpenID.VCI": {
+                date: "3 February 2023",
+                href: "https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html",
+                title: "OpenID for Verifiable Credential Issuance",
+        },
+            "OpenID.VP": {
+                date: "21 April 2023",
+                href: "https://openid.net/specs/openid-4-verifiable-presentations-1_0.html",
+                title: "OpenID for Verifiable Presentations",
+        },
+            "RFC6749": {
+                href: "https://www.rfc-editor.org/rfc/rfc6749.html",
+                title: "The OAuth 2.0 Authorization Framework",
+        },
+            "RFC7515": {
+                href: "https://www.rfc-editor.org/rfc/rfc7515",
+                title: "JSON Web Signature (JWS)",
+        },
+            "RFC7519": {
+                href: "https://www.rfc-editor.org/rfc/rfc7519",
+                title: "JSON Web Token (JWT)",
+        },
+            "RFC8414": {
+                href: "https://www.rfc-editor.org/rfc/rfc8414",
+                title: "OAuth 2.0 Authorization Server Metadata",
+        },
+            "RFC8725": {
+                href: "https://www.rfc-editor.org/rfc/rfc8725",
+                title: "JSON Web Token Best Current Practices",
+        },
+            "STORK2.MandateReport": {
+                date: "2012",
+                href: "https://ec.europa.eu/digital-building-blocks/wikis/display/EIDCOMMUNITY/STORK+2.0+WP3+-+Legal+and+Trust+Analysis?preview=/84415420/84415378/STORK_2_0_D3_3_MandateAttribute_Management_Report_v_1_0.pdf",
+                title: "STORK 2.0: D.3.3 – Mandate/Attribute Management Report",
+        },
+            "eIDAS": {
+                href: "https://digital-strategy.ec.europa.eu/en/policies/discover-eidas",
+                title: "Discover eIDAS",
+        },
+            "eIDAS-SAML_V1.2": {
+                date: "August 2019",
+                href: "https://ec.europa.eu/digital-building-blocks/wikis/download/attachments/467109280/eIDAS%20SAML%20Attribute%20Profile%20v1.2%20Final.pdf",
+                title: "eIDAS SAML Attribute Profile. Version 1.2",
+        },
+            "eIDAS.Regulation": {
+                date: "23 July 2014",
+                href: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=uriserv%3AOJ.L_.2014.257.01.0073.01.ENG",
+                title: "Regulation (EU) No 910/2014 of the European Parliament and of the Council of 23 July 2014 on electronic identification and trust services for electronic transactions in the internal market and repealing Directive 1999/93/EC",
+        },
+            "eIDAS2.Regulation": {
+                date: "March 2023",
+                href: "https://www.europarl.europa.eu/doceo/document/A-9-2023-0038_EN.html",
+                title: "REPORT on the proposal for a regulation of the European Parliament and of the Council amending Regulation (EU) No 910/2014 as regards establishing a framework for a European Digital Identity",
+        },
             },
         };
     </script>
-    <link rel="stylesheet" href="/assets/templates/respec/additional.css">
+    <style>
+        :root {
+            font-size: 1.2rem;
+        }
+
+        @media screen and (min-width: 78em) {
+            body:not(.toc-inline) #toc {
+                width: 19em!important;
+            }
+        }
+
+        .xnotet {
+            width: 100%;
+            display: inline-block;
+            margin: 0;
+            border-left: 0.5em solid #52e052;
+            border-right: 6px solid #e9fbe9;
+            border-top: 6px solid #e9fbe9;
+            border-bottom: 6px solid #e9fbe9;
+
+            overflow: auto;
+            page-break-inside: avoid;
+        }
+
+        .xnotea {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
+
+        .xwarnt {
+            width: 100%;
+            display: inline-block;
+            margin: 0;
+            border-left: 0.5em solid #f11;
+            border-right: 6px solid #fbe9e9;
+            border-top: 6px solid #fbe9e9;
+            border-bottom: 6px solid #fbe9e9;
+
+            overflow: auto;
+            page-break-inside: avoid;
+        }
+
+        .xwarna {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
+
+        .xnotep {
+            font-weight: bold;
+        }
+
+        code {
+            color: red;
+        }
+
+        pre.nohighlight {
+            padding: 0.5em;
+            margin: 0;
+        }
+
+        .codecolor {
+            width: 100%;
+            display: inline-block;
+            margin: 0;
+            box-shadow: 5px 5px 5px rgba(68, 68, 68, 0.6);
+            border-radius: 7px;
+            border: 1px solid black;
+        }
+
+        .figureshadow {
+            width: 100%;
+            display: inline-block;
+            padding: 0.5em;
+            margin: 0;
+            box-shadow: 5px 5px 5px rgba(68, 68, 68, 0.6);
+            border-radius: 0px;
+            border: 1px solid #a9a9a9;
+        }
+
+        div.nohighlight {
+            padding: 0.5em
+        }
+
+        ul.plain {
+            list-style: none;
+        }
+
+        ul.plain>li {
+            text-indent: -1em;
+        }
+
+        ul.plain>li>div {
+            text-indent: 0;
+        }
+
+        ul.plain>li>p {
+            text-indent: 0;
+        }
+    </style>
 </head>
 
 <body>
     <p class="copyright">
         Copyright © 2021 the document editors/authors. Text is available under the
         <a rel="license" href="https://creativecommons.org/licenses/by/4.0/legalcode">
-        Creative Commons Attribution 4.0 International Public License</a>
+            Creative Commons Attribution 4.0 International Public License</a>
     </p>
-
+    
 
 <section id='abstract'>
     <p>The core of <code>rite</code> syntax  is essentially semantic HTML5 with some simplifications to make it easier to write. It also allows a reduced set of Markdown features, described below.

@@ -4,7 +4,7 @@
 {{end}}
 
 </article>
-<script src="./assets/prism.js"></script>
+<script src="assets/prism.js"></script>
 </body>
 </html>
 {{end}}

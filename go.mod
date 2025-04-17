@@ -1,6 +1,6 @@
 module github.com/hesusruiz/rite
 
-go 1.20
+go 1.23.3
 
 require (
 	github.com/alecthomas/chroma/v2 v2.7.0

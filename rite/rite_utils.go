@@ -46,17 +46,14 @@ type Text struct {
 	Content     []byte
 }
 
-// String represents the Text with the 20 first characters
+// String represents the Text with the 60 first characters
 func (para *Text) String() string {
 	// This is helpful for debugging
 	if para == nil {
 		return "<nil>"
 	}
 
-	numChars := 20
-	if len(para.Content) < numChars {
-		numChars = len(para.Content)
-	}
+	numChars := min(len(para.Content), 60)
 
 	return strings.Repeat(" ", para.Indentation) + string(para.Content[:numChars])
 }

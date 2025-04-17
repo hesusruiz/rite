@@ -111,9 +111,6 @@ func main() {
 // processCommandLineAndExecute is the main entry point of the program
 func processCommandLineAndExecute(c *cli.Context) error {
 
-	// Default input file name
-	var inputFileName = defaultIndexFileName
-
 	// Output file name command line parameter
 	outputFileName := c.String("output")
 
@@ -125,10 +122,11 @@ func processCommandLineAndExecute(c *cli.Context) error {
 
 	debugflag = c.Bool("debug")
 
-	// For plain HTML (maybe to integrate in document build chains)
+	// For plain HTML (for example, to integrate in document build chains)
 	norespec = c.Bool("norespec")
 
 	// Get the input file name
+	var inputFileName = defaultIndexFileName
 	if c.Args().Present() {
 		inputFileName = c.Args().First()
 	} else {
@@ -149,10 +147,13 @@ func processCommandLineAndExecute(c *cli.Context) error {
 
 	isDir := finfo.IsDir()
 
+	// If the user specified a directory, process it and return
 	if isDir {
 		fmt.Println("processing directory", absInputPath)
 		return processDirectory(absInputPath, indexFileName)
 	}
+
+	// At this moment, we know that the user specified a file
 
 	// Generate the output file name, changing the extension or adding it
 	if len(outputFileName) == 0 {
@@ -173,7 +174,10 @@ func processCommandLineAndExecute(c *cli.Context) error {
 		return fmt.Errorf("running processWatch with %s and %s: %w", inputFileName, outputFileName, err)
 	}
 
-	html := NewParseAndRender(absInputPath)
+	html, err := NewParseAndRender(absInputPath)
+	if err != nil {
+		return fmt.Errorf("parsing %s: %w", absInputPath, err)
+	}
 
 	// Do nothing if flag dryrun was specified
 	if dryrun {
@@ -220,7 +224,10 @@ func processDirectory(absInputPath string, indexFileName string) error {
 		}
 
 		// Parse the input file and get the HTML
-		html := NewParseAndRender(filepath.Join(dirName, fileName))
+		html, err := NewParseAndRender(filepath.Join(dirName, fileName))
+		if err != nil {
+			return fmt.Errorf("parsing %s: %w", filepath.Join(dirName, fileName), err)
+		}
 
 		// Write the HTML to the output file
 		err = os.WriteFile(outputFileName, []byte(html), 0664)
@@ -262,7 +269,13 @@ func processWatch(inputFileName string, outputFileName string) error {
 			fmt.Println("************Processing*************")
 
 			// Parse and render the document
-			html := NewParseAndRender(inputFileName)
+			html, err := NewParseAndRender(inputFileName)
+			if err != nil {
+				fmt.Printf("Error parsing file %s: %v\n", inputFileName, err)
+				// Continue the loop instead of returning
+				time.Sleep(1 * time.Second)
+				continue
+			}
 
 			// And write the new version of the HTML
 			err = os.WriteFile(outputFileName, []byte(html), 0664)
@@ -283,13 +296,21 @@ func processWatch(inputFileName string, outputFileName string) error {
 //go:embed assets
 var assets embed.FS
 
-func NewParseAndRender(fileName string) string {
+// NewParseAndRender processes a file named fileName, and all assets referenced from it
+func NewParseAndRender(fileName string) (string, error) {
+
+	// Get the absolute name of the file, in preparation to get the directory and file name
+	absoluteFileName, err := filepath.Abs(fileName)
+	if err != nil {
+		return "", fmt.Errorf("getting absolute file name for %s: %w", fileName, err)
+	}
+
+	directory, fileName := filepath.Split(absoluteFileName)
 
 	// Open the file and parse it
 	parser, err := rite.ParseFromFile(fileName, true)
 	if err != nil {
-		fmt.Printf("error processing %s: %s\n", fileName, err.Error())
-		os.Exit(1)
+		return "", fmt.Errorf("processing %s: %w", fileName, err)
 	}
 
 	// Generate the HTML by visiting all the nodes in the parse tree
@@ -311,17 +332,23 @@ func NewParseAndRender(fileName string) string {
 	var t *template.Template
 	_, err = os.Stat(templateDir)
 	if err != nil {
-		fmt.Println("Using embedded template dir:", templateDir)
+
+		// The template directory does NOT exist in the local disk
 		// Parse the embedded templates. Any error stops processing.
+		fmt.Println("Using embedded template dir:", templateDir)
 		t = template.Must(template.ParseFS(assets, templateDir+"/layouts/*"))
 		t = template.Must(t.ParseFS(assets, templateDir+"/partials/*"))
 		t = template.Must(t.ParseFS(assets, templateDir+"/pages/*"))
+
 	} else {
+
+		// The template directory DOES exist in the local disk
+		// Parse all templates in the proper directories. Any error stops processing.
 		fmt.Println("Using local template dir:", templateDir)
-		// Parse all templates in the following directories. Any error stops processing.
 		t = template.Must(template.ParseGlob(templateDir + "/layouts/*"))
 		t = template.Must(t.ParseGlob(templateDir + "/partials/*"))
 		t = template.Must(t.ParseGlob(templateDir + "/pages/*"))
+
 	}
 
 	// Get the bibliography for the references, in the tag "localBiblio"
@@ -330,9 +357,13 @@ func NewParseAndRender(fileName string) string {
 	bibData := parser.Config.Map("localBiblio", nil)
 	if bibData == nil {
 
-		// Read the bibliography file if it exists
+		// Bibliography data does NOT exist directly in the file being processed
+		// Try to see if the file specifies a SEPARATE file with bibliography data
 		// First try reading the file specified in the YAML header, otherwise use the default name
-		bd, err := yaml.ParseYamlFile(parser.Config.String("localBiblioFile", "localbiblio.yaml"))
+		// The biblio file name is relative to the location of the file we are processing
+		relativeBiblioFile := parser.Config.String("localBiblioFile", "localbiblio.yaml")
+		absoluteBiblioFile := filepath.Join(directory, relativeBiblioFile)
+		bd, err := yaml.ParseYamlFile(absoluteBiblioFile)
 		if err == nil {
 			bibData = bd.Map("")
 		}
@@ -348,7 +379,7 @@ func NewParseAndRender(fileName string) string {
 	// Execute the template and store the result in memory
 	var out bytes.Buffer
 	if err := t.ExecuteTemplate(&out, indexTemplateName, data); err != nil {
-		panic(err)
+		return "", fmt.Errorf("processing template %s with file: %s: %w", indexTemplateName, fileName, err)
 	}
 
 	// Get the raw HTML where we still have to perform some processing
@@ -371,5 +402,5 @@ func NewParseAndRender(fileName string) string {
 	// Apply the changes to the buffer and get the HTML
 	html := editBuffer.String()
 
-	return html
+	return html, nil
 }

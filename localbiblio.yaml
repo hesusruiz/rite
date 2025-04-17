@@ -68,10 +68,6 @@
 "RFC7519":
     title: "JSON Web Token (JWT)"
     href: "https://www.rfc-editor.org/rfc/rfc7519"
-"DID-ELSI":
-    title: "DID ETSI Legal person Semantic Identifier Method Specification (did:elsi)"
-    href: "https://alastria.github.io/did-method-elsi/"
-    date: "04 June 2023"
 "DID-ONBOARDING":
     title: "Onboarding example with LEARCredential using did:elsi"
     href: "https://alastria.github.io/did-method-elsi/onboarding.html"

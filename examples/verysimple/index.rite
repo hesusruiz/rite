@@ -1,9 +1,12 @@
 ---
 title: Replace me with a real title
+publishDate: "2021-01-02"
 editors:
 - name: "Jesus Ruiz"
   email: "hesusruiz@gmail.com"
   url: "https://hesusruiz.github.io/hesusruiz"
+rite:
+  norespec: true
 ---
 
 <section #abstract>
@@ -23,11 +26,11 @@ editors:
     <aside .example>
         This is an example, marked with the class 'example'.
 
-        <x-code .js>
-            // A code section with sutomatic syntax highlighting
-            function someJavaScript(){}
+    <x-code .js>
+        // A code section with sutomatic syntax highlighting
+        function someJavaScript(){}
 
-    <section>I'm a sub-section
+    <section>I am a sub-section
 
         This is a subsection because it is indented with respect to the parent section
 
