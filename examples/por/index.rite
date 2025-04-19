@@ -8,6 +8,7 @@ editors:
       companyURL: "https://hesusruiz.github.io/"
 authors:
     - name: "The DOME project participants"
+publishDate: "11 October 2024"
 rite:
     norespec: true
 
@@ -64,7 +65,7 @@ localBiblioFile: "localbiblio.yaml"
     <blockquote>
         To achieve **simplification and cost reduction benefits to persons and businesses across the Union, including by enabling powers of representation and e-mandates**, Member States should issue EDIWs relying on common standards and technical specifications to ensure seamless interoperability and to adequately increase the IT security, strengthen robustness against cyber-attacks and thus significantly reduce the potential risks of ongoing digitalisation for citizens and businesses.
 
-        <figcaption>—[[[eIDAS2.Regulation]]]
+        <figcaption>—[[eIDAS2-Regulation]]
 
     The traditional way to solve the problem of powers of representation is by using cumbersome processes associated to onboarding and Know-Your-Customer (KYC) procedures, in many cases manual processes and paper/PDF documents that the Relying Party verifies until it is satisfied with the level of legal risk assumed when allowing a Principal to access some services on behalf of the Participant. Those setup processes are normally cumbersome, slow and people-intensive, creating a lot of friction in the initial stages of using a service, especially when strong identification is required by the nature of the service.
 
@@ -149,7 +150,7 @@ localBiblioFile: "localbiblio.yaml"
 
                 - **Binding of issuer with a real-world identity**. The Relying Party can verify that the credential was issued by somebody controlling a private key associated to a given real-world identity.
 
-                    The verification is enabled because the Verifiable Credential is sealed with an eIDAS <x-ref "qualified certificate for electronic seal"> issued to the Participant by a <x-ref "qualified trust service provider"> (QTSP) in the [[[EU_Trusted_Lists]]], and the signature of the credential is an advanced or qualified electronic signature using the [[JAdES]] format (JSON Advanced Electronic Signature) as defined in the eIDAS regulation.
+                    The verification is enabled because the Verifiable Credential is sealed with an eIDAS <x-ref "qualified certificate for electronic seal"> issued to the Participant by a <x-ref "qualified trust service provider"> (QTSP) in the [[EU_Trusted_Lists]], and the signature of the credential is an advanced or qualified electronic signature using the [[JAdES]] format (JSON Advanced Electronic Signature) as defined in the eIDAS regulation.
 
                     Of course, we also support electronic signatures with qualified certificates for electronic signatures issued by QTSPs to **natural persons acting as representatives of legal persons**.
 
@@ -159,7 +160,7 @@ localBiblioFile: "localbiblio.yaml"
 
                 - **Verify that the real-world identity is a Participant**. The Relying Party, using the unique identifier in the eIDAS certificate used to sign the credential, can check if the issuer of the credential is a participant in a given ecosystem by looking for that unique identifier in the Trusted Participant List managed by that ecosystem.
 
-                    This unique identifier is the unique `organizationIdentifier` defined in [[[ETSI-LEGALPERSON]]], which is inside the certificates for legal persons and certificates for natural persons acting as representatives of legal persons.
+                    This unique identifier is the unique `organizationIdentifier` defined in [[ETSI-LEGALPERSON]], which is inside the certificates for legal persons and certificates for natural persons acting as representatives of legal persons.
 
                     Any legal person that can already engage in electronic transactions in the internal market can have an eIDAS certificate including such a unique identifier, which is used in all types of legally-binding signatures like invoices, contracts, etc.
 
@@ -396,7 +397,7 @@ localBiblioFile: "localbiblio.yaml"
                 <ul>
                     - a <b>certificate for electronic seals</b> issued to a legal person by a <x-ref "qualified trust service provider">, or
                     - a <b>certificate for electronic signatures</b>, issued to a <b>legal representative of the legal person</b> by a qualified trust service provider.
-            - signed using the <b>JSON Advanced Electronic Signature</b> format described in [[[JAdES]]]
+            - signed using the <b>JSON Advanced Electronic Signature</b> format described in [[JAdES]]
 
         The LEARCredential includes claims identifying the subject of the credential and a description of the concrete powers that have been delegated by the legal representative of the organisation.
 
@@ -431,7 +432,7 @@ localBiblioFile: "localbiblio.yaml"
             - Includes claims stating the delegation of specific powers to perform a set of specific processes on behalf of the organisation
             - Includes a public key where the corresponding private key is controlled by the subject, enabling the subject to prove that she/he/it is the holder of the credential when it is being used in an authentication process like the ones used as examples in this document.
 
-        The LEARCredential uses the `did:elsi` method for the identifiers of legal persons involved in the process, to facilitate the DID resolution and linkage with the eIDAS certificates. The `did:elsi` method is specified in [[[DID-ELSI]]]. But any other suitable DID method can be used if desired.
+        The LEARCredential uses the `did:elsi` method for the identifiers of legal persons involved in the process, to facilitate the DID resolution and linkage with the eIDAS certificates. The `did:elsi` method is specified in [[DID-ELSI]]. But any other suitable DID method can be used if desired.
         
         The high-level view of the process is described in the following diagram, where the legal entity representative of a company appoints an employee to perform some processes with a third party (the Relying Party):
 
@@ -462,7 +463,7 @@ localBiblioFile: "localbiblio.yaml"
 
         In this example the LEARCredential will be generated using the eIDAS certificate of representation of the COO (Chief Operation Officer) of the organisation that will be issuing the credential (GoodAir).
 
-        The credential will be generated with an application that the COO will use as Issuer of the LEARCredential and that allows the employee to receive the credential using his credential wallet, using [[OpenID.VCI]] to achieve compliance with the EDIW Wallet ARF.
+        The credential will be generated with an application that the COO will use as Issuer of the LEARCredential and that allows the employee to receive the credential using his credential wallet, using [[OpenID-VCI]] to achieve compliance with the EDIW Wallet ARF.
 
         This application enables the COO to attest the information required to create the LEARCredential, specifying the employee information and the specific type of LEARCredential. In general, there may be different instances of LEARCredentials for different purposes. One employee can have more than one LEARCredential, each having a different delegation of powers for different environments.
 
@@ -713,7 +714,7 @@ localBiblioFile: "localbiblio.yaml"
 
             When the user clicks the "Login" button, the application redirects the user to the VCVerifier, which will authenticate the user and request the LEARCredential. The Relying Party tells the VCVerifier which is the concrete Verifiable Credential that is requesting via the `scope` parameter of the OIDC Authentication Request that is sent to the VCVerifier.
 
-            The VCVerifier then starts an OpenID for Verifiable Presentations flow [[OpenID.VP]] with the Wallet of the user. In this context, the VCVerifier acts as a Relying Party and the Wallet as an OpenID Provider.
+            The VCVerifier then starts an OpenID for Verifiable Presentations flow [[OpenID-VP]] with the Wallet of the user. In this context, the VCVerifier acts as a Relying Party and the Wallet as an OpenID Provider.
 
             In other words, the VCVerifier has internally two components with different roles, depending on who is the other party:
 
@@ -832,11 +833,11 @@ localBiblioFile: "localbiblio.yaml"
 
             The Authorization Request travels in the response body of the HTTP GET request performed in the previous point, as a JWT signed by the DOME onboarding service, using the eIDAS certificate for seals that corresponds to the legal person operating the service and with the JAdES signature format.
 
-            The parameters comprising a request for verifiable presentations are given in section 5 of [[OpenID.VP]] and are reproduced here with the particularities of this use case, in particular taking into account that this is a cross-device interaction:
+            The parameters comprising a request for verifiable presentations are given in section 5 of [[OpenID-VP]] and are reproduced here with the particularities of this use case, in particular taking into account that this is a cross-device interaction:
 
             <ul>
 
-                -(response_type) (REQUIRED). Must be `vp_token`. This parameter is defined in [[RFC6749]]. The possible values are determined by the response type registry established by [[RFC6749]]. The [[OpenID.VP]] specification introduces the response type `vp_token`. This response type asks the Wallet to return only a VP Token in the Authorization Response, which is what we want in our case.
+                -(response_type) (REQUIRED). Must be `vp_token`. This parameter is defined in [[RFC6749]]. The possible values are determined by the response type registry established by [[RFC6749]]. The [[OpenID-VP]] specification introduces the response type `vp_token`. This response type asks the Wallet to return only a VP Token in the Authorization Response, which is what we want in our case.
 
                 -(response_mode) REQUIRED. MUST be `direct_post`. In this mode, the Authorization Response is sent to the VCVerifier using an HTTP POST request to an endpoint controlled by the VCVerifier. The Authorization Response parameters are encoded in the body using the application/x-www-form-urlencoded content type. According to the OID4VP spec, the flow can end with an HTTP POST request from the Wallet to the Verifier, or it can end with a redirect that follows the HTTP POST request, if the Verifier responds with a redirect URI to the Wallet. In our case we use the first option for a cross-device flow (the one used in the example): from the point of view of the Wallet, the flow ends with the POST reply. For a same-device flow, we would use the second option: the VCVerifier replies to the Wallet with a redirection, sending the user back to the web page of the Client (the DOME Marketplace in the example).
 
@@ -853,15 +854,15 @@ localBiblioFile: "localbiblio.yaml"
 
                         - If the VCVerifier has a LEARCredential issued to the application, the signature MUST use the private key corresponding to the public key associated to the `did:key` identifier inside the LEARCredential.
                 
-                    All Verifier metadata other than the public key MUST be obtained from the `client_metadata` or the `client_metadata_uri` parameter as defined in Section 5 of [[OpenID.VP]].
+                    All Verifier metadata other than the public key MUST be obtained from the `client_metadata` or the `client_metadata_uri` parameter as defined in Section 5 of [[OpenID-VP]].
 
-                -(nonce) REQUIRED. This parameter follows the definition given in [[OpenID.Core]]. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.
+                -(nonce) REQUIRED. This parameter follows the definition given in [[OpenID-Core]]. It is used to securely bind the verifiable presentation(s) provided by the wallet (SIOP) to the particular transaction managed by the RP.
 
                 -(state) REQUIRED. Used by the VCVerifier to associate the start of an authentication session with the end of that session.
 
-                -(presentation_definition) CONDITIONAL. A string containing a `presentation_definition` JSON object as defined in Section 4 of [[DIF.PresentationExchange]]. We do not use this parameter because `scope` already specifies the credential type.
+                -(presentation_definition) CONDITIONAL. A string containing a `presentation_definition` JSON object as defined in Section 4 of [[DIF-PresentationExchange]]. We do not use this parameter because `scope` already specifies the credential type.
 
-                -(presentation_definition_uri) CONDITIONAL. A string containing a URL pointing to a resource where a `presentation_definition` JSON object as defined in Section 4 of [[DIF.PresentationExchange]] can be retrieved. We do not use this parameter because `scope` already specifies the credential type.
+                -(presentation_definition_uri) CONDITIONAL. A string containing a URL pointing to a resource where a `presentation_definition` JSON object as defined in Section 4 of [[DIF-PresentationExchange]] can be retrieved. We do not use this parameter because `scope` already specifies the credential type.
 
             The following is an example of the payload of a Request Object:
 
@@ -950,7 +951,7 @@ localBiblioFile: "localbiblio.yaml"
                 mobile -> mobile: **(13)** Create Authorization Response
                 # -(13) The wallet creates an Authorization Response to be posted in the `response_uri` specified by VCVerifier in the Authorization Request that was sent to the Wallet. The contents of the Authorization Response are described below.
 
-                    The response is constructed as defined in section 6.1 of [[OpenID.VP]]. In particular, because the Authorization Request included only `vp_token` as the `response_type`, the VP Token is provided directly in the Authorization Response and a separate `id_token` is not needed.
+                    The response is constructed as defined in section 6.1 of [[OpenID-VP]]. In particular, because the Authorization Request included only `vp_token` as the `response_type`, the VP Token is provided directly in the Authorization Response and a separate `id_token` is not needed.
 
                     The contents of the Authorization Response in our specific use case are:
 
@@ -978,7 +979,7 @@ localBiblioFile: "localbiblio.yaml"
                         }
 
 
-                    Which complies with [[DIF.PresentationExchange]] and refers to the Verifiable Presentation in the `vp_token` parameter provided in the same response. In our example, the Verifiable Presentation includes the LEARCredential that was described in the previous sections.
+                    Which complies with [[DIF-PresentationExchange]] and refers to the Verifiable Presentation in the `vp_token` parameter provided in the same response. In our example, the Verifiable Presentation includes the LEARCredential that was described in the previous sections.
 
                 mobile -> rp ++: **(14)** POST /authorization_response
                 # -(14) The wallet sends the Authorization Response to the endpoint received in the `response_uri` parameter of the Authorization Request, sending an HTTP `POST` request using the encoding `application/x-www-form-urlencoded`.
@@ -1017,7 +1018,7 @@ localBiblioFile: "localbiblio.yaml"
                 mobile -> rp ++: **(14)** POST /authorization_response
 
                 rp -> rp: **(15 and 16)** Verify signature\nand issuer of\nLEARCredential
-                # -(15 and 16) The Verifier receives the Authorization Request and has to perform verifications, the standard ones being defined in [[DIF.PresentationExchange]]. In order to verify that the Verifiable Credential has been issued by a trusted entity, the Relying Party has to verify:
+                # -(15 and 16) The Verifier receives the Authorization Request and has to perform verifications, the standard ones being defined in [[DIF-PresentationExchange]]. In order to verify that the Verifiable Credential has been issued by a trusted entity, the Relying Party has to verify:
 
                     <ol>
                         - That the DID of the entity which is the issuer of the VC is a trusted entity.
@@ -1236,7 +1237,7 @@ localBiblioFile: "localbiblio.yaml"
 
                 - **vp_token**: REQUIRED. JSON String that MUST contain a single Verifiable Presentation (the array syntax MUST NOT be used, even if the array has only one presentation). The Verifiable Presentation MUST be represented as a JSON string (that is a Base64url encoded value) using the format "jwt_vp_json": the VP is not using JSON-LD and is signed as a JWT. The VP MUST include only one LEARCredential, which will be used for authentication by the VCVerifier. The LEARCredential MUST be included in the VP using the format "jwt_vc_json", that is: VC signed as a JWT, not using JSON-LD.
                 
-                - **presentation_submission**: MUST NOT BE USED. The presentation_submission element as defined in [DIF.PresentationExchange]. It contains mappings between the requested Verifiable Credentials and where to find them within the VP Token. This is expressed via elements in the descriptor_map array, known as Input Descriptor Mapping Objects. At this moment, the vp_token format is completely defined by this profile, and the presentation_submission claim MUST NOT be used, to avoid confusion. In the future, this claim can be used to specify additional formats for the VP token.
+                - **presentation_submission**: MUST NOT BE USED. The presentation_submission element as defined in [[DIF-PresentationExchange]]. It contains mappings between the requested Verifiable Credentials and where to find them within the VP Token. This is expressed via elements in the descriptor_map array, known as Input Descriptor Mapping Objects. At this moment, the vp_token format is completely defined by this profile, and the presentation_submission claim MUST NOT be used, to avoid confusion. In the future, this claim can be used to specify additional formats for the VP token.
 
                     For ilustrative purposes, an example presentation_submission object corresponding to the VP token defined in this profile would be:
 
@@ -1286,7 +1287,7 @@ localBiblioFile: "localbiblio.yaml"
 
         <section>Overview
 
-            In this example we use what we call a <i>profile</i> of the [[OpenID.VCI]] protocol. The standard is very flexible, and we restrict the different options available in the standard and implement a set of the options with given values that are adequate for our use case, without impacting flexibility in practice.
+            In this example we use what we call a <i>profile</i> of the [[OpenID-VCI]] protocol. The standard is very flexible, and we restrict the different options available in the standard and implement a set of the options with given values that are adequate for our use case, without impacting flexibility in practice.
 
             The following figure describes the main components that interact in the issuance of a credential in this profile.
 
@@ -1376,7 +1377,7 @@ localBiblioFile: "localbiblio.yaml"
                 wallet <-> issuer: **(3)** Obtains Issuer's Credential Issuer metadata
                 # -(3. Wallet obtains Issuer's Credential Issuer metadata)
                     
-                    The Wallet uses the Credential Issuer's URL to fetch its metadata, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-11.2">Section 11.2</a> of [[OpenID.VCI]]. The Wallet needs the metadata to learn the Credential types and formats that the Credential Issuer supports, and to determine the Token Endpoint (at the OAuth 2.0 Authorization Server) as well as the Credential Endpoint required to start the request.)
+                    The Wallet uses the Credential Issuer's URL to fetch its metadata, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-11.2">Section 11.2</a> of [[OpenID-VCI]]. The Wallet needs the metadata to learn the Credential types and formats that the Credential Issuer supports, and to determine the Token Endpoint (at the OAuth 2.0 Authorization Server) as well as the Credential Endpoint required to start the request.)
 
 
                 user --> wallet: interacts
@@ -1384,7 +1385,7 @@ localBiblioFile: "localbiblio.yaml"
                 wallet -> issuer++: **(4)** Token Request (Pre-Authorized Code, tx_code)
                 # -(4. Token Request)
 
-                    The Wallet sends the Pre-Authorized Code obtained in Step (2) in the Token Request to the Token Endpoint. The Wallet will additionally send a Transaction Code provided by the End-User, if it was required by the Credential Issuer. This step is defined in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-6">Section 6</a> of [[OpenID.VCI]].
+                    The Wallet sends the Pre-Authorized Code obtained in Step (2) in the Token Request to the Token Endpoint. The Wallet will additionally send a Transaction Code provided by the End-User, if it was required by the Credential Issuer. This step is defined in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-6">Section 6</a> of [[OpenID-VCI]].
 
                 issuer -> wallet--: Token Response (access_token)
 
@@ -1505,9 +1506,9 @@ localBiblioFile: "localbiblio.yaml"
 
                 issuer -> issuer: **(5)** Generate QR code
                 # -(5. Generate QR code)
-                    The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
+                    The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID-VP]] process.
 
-                    A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
+                    A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID-SIOP2]].
 
                     <x-code .ini>
                         https://verifier.dome-marketplace.eu/authorization-requests?state=af0ifjsldkj
@@ -1583,9 +1584,9 @@ localBiblioFile: "localbiblio.yaml"
 
                 issuer -> issuer: **(5)** Generate QR code
                 # -(5. Generate QR code)
-                    The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
+                    The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID-VP]] process.
 
-                    A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
+                    A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID-SIOP2]].
 
                     <x-code .ini>
                         https://verifier.dome-marketplace.eu/authorization-requests?state=af0ifjsldkj
@@ -1604,9 +1605,9 @@ localBiblioFile: "localbiblio.yaml"
                 # -(7. Scan QR code)
                     The user scans the QR with her wallet and tells the wallet to go to the URL in the QR.
 
-                    In this profile the wallet does not have to implement the Credential Offer Endpoint described in section 4 of [[OpenID.VCI]].
+                    In this profile the wallet does not have to implement the Credential Offer Endpoint described in section 4 of [[OpenID-VCI]].
 
-                    Instead, the Credential Issuer renders a QR code containing a reference to the Credential Offer that can be scanned by the End-User using a Wallet, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-4.1">section 4.1</a> of [[OpenID.VCI]].
+                    Instead, the Credential Issuer renders a QR code containing a reference to the Credential Offer that can be scanned by the End-User using a Wallet, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-4.1">section 4.1</a> of [[OpenID-VCI]].
 
                     According to the spec, the Credential Offer object is a JSON object containing the Credential Offer parameters and can be sent by value or by reference. To avoid problems with the size of the QR travelling in the URL, this profile requires that the QR contains the `credential_offer_uri`, which is a URL using the `https` scheme referencing a resource containing a JSON object with the Credential Offer parameters. The `credential_offer_uri` endpoint should be implemented by the Issuer backend.
 
@@ -1617,13 +1618,13 @@ localBiblioFile: "localbiblio.yaml"
 
             <section>Credential Offer Parameters for the LEAR Credential issuance flow
 
-                The LEAR Credential profile restricts the options available in <a href="https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#section-4.1.1">section 4.1.1</a> of [[OpenID.VCI]]. The profile defines a Credential Offer object containing the following parameters:
+                The LEAR Credential profile restricts the options available in <a href="https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#section-4.1.1">section 4.1.1</a> of [[OpenID-VCI]]. The profile defines a Credential Offer object containing the following parameters:
 
                 <ul>
 
-                    - `credential_issuer`: REQUIRED. The URL of the Credential Issuer, as defined in <a href="https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#section-11.2.1">Section 11.2.1</a> of [[OpenID.VCI]], from which the Wallet is requested to obtain one or more Credentials. The Wallet uses it to obtain the Credential Issuer's Metadata following the steps defined in <a href="https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#section-11.2.2">Section 11.2.2</a>.
+                    - `credential_issuer`: REQUIRED. The URL of the Credential Issuer, as defined in <a href="https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#section-11.2.1">Section 11.2.1</a> of [[OpenID-VCI]], from which the Wallet is requested to obtain one or more Credentials. The Wallet uses it to obtain the Credential Issuer's Metadata following the steps defined in <a href="https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#section-11.2.2">Section 11.2.2</a>.
 
-                    - `credential_configuration_ids`: REQUIRED. Array of unique strings that each identify one of the keys in the name/value pairs stored in the `credential_configurations_supported` Credential Issuer metadata. The Wallet uses these string values to obtain the respective object that contains information about the Credential being offered as defined in <a href="https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#section-11.2.3">Section 11.2.3</a> of [[OpenID.VCI]].
+                    - `credential_configuration_ids`: REQUIRED. Array of unique strings that each identify one of the keys in the name/value pairs stored in the `credential_configurations_supported` Credential Issuer metadata. The Wallet uses these string values to obtain the respective object that contains information about the Credential being offered as defined in <a href="https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#section-11.2.3">Section 11.2.3</a> of [[OpenID-VCI]].
 
                         <x-note>LEARCredential
                             For the LEAR Credential Issuer, the `credential_configuration_ids` array MUST contain at least the identifier of the LEAR Credential for employees, which is `"LEARCredentialEmployee"`. The LEARCredential is a credential known globally to the DOME ecosystem, so its schema should be published and be available in the Trusted Credential Schemas List of DOME.
@@ -1636,7 +1637,7 @@ localBiblioFile: "localbiblio.yaml"
 
                     - `pre-authorized_code`: REQUIRED. The code representing the Credential Issuer's authorization for the Wallet to obtain Credentials of a certain type. This code MUST be short lived and single use. The LEAR Credential issuance uses the Pre-Authorized Code Flow, so this parameter value MUST be included in the subsequent Token Request.
 
-                    - `tx_code`: REQUIRED in the LEAR Credential profile. Object specifying whether the Authorization Server expects presentation of a Transaction Code by the End-User along with the Token Request in a Pre-Authorized Code Flow. The Transaction Code is intended to bind the Pre-Authorized Code to a certain transaction to prevent replay of this code by an attacker that, for example, scanned the QR code while standing behind the legitimate End-User. The Transaction Code MUST be sent via a separate channel (eg. using the employee email if it is considered sufficiently secure, or communicating it via whatever secure mechanisms the company has for employee communications). The Transaction Code value MUST be sent in the `tx_code` parameter with the respective Token Request as defined in <a href="https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#section-6.1">Section 6.1</a> of [[OpenID.VCI]].
+                    - `tx_code`: REQUIRED in the LEAR Credential profile. Object specifying whether the Authorization Server expects presentation of a Transaction Code by the End-User along with the Token Request in a Pre-Authorized Code Flow. The Transaction Code is intended to bind the Pre-Authorized Code to a certain transaction to prevent replay of this code by an attacker that, for example, scanned the QR code while standing behind the legitimate End-User. The Transaction Code MUST be sent via a separate channel (eg. using the employee email if it is considered sufficiently secure, or communicating it via whatever secure mechanisms the company has for employee communications). The Transaction Code value MUST be sent in the `tx_code` parameter with the respective Token Request as defined in <a href="https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#section-6.1">Section 6.1</a> of [[OpenID-VCI]].
 
                     <ul>
                         - `input_mode` : REQUIRED in the LEAR Credential profile. String specifying the input character set. Possible values are numeric (only digits) and text (any characters). The default is numeric.
@@ -1741,9 +1742,9 @@ localBiblioFile: "localbiblio.yaml"
 
                 issuer -> issuer: **(5)** Generate QR code
                 # -(5. Generate QR code)
-                    The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
+                    The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID-VP]] process.
 
-                    A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
+                    A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID-SIOP2]].
 
                     <x-code .ini>
                         https://verifier.dome-marketplace.eu/authorization-requests?state=af0ifjsldkj
@@ -1762,9 +1763,9 @@ localBiblioFile: "localbiblio.yaml"
                 # -(7. Scan QR code)
                     The user scans the QR with her wallet and tells the wallet to go to the URL in the QR.
 
-                    In this profile the wallet does not have to implement the Credential Offer Endpoint described in section 4 of [[OpenID.VCI]].
+                    In this profile the wallet does not have to implement the Credential Offer Endpoint described in section 4 of [[OpenID-VCI]].
 
-                    Instead, the Credential Issuer renders a QR code containing a reference to the Credential Offer that can be scanned by the End-User using a Wallet, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-4.1">section 4.1</a> of [[OpenID.VCI]].
+                    Instead, the Credential Issuer renders a QR code containing a reference to the Credential Offer that can be scanned by the End-User using a Wallet, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-4.1">section 4.1</a> of [[OpenID-VCI]].
 
                     According to the spec, the Credential Offer object is a JSON object containing the Credential Offer parameters and can be sent by value or by reference. To avoid problems with the size of the QR travelling in the URL, this profile requires that the QR contains the `credential_offer_uri`, which is a URL using the `https` scheme referencing a resource containing a JSON object with the Credential Offer parameters. The `credential_offer_uri` endpoint should be implemented by the Issuer backend.
 
@@ -1775,7 +1776,7 @@ localBiblioFile: "localbiblio.yaml"
                 wallet <-> issuer: **(9)** Obtains Issuer's Credential Issuer metadata
                 # -(9. Wallet obtains Issuer's Credential Issuer metadata)
                     
-                    The Wallet retrieves the Credential Issuer's configuration using the Credential Issuer Identifier, the `credential_issuer` field in the Credential Offer received before, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-11.2">Section 11.2</a> of [[OpenID.VCI]]. The Wallet needs the metadata to learn the Credential types and formats that the Credential Issuer supports, and to determine the Token Endpoint (at the OAuth 2.0 Authorization Server, which in this case it is the same LEAR Credential Issuer) as well as the Credential Endpoint required to start the request.)
+                    The Wallet retrieves the Credential Issuer's configuration using the Credential Issuer Identifier, the `credential_issuer` field in the Credential Offer received before, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-11.2">Section 11.2</a> of [[OpenID-VCI]]. The Wallet needs the metadata to learn the Credential types and formats that the Credential Issuer supports, and to determine the Token Endpoint (at the OAuth 2.0 Authorization Server, which in this case it is the same LEAR Credential Issuer) as well as the Credential Endpoint required to start the request.)
 
 
             <section>Credential Issuer Metadata Parameters
@@ -1865,7 +1866,7 @@ localBiblioFile: "localbiblio.yaml"
                                     
                                     - `order`: MUST NOT be used for the LEAR Credential profile. To make the use of the LEAR Credential safer for End-Users, all Wallets MUST use the "official" definition of the LEAR Credential, which includes the `order` field.
 
-                As allowed by <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-11.2.3">Section 11.2.3</a> of [[OpenID.VCI]], for the LEAR Credential profile the `response_types_supported` parameter MUST NOT appear in the metadata of the LEAR Credential Issuer despite [RFC8414] mandating it, because the LEAR Credential Issuer only supports the Pre-Authorized Code grant type.
+                As allowed by <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-11.2.3">Section 11.2.3</a> of [[OpenID-VCI]], for the LEAR Credential profile the `response_types_supported` parameter MUST NOT appear in the metadata of the LEAR Credential Issuer despite [RFC8414] mandating it, because the LEAR Credential Issuer only supports the Pre-Authorized Code grant type.
 
 
         <section>OAuth 2.0 Authorization Server Metadata
@@ -1931,9 +1932,9 @@ localBiblioFile: "localbiblio.yaml"
 
                 issuer -> issuer: **(5)** Generate QR code
                 # -(5. Generate QR code)
-                    The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID.VP]] process.
+                    The Verifier generates a QR code, containing inside the URL of the `/authentication-requests` endpoint of the Verifier component which will be used to start the [[OpenID-VP]] process.
 
-                    A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID.SIOP2]].
+                    A QR code is used because a Self-Issued OP may be running locally as a native application or progressive web application (PWA), the RP may not have a network-addressable endpoint to communicate directly with the OP. We have to leverage the implicit flow of OpenID Connect to communicate with such locally-running Ops, as described in [[OpenID-SIOP2]].
 
                     <x-code .ini>
                         https://verifier.dome-marketplace.eu/authorization-requests?state=af0ifjsldkj
@@ -1952,9 +1953,9 @@ localBiblioFile: "localbiblio.yaml"
                 # -(7. Scan QR code)
                     The user scans the QR with her wallet and tells the wallet to go to the URL in the QR.
 
-                    In this profile the wallet does not have to implement the Credential Offer Endpoint described in section 4 of [[OpenID.VCI]].
+                    In this profile the wallet does not have to implement the Credential Offer Endpoint described in section 4 of [[OpenID-VCI]].
 
-                    Instead, the Credential Issuer renders a QR code containing a reference to the Credential Offer that can be scanned by the End-User using a Wallet, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-4.1">section 4.1</a> of [[OpenID.VCI]].
+                    Instead, the Credential Issuer renders a QR code containing a reference to the Credential Offer that can be scanned by the End-User using a Wallet, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-4.1">section 4.1</a> of [[OpenID-VCI]].
 
                     According to the spec, the Credential Offer object is a JSON object containing the Credential Offer parameters and can be sent by value or by reference. To avoid problems with the size of the QR travelling in the URL, this profile requires that the QR contains the `credential_offer_uri`, which is a URL using the `https` scheme referencing a resource containing a JSON object with the Credential Offer parameters. The `credential_offer_uri` endpoint should be implemented by the Issuer backend.
 
@@ -1965,7 +1966,7 @@ localBiblioFile: "localbiblio.yaml"
                 wallet <-> issuer: **(9)** Obtains Issuer's Credential Issuer metadata
                 # -(9. Wallet obtains Issuer's Credential Issuer metadata)
                     
-                    The Wallet retrieves the Credential Issuer's configuration using the Credential Issuer Identifier, the `credential_issuer' field in the Credential Offer received before, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-11.2">Section 11.2</a> of [[OpenID.VCI]]. The Wallet needs the metadata to learn the Credential types and formats that the Credential Issuer supports, and to determine the Token Endpoint (at the OAuth 2.0 Authorization Server, which in this case it is the same LEAR Credential Issuer) as well as the Credential Endpoint required to start the request.)
+                    The Wallet retrieves the Credential Issuer's configuration using the Credential Issuer Identifier, the `credential_issuer' field in the Credential Offer received before, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-11.2">Section 11.2</a> of [[OpenID-VCI]]. The Wallet needs the metadata to learn the Credential types and formats that the Credential Issuer supports, and to determine the Token Endpoint (at the OAuth 2.0 Authorization Server, which in this case it is the same LEAR Credential Issuer) as well as the Credential Endpoint required to start the request.)
 
                 wallet -> issuer++: **(10)** Token Request (Pre-Authorized Code, tx_code)
                 issuer -> wallet--++: Token Response (access_token)
@@ -2067,7 +2068,7 @@ localBiblioFile: "localbiblio.yaml"
 
             <section>Token Error Response
 
-                If the Token Request is invalid or unauthorised, the Authorization Server constructs the error response as defined in section 6.3 of [[OpenID.VCI]].
+                If the Token Request is invalid or unauthorised, the Authorization Server constructs the error response as defined in section 6.3 of [[OpenID-VCI]].
 
 
         <section>Request and receive Credential
@@ -2100,7 +2101,7 @@ localBiblioFile: "localbiblio.yaml"
                 <ul>
                     - `format`: REQUIRED. This profile uses the Credential format identifier `jwt_vc_json`.
 
-                    - `proof`: OPTIONAL. JSON object containing proof of possession of the key material the issued Credential shall be bound to. The specification envisions use of different types of proofs for different cryptographic schemes. The proof object MUST contain a `proof_type` claim of type JSON string denoting the concrete proof type. This type determines the further claims in the proof object and its respective processing rules. Proof types are defined in Section [[[#proof_type]]].
+                    - `proof`: OPTIONAL. JSON object containing proof of possession of the key material the issued Credential shall be bound to. The specification envisions use of different types of proofs for different cryptographic schemes. The proof object MUST contain a `proof_type` claim of type JSON string denoting the concrete proof type. This type determines the further claims in the proof object and its respective processing rules. Proof types are defined in Section <x-ref "proof_type">.
 
                 The proof element MUST incorporate a `c_nonce` value generated by the Credential Issuer and the Credential Issuer Identifier (audience) to allow the Credential Issuer to detect replay. The way that data is incorporated depends on the proof type. In a JWT, for example, the `c_nonce` is conveyed in the `nonce` claim whereas the audience is conveyed in the `aud` claim. In a Linked Data proof, for example, the `c_nonce` is included as the challenge element in the proof object and the Credential Issuer (the intended audience) is included as the domain element.
 
@@ -2265,7 +2266,7 @@ localBiblioFile: "localbiblio.yaml"
             wallet <-> issuer: **(3)** Obtains Issuer's Credential Issuer metadata
             # -(3. Wallet obtains Issuer's Credential Issuer metadata)
                 
-                The Wallet uses the Credential Issuer's URL to fetch its metadata, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-11.2">Section 11.2</a> of [[OpenID.VCI]]. The Wallet needs the metadata to learn the Credential types and formats that the Credential Issuer supports, and to determine the Token Endpoint (at the OAuth 2.0 Authorization Server) as well as the Credential Endpoint required to start the request.)
+                The Wallet uses the Credential Issuer's URL to fetch its metadata, as described in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-11.2">Section 11.2</a> of [[OpenID-VCI]]. The Wallet needs the metadata to learn the Credential types and formats that the Credential Issuer supports, and to determine the Token Endpoint (at the OAuth 2.0 Authorization Server) as well as the Credential Endpoint required to start the request.)
 
 
             user --> wallet: interacts
@@ -2273,7 +2274,7 @@ localBiblioFile: "localbiblio.yaml"
             wallet -> issuer++: **(4)** Token Request (Pre-Authorized Code, tx_code)
             # -(4. Token Request)
 
-                The Wallet sends the Pre-Authorized Code obtained in Step (2) in the Token Request to the Token Endpoint. The Wallet will additionally send a Transaction Code provided by the End-User, if it was required by the Credential Issuer. This step is defined in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-6">Section 6</a> of [[OpenID.VCI]].
+                The Wallet sends the Pre-Authorized Code obtained in Step (2) in the Token Request to the Token Endpoint. The Wallet will additionally send a Transaction Code provided by the End-User, if it was required by the Credential Issuer. This step is defined in <a href="https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-6">Section 6</a> of [[OpenID-VCI]].
 
             issuer -> wallet--: Token Response (access_token)
 
@@ -2295,7 +2296,7 @@ localBiblioFile: "localbiblio.yaml"
 
 <section>Reference architecture for authentication and access control
 
-    According to the [[[EDIW.ARF]]], there are four types of flows when using the wallet with Verifiable Credentials:
+    According to the [[EDIW-ARF]], there are four types of flows when using the wallet with Verifiable Credentials:
 
     <ol>
         - Proximity supervised flow.
@@ -2315,7 +2316,7 @@ localBiblioFile: "localbiblio.yaml"
 
     The User journeys described here focus on the cross-device flow, which is the most complex, involving two different devices.
 
-    To describe the system we will use the following figure which is based on [[[NIST-AUTH]]] and describes a reference architecture with the required functional components to achieve authentication and enforcement of the authorization policies.
+    To describe the system we will use the following figure which is based on [[NIST-AUTH]] and describes a reference architecture with the required functional components to achieve authentication and enforcement of the authorization policies.
 
     The diagram uses the logical concepts also used in the XACML reference architecture, but our description is agnostic to the actual policy language used in a concrete implementation.
 
@@ -2384,7 +2385,7 @@ localBiblioFile: "localbiblio.yaml"
 
         The same mechanism can be used by any participant in the ecosystem, if they want to use an advanced IAM mechanism which is aligned with the EU strategy on digital identity based on Verifiable Credential and eIDAS2.
 
-        For the explanation we will use the following figure which is based on [[[NIST-AUTH]]] which describes a reference architecture with necessary functional components to achieve enforcement the authorization policies. The authorization process depends on four layers of functionality: <b>Enforcement</b>, <b>Decision</b>, <b>Access Control Data</b>, and <b>Administration</b>.
+        For the explanation we will use the following figure which is based on [[NIST-AUTH]] which describes a reference architecture with necessary functional components to achieve enforcement the authorization policies. The authorization process depends on four layers of functionality: <b>Enforcement</b>, <b>Decision</b>, <b>Access Control Data</b>, and <b>Administration</b>.
 
         <figure #authn-reference>
             <img src="images/login_in_DOME/authn_architecture_authorization.drawio.png" alt="" />
@@ -3071,7 +3072,7 @@ localBiblioFile: "localbiblio.yaml"
 
 <section #request_scope>Request Scope
 
-    According to section 5.3 of [[OpenID.VP]], wallets MAY support requesting presentation of credentials using OAuth 2.0 `scope` values. Such a scope value MUST be an alias for a well-defined presentation definition as it will be referred to in the `presentation_submission` response parameter.
+    According to section 5.3 of [[OpenID-VP]], wallets MAY support requesting presentation of credentials using OAuth 2.0 `scope` values. Such a scope value MUST be an alias for a well-defined presentation definition as it will be referred to in the `presentation_submission` response parameter.
 
     In this specification we define concrete scope values and the mapping between a certain scope value and the respective presentation definition, in particular the mapping between scope values and specific types of Verifiable Credentials used for access control in the use case described in this document. In a production implementation of a Data Space ecosystem, the Trust Framework has to define the mappings used in the ecosysyem and the mechanisms and governance model used to update those mappings.
 
@@ -3110,7 +3111,7 @@ localBiblioFile: "localbiblio.yaml"
 
 <section #glossary>Glossary
 
-    As far as possible and in order to enhance consistency with the regulation, we use in this document the following definitions, which is essentially a subset of the definitions in Article 3 of the document [[eIDAS2.Regulation]] and in the original [[[eIDAS.Regulation]]].
+    As far as possible and in order to enhance consistency with the regulation, we use in this document the following definitions, which is essentially a subset of the definitions in Article 3 of the document [[eIDAS2-Regulation]] and in the original [[eIDAS-Regulation]].
 
     This is the reason why in some definitions below the description refers to an article or section that does not exist in this document. We have decided to keep the definitions like in the original, as we think it does not limit the understanding of the concept.
 
@@ -3233,7 +3234,7 @@ localBiblioFile: "localbiblio.yaml"
 
         // (32) ‘qualified electronic seal creation device’ from eIDAS1
         <dt>qualified electronic seal creation device 
-        <dd>means an electronic seal creation device that meets mutatis mutandis the requirements laid down in Annex II of [[eIDAS.Regulation]];
+        <dd>means an electronic seal creation device that meets mutatis mutandis the requirements laid down in Annex II of [[eIDAS-Regulation]];
 
         // (33) ‘electronic time stamp’ from eIDAS1
         <dt>electronic time stamp 
@@ -3241,7 +3242,7 @@ localBiblioFile: "localbiblio.yaml"
 
         // (34) ‘qualified electronic time stamp’ from eIDAS1
         <dt>qualified electronic time stamp 
-        <dd>means an electronic time stamp which meets the requirements laid down in Article 42 of [[eIDAS.Regulation]];
+        <dd>means an electronic time stamp which meets the requirements laid down in Article 42 of [[eIDAS-Regulation]];
 
         // (35) ‘electronic document’ from eIDAS1
         <dt>electronic document 

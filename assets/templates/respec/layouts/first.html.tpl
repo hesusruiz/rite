@@ -82,7 +82,7 @@
     </script>
     <style>
         :root {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
 
         @media screen and (min-width: 78em) {
@@ -143,7 +143,7 @@
         .codecolor {
             width: 100%;
             display: inline-block;
-            margin: 0;
+            margin: 0 0 1rem 0;
             box-shadow: 5px 5px 5px rgba(68, 68, 68, 0.6);
             border-radius: 7px;
             border: 1px solid black;
@@ -178,6 +178,16 @@
         ul.plain>li>p {
             text-indent: 0;
         }
+
+        dl {
+            margin: 0 0 0 0!important;
+        }
+
+        dd {
+            margin: 0 0 .2em .2em!important;
+        }
+
+        
     </style>
 </head>
 

@@ -85,7 +85,8 @@ type Parser struct {
 	Xref map[string]*Node
 
 	// The configuration read from the metadata of the file
-	Config *yaml.YAML
+	Config   *yaml.YAML
+	NoReSpec bool
 
 	Bibdata   *yaml.YAML
 	MyBibdata map[string]any
@@ -97,10 +98,10 @@ func (p *Parser) AddSyntaxError(se *SyntaxError) {
 	p.syntaxErrors = append(p.syntaxErrors, se)
 }
 
-// NewParser parses a document reading lines from linescanner.
+// newParser creates a Parser object with basic initialization.
 // filename is for logging/tracing purposes.
 // The parser has an initial node representing the document (or sub-document) being parsed.
-func NewParser(fileName string, rootDir string, linescanner *bufio.Scanner, debug bool) (*Parser, error) {
+func newParser(fileName string, rootDir string, linescanner *bufio.Scanner, debug bool) (*Parser, error) {
 
 	// Get the absolute name of the file, in preparation to get the directory and file name
 	absoluteFileName, err := filepath.Abs(fileName)
@@ -178,7 +179,7 @@ func ParseFromReader(fileName string, input io.Reader, debug bool) (*Parser, err
 	linescanner := bufio.NewScanner(input)
 
 	// Create a new parser for the file
-	p, err := NewParser(fileName, "", linescanner, debug)
+	p, err := newParser(fileName, "", linescanner, debug)
 	if err != nil {
 		return nil, fmt.Errorf("creating parser: %w", err)
 	}
@@ -234,7 +235,7 @@ func (p *Parser) RetrieveBliblioData() (*yaml.YAML, error) {
 
 }
 
-func (p *Parser) RenderBibliography() []byte {
+func (p *Parser) RenderNoReSpecBibliography() []byte {
 
 	htmlBuilder := &ByteRenderer{}
 	htmlBuilder.Renderln()
@@ -292,13 +293,16 @@ func (p *Parser) ParseIncludeFile(parent *Node, fileName string) (*Parser, error
 	linescanner := bufio.NewScanner(file)
 
 	// Create a new parser for the file
-	subParser, err := NewParser(fileName, p.rootDir, linescanner, p.debug)
+	subParser, err := newParser(fileName, p.rootDir, linescanner, p.debug)
 	if err != nil {
 		return nil, fmt.Errorf("creating parser for %s: %w", fileName, err)
 	}
 
 	// Set the configuration from the parent parser
 	subParser.Config = p.Config
+
+	// Tell the subparser if we are processing for ReSpec or not
+	subParser.NoReSpec = p.NoReSpec
 
 	// Pass the maps for references from the parent parser, so the subparser can update them
 	subParser.Ids = p.Ids
@@ -646,7 +650,7 @@ func (p *Parser) PeekParagraphFirstLine() *Text {
 	return line
 }
 
-// This regex detects the Markdown backticks, double asterisks and double underscores that need special processing
+// This regexes detect the Markdown backticks, double asterisks and double underscores that need special processing
 var reCodeBackticks = regexp.MustCompile(`\x60(.+?)\x60`)
 var reMarkdownBold = regexp.MustCompile(`\*\*(.+?)\*\*`)
 var reMarkdownItalics = regexp.MustCompile(`__(.+?)__`)
@@ -680,7 +684,38 @@ func (p *Parser) PreprocesLine(lineSt *Text) *Text {
 		lineSt.Content = reMarkdownItalics.ReplaceAll(lineSt.Content, []byte("<i>${1}</i>"))
 	}
 
-	// Preprocesslines starting with Markdown headers ('#') and convert to h1, h2, ...
+	if p.NoReSpec && bytes.Contains(lineSt.Content, []byte("[[")) {
+		// Handle cross-references in the line
+		if allsubmatches := reBiblioRef.FindAllSubmatch(lineSt.Content, -1); len(allsubmatches) > 0 {
+
+			for _, submatchs := range allsubmatches {
+
+				sub1 := string(bytes.Clone(submatchs[1]))
+
+				// If the referenced node has a description, we will use it for the text of the link.
+				// Otherwise we will use the plain ID of the referenced node
+				if p.Bibdata == nil {
+					stdlog.Printf("%s (line %d) error: nil Biblio reference for '%s'\n", p.fileName, p.currentLineNum(), sub1)
+					continue
+				}
+				referencedNode := p.Bibdata.Map(sub1)
+				if referencedNode == nil {
+					stdlog.Printf("%s (line %d) error: nil Biblio reference for '%s'\n", p.fileName, p.currentLineNum(), sub1)
+					continue
+				}
+
+				p.MyBibdata[sub1] = referencedNode
+
+				replacement := []byte("<a href=\"#bib_" + sub1 + "\" class=\"xref\">[" + sub1 + "]</a>")
+				original := submatchs[0]
+				lineSt.Content = bytes.ReplaceAll(lineSt.Content, original, replacement)
+
+			}
+		}
+
+	}
+
+	// Preprocess lines starting with Markdown headers ('#') and convert to h1, h2, ...
 	// We assume that a header starts with the '#' character, no matter what the rest of the line is
 	if lineSt.Content[0] == '#' {
 
@@ -1048,31 +1083,34 @@ func (p *Parser) ParseBlock(parent *Node) *SyntaxError {
 			switch newNode.Type {
 			case SectionNode:
 
-				// If it is a section, calculate its sequence number.
-				// The "abstract" section is not numbered.
-				if string(newNode.Id) != "abstract" {
+				if p.NoReSpec {
+					// If it is a section, calculate its sequence number.
+					// The "abstract" and "conformance" sections are not numbered.
+					if (string(newNode.Id) != "abstract") && (string(newNode.Id) != "conformance") {
 
-					// Section nodes can only be children of other section nodes or of the root Document
-					if parent.Type != DocumentNode && parent.Type != SectionNode {
-						// Stop parsing the block
-						return NewSyntaxError(p, "a section node should be root section or child of other section node", p.currentIndentation)
-					}
-
-					// Increase the level
-					newNode.Level = parent.Level + 1
-
-					// Calculate our sequence number for the parent section
-					numSections := 1
-					for theNode := parent.FirstChild; theNode != nil; theNode = theNode.NextSibling {
-						if theNode.Type == SectionNode && string(theNode.Id) != "abstract" {
-							numSections++
+						// Section nodes can only be children of other section nodes or of the root Document
+						if parent.Type != DocumentNode && parent.Type != SectionNode {
+							// Stop parsing the block
+							return NewSyntaxError(p, "a section node should be root section or child of other section node", p.currentIndentation)
 						}
+
+						// Increase the level
+						newNode.Level = parent.Level + 1
+
+						// Calculate our sequence number for the parent section
+						numSections := 0
+						for theNode := parent.FirstChild; theNode != nil; theNode = theNode.NextSibling {
+							if theNode.Type == SectionNode && string(theNode.Id) != "abstract" && (string(newNode.Id) != "conformance") {
+								numSections++
+							}
+						}
+
+						newNode.Outline = fmt.Sprintf("%s%d.", parent.Outline, numSections)
+
+						copy(newNode.OutlineInts, parent.OutlineInts)
+						newNode.OutlineInts = append(newNode.OutlineInts, numSections)
+
 					}
-
-					newNode.Outline = fmt.Sprintf("%s%d.", parent.Outline, numSections)
-
-					copy(newNode.OutlineInts, parent.OutlineInts)
-					newNode.OutlineInts = append(newNode.OutlineInts, numSections)
 
 				}
 
@@ -1430,6 +1468,12 @@ func (p *Parser) PreprocessYAMLHeader() error {
 	p.Config, err = yaml.ParseYaml(frontMatter)
 	if err != nil {
 		stdlog.Fatalf("malformed YAML metadata: %v\n", err)
+	}
+
+	// Until we migrate all configurations in front matter to a struct,
+	// we do it for the most important ones
+	if p.Config.Bool("rite.noReSpec") || p.Config.Bool("rite.norespec") {
+		p.NoReSpec = true
 	}
 
 	// config = p.Config

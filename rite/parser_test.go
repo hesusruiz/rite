@@ -61,7 +61,7 @@ rite:
 
 			// Render to HTML
 			fragmentHTML, err := got.RenderHTML()
-			biblio := got.RenderBibliography()
+			biblio := got.RenderNoReSpecBibliography()
 
 			fragmentHTML = append(fragmentHTML, biblio...)
 

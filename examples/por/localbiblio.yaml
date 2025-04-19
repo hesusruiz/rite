@@ -31,25 +31,29 @@
     href: "https://tools.ietf.org/html/draft-mayrhofer-did-dns-01"
     status: "Internet Draft"
     publisher: "IETF"
-"DIF.PresentationExchange":
+"DIF-PresentationExchange":
     title: "Presentation Exchange 2.0.0"
     href: "https://identity.foundation/presentation-exchange/spec/v2.0.0/"
 "OWASP-TRANSPORT":
     title: "Transport Layer Protection Cheatsheet"
     href: "https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet"
-"OpenID.Core":
+"DID-Core":
+    title: "Decentralized Identifiers (DIDs) v1.0"
+    href: "https://www.w3.org/TR/did-1.0/"
+    date: "19 July 2022"
+"OpenID-Core":
     title: "OpenID Connect Core 1.0 incorporating errata set 1"
     href: "http://openid.net/specs/openid-connect-core-1_0.html"
     date: "8 November 2014"
-"OpenID.VCI":
+"OpenID-VCI":
     title: "OpenID for Verifiable Credential Issuance - draft 13"
     date: "8 February 2024"
     href: "https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html"
-"OpenID.SIOP2":
+"OpenID-SIOP2":
     title: "Self-Issued OpenID Provider v2"
     date: "28 January 2022"
     href: "https://openid.bitbucket.io/connect/openid-connect-self-issued-v2-1_0.html"
-"OpenID.VP":
+"OpenID-VP":
     title: "OpenID for Verifiable Presentations - draft 21"
     date: "9 August 2024"
     href: "https://openid.net/specs/openid-4-verifiable-presentations-1_0.html"
@@ -68,6 +72,15 @@
 "RFC7519":
     title: "JSON Web Token (JWT)"
     href: "https://www.rfc-editor.org/rfc/rfc7519"
+"RFC9396":
+    title: "OAuth 2.0 Rich Authorization Requests"
+    href: "https://www.rfc-editor.org/rfc/rfc9396"
+    date: "May 2023"
+"RFC9068":
+    title: "JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens"
+    href: "https://www.rfc-editor.org/rfc/rfc9068"
+    date: "October 2021"
+
 "NIST-AUTH":
     title: "NIST Special Publication 800-178: A Comparison of Attribute Based Access Control (ABAC) Standards for Data Service Applications"
     href: "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-178.pdf"
@@ -83,15 +96,15 @@
 "eIDAS":
     title: "Discover eIDAS"
     href: "https://digital-strategy.ec.europa.eu/en/policies/discover-eidas"
-"eIDAS.Regulation":
+"eIDAS-Regulation":
     title: "Regulation (EU) No 910/2014 of the European Parliament and of the Council of 23 July 2014 on electronic identification and trust services for electronic transactions in the internal market and repealing Directive 1999/93/EC"
     href: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=uriserv%3AOJ.L_.2014.257.01.0073.01.ENG"
     date: "23 July 2014"
-"eIDAS2.Regulation":
+"eIDAS2-Regulation":
     title: "REPORT on the proposal for a regulation of the European Parliament and of the Council amending Regulation (EU) No 910/2014 as regards establishing a framework for a European Digital Identity"
     href: "https://www.europarl.europa.eu/doceo/document/A-9-2023-0038_EN.html"
     date: "March 2023"
-"EDIW.ARF":
+"EDIW-ARF":
     title: "EUDI Wallet Architecture and Reference Framework 1.1.0"
     href: "https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework/blob/main/docs/arf.md"
     date: "20 April 2023"
@@ -114,8 +127,7 @@
     title: "Extending Actor Models in Data Spaces"
     href: "https://dl.acm.org/doi/pdf/10.1145/3543873.3587645"
     date: "April 2023"
-
-"STORK2.MandateReport":
+"STORK2-MandateReport":
     title: "STORK 2.0: D.3.3 – Mandate/Attribute Management Report"
     href: "https://ec.europa.eu/digital-building-blocks/wikis/display/EIDCOMMUNITY/STORK+2.0+WP3+-+Legal+and+Trust+Analysis?preview=/84415420/84415378/STORK_2_0_D3_3_MandateAttribute_Management_Report_v_1_0.pdf"
     date: "2012"

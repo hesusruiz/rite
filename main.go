@@ -19,7 +19,6 @@ import (
 
 	"github.com/hesusruiz/rite/rite"
 	"github.com/hesusruiz/rite/sliceedit"
-	"github.com/hesusruiz/vcutils/yaml"
 	"github.com/urfave/cli/v2"
 )
 
@@ -309,8 +308,6 @@ func NewParseAndRender(fileName string, debug bool) (string, error) {
 		return "", fmt.Errorf("getting absolute file name for %s: %w", fileName, err)
 	}
 
-	directory, _ := filepath.Split(absoluteFileName)
-
 	// Open the file and parse it
 	parser, err := rite.ParseFromFile(absoluteFileName, debug)
 	if err != nil {
@@ -322,8 +319,6 @@ func NewParseAndRender(fileName string, debug bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	plainBiblioHTML := parser.RenderBibliography()
 
 	// Initialise the template system. Use the templates specified in the document header,
 	// or the default if not specified (assets/templates/respec or assets/templates/standard)
@@ -360,30 +355,35 @@ func NewParseAndRender(fileName string, debug bool) (string, error) {
 
 	}
 
-	// Get the bibliography for the references, in the tag "localBiblio"
-	// It can be specified in the YAML header or in a separate file in the "localBiblioFile" tag.
-	// If both "localBiblio" and "localBiblioFile" exists in the header, only "localBiblio" is used.
-	bibData := parser.Config.Map("localBiblio", nil)
-	if bibData == nil {
+	// // Get the bibliography for the references, in the tag "localBiblio"
+	// // It can be specified in the YAML header or in a separate file in the "localBiblioFile" tag.
+	// // If both "localBiblio" and "localBiblioFile" exists in the header, only "localBiblio" is used.
+	// bibData := parser.Config.Map("localBiblio", nil)
+	// if bibData == nil {
 
-		// Bibliography data does NOT exist directly in the file being processed
-		// Try to see if the file specifies a SEPARATE file with bibliography data
-		// First try reading the file specified in the YAML header, otherwise use the default name
-		// The biblio file name is relative to the location of the file we are processing
-		relativeBiblioFile := parser.Config.String("localBiblioFile", "localbiblio.yaml")
-		absoluteBiblioFile := filepath.Join(directory, relativeBiblioFile)
-		bd, err := yaml.ParseYamlFile(absoluteBiblioFile)
-		if err == nil {
-			bibData = bd.Map("")
-		}
-	}
+	// 	// Bibliography data does NOT exist directly in the file being processed
+	// 	// Try to see if the file specifies a SEPARATE file with bibliography data
+	// 	// First try reading the file specified in the YAML header, otherwise use the default name
+	// 	// The biblio file name is relative to the location of the file we are processing
+	// 	relativeBiblioFile := parser.Config.String("localBiblioFile", "localbiblio.yaml")
+	// 	absoluteBiblioFile := filepath.Join(directory, relativeBiblioFile)
+	// 	bd, err := yaml.ParseYamlFile(absoluteBiblioFile)
+	// 	if err == nil {
+	// 		bibData = bd.Map("")
+	// 	}
+	// }
 
 	// Set the data that will be available for the templates
 	var data = map[string]any{
-		"Config":   parser.Config.Data(),
-		"Biblio":   bibData,
-		"MyBiblio": string(plainBiblioHTML),
-		"HTML":     string(fragmentHTML),
+		"Config": parser.Config.Data(),
+		"Biblio": parser.Bibdata.Map(""),
+		"HTML":   string(fragmentHTML),
+	}
+
+	// Render ourselves the bibliography if in NoReSpec mode
+	if parser.NoReSpec {
+		plainBiblioHTML := parser.RenderNoReSpecBibliography()
+		data["MyBiblio"] = string(plainBiblioHTML)
 	}
 
 	// Execute the template and store the result in memory

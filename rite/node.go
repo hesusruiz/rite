@@ -370,33 +370,33 @@ func (n *Node) RenderNormalNode(br *ByteRenderer) error {
 		}
 	}
 
-	// Handle cross-references in the line
-	if allsubmatches := reBiblioRef.FindAllSubmatch(rest, -1); len(allsubmatches) > 0 {
+	// // Handle cross-references in the line
+	// if allsubmatches := reBiblioRef.FindAllSubmatch(rest, -1); len(allsubmatches) > 0 {
 
-		for _, submatchs := range allsubmatches {
+	// 	for _, submatchs := range allsubmatches {
 
-			sub1 := string(bytes.Clone(submatchs[1]))
+	// 		sub1 := string(bytes.Clone(submatchs[1]))
 
-			// If the referenced node has a description, we will use it for the text of the link.
-			// Otherwise we will use the plain ID of the referenced node
-			if n.p.Bibdata == nil {
-				stdlog.Printf("%s (line %d) error: nil Biblio reference for '%s'\n", n.p.fileName, n.LineNumber, sub1)
-				continue
-			}
-			referencedNode := n.p.Bibdata.Map(sub1)
-			if referencedNode == nil {
-				stdlog.Printf("%s (line %d) error: nil Biblio reference for '%s'\n", n.p.fileName, n.LineNumber, sub1)
-				continue
-			}
+	// 		// If the referenced node has a description, we will use it for the text of the link.
+	// 		// Otherwise we will use the plain ID of the referenced node
+	// 		if n.p.Bibdata == nil {
+	// 			stdlog.Printf("%s (line %d) error: nil Biblio reference for '%s'\n", n.p.fileName, n.LineNumber, sub1)
+	// 			continue
+	// 		}
+	// 		referencedNode := n.p.Bibdata.Map(sub1)
+	// 		if referencedNode == nil {
+	// 			stdlog.Printf("%s (line %d) error: nil Biblio reference for '%s'\n", n.p.fileName, n.LineNumber, sub1)
+	// 			continue
+	// 		}
 
-			n.p.MyBibdata[sub1] = referencedNode
+	// 		n.p.MyBibdata[sub1] = referencedNode
 
-			replacement := []byte("<a href=\"#bib_" + sub1 + "\" class=\"xref\">[" + sub1 + "]</a>")
-			original := submatchs[0]
-			rest = bytes.ReplaceAll(rest, original, replacement)
+	// 		replacement := []byte("<a href=\"#bib_" + sub1 + "\" class=\"xref\">[" + sub1 + "]</a>")
+	// 		original := submatchs[0]
+	// 		rest = bytes.ReplaceAll(rest, original, replacement)
 
-		}
-	}
+	// 	}
+	// }
 
 	// Render the start tag of this node
 	br.Renderln(indentStr, startTag, rest)
@@ -486,7 +486,7 @@ func (n *Node) addAttributes(st *ByteRenderer, attrs ...AttrType) {
 // - tagName: the naked tag name, e.g. 'section'
 // - startTag: the full rendered start tag, e.g. '<section id="the_section_name" class="theclass">'
 // - endTag: the rendered end tag, e.g. '</section>'
-// - rest: the unprocessed rest of the line where the tag was foun, if any
+// - rest: the unprocessed rest of the line where the tag was found, if any
 func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte, rest []byte) {
 	startTagBuffer := &ByteRenderer{}
 	endTagBuffer := &ByteRenderer{}
@@ -498,10 +498,11 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
 		startTagBuffer.Render(">")
 
-		// If the line has additional text, and we output for ReSpec, we use it to automatically generate a header,
+		// If the line has additional text, and we output for ReSpec,
+		// we use it to automatically generate a header,
 		// as described in https://respec.org/docs/#sections
 		if len(n.RestLine) > 0 {
-			if n.p.Config.Bool("rite.noReSpec") || n.p.Config.Bool("rite.norespec") {
+			if n.p.NoReSpec {
 				startTagBuffer.Render("<h2>", n.Outline, " ", n.RestLine, "</h2>\n")
 			} else {
 				startTagBuffer.Render("<h2>", n.RestLine, "</h2>\n")
@@ -540,24 +541,42 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		// We represent definition lists as tables, for compatibility with Google Docs when copying from HTML
 		// and pasting to Google Docs.
 		// This is a class for table formatting in the case of definitions.
-		n.AddClassString("deftable")
+		if len(n.Name) > 200 {
+			n.AddClassString("deftable")
 
-		startTagBuffer.Render("<table")
-		n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
-		startTagBuffer.Render(">")
+			startTagBuffer.Render("<table")
+			n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
+			startTagBuffer.Render(">")
 
-		endTagBuffer.Render("</table>")
+			endTagBuffer.Render("</table>")
+
+		} else {
+			startTagBuffer.Render("<dl")
+			n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
+			startTagBuffer.Render(">")
+
+			endTagBuffer.Render("</dl>")
+		}
 
 	case "x-dt":
-		// definition terms are represented as rows in the table for definitin list (see 'x-dl')
+		// definition terms are represented as rows in the table for definition list (see 'x-dl')
 		// TODO: move the style definitions to a class in the style sheet
-		startTagBuffer.Render(
-			"<tr><td style='padding-left: 0px;'><b>",
-			bytes.TrimSpace(n.RestLine),
-			"</b></td></tr><tr><td style='padding-left: 20px;'>",
-		)
+		if len(n.Name) > 200 {
+			startTagBuffer.Render(
+				"<tr><td style='padding-left: 0px;'><b>",
+				bytes.TrimSpace(n.RestLine),
+				"</b></td></tr><tr><td style='padding-left: 20px;'>",
+			)
 
-		endTagBuffer.Render("</td></tr>")
+			endTagBuffer.Render("</td></tr>")
+
+		} else {
+			startTagBuffer.Render("<dt")
+			n.addAttributes(startTagBuffer, Id, Class, Src, Href, Attrs)
+			startTagBuffer.Render(">", bytes.TrimSpace(n.RestLine), "</dt><dd>")
+
+			endTagBuffer.Render("</dd>")
+		}
 
 	case "x-code", "x-example":
 		// These are special tags to simplify writing examples and code sections
@@ -568,14 +587,27 @@ func (n *Node) preRenderTheTag() (tagName string, startTag []byte, endTag []byte
 		endTagBuffer.Render("</code></pre>")
 
 	case "x-note":
-		// Special tag for notes as aside blocks
-		// TODO: move styles to the class sheet
-		startTagBuffer.Render("<table style='width:100%;margin:1em 0;'><tr><td class='xnotet'><aside class='xnotea'>")
-		if len(n.RestLine) > 0 {
-			startTagBuffer.Render("<p class='xnotep'>NOTE: ", bytes.TrimSpace(n.RestLine), "</p>")
-		}
 
-		endTagBuffer.Render("</aside></td></tr></table>")
+		if len(n.Name) > 200 {
+			// Special tag for notes as aside blocks
+			// TODO: move styles to the class sheet
+			startTagBuffer.Render("<table style='width:100%;margin:1em 0;'><tr><td class='xnotet'><aside class='xnotea'>")
+			if len(n.RestLine) > 0 {
+				startTagBuffer.Render("<p class='xnotep'>NOTE: ", bytes.TrimSpace(n.RestLine), "</p>")
+			}
+
+			endTagBuffer.Render("</aside></td></tr></table>")
+		} else {
+			// Special tag for notes as aside blocks
+			// TODO: move styles to the class sheet
+			startTagBuffer.Render("<div class='xnotet'><aside class='xnotea'>")
+			if len(n.RestLine) > 0 {
+				startTagBuffer.Render("<p class='xnotep'>NOTE: ", bytes.TrimSpace(n.RestLine), "</p>")
+			}
+
+			endTagBuffer.Render("</aside></div>")
+
+		}
 
 	case "x-warning":
 		// Special tag for a warning note
@@ -652,9 +684,21 @@ func (n *Node) RenderExampleNode(br *ByteRenderer) error {
 			log.Fatal(err)
 		}
 
+		// br.Renderln()
+		// br.Renderln(`<table style="width:100%;"><tr><td class="codecolor">`)
+		// br.Renderln("<pre class='nohighlight precolor'>")
+		// rb := &bytes.Buffer{}
+		// err = f.Format(rb, s, it)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// br.Render(rb.Bytes())
+		// br.Render("</pre>")
+		// br.Renderln(`</td></tr></table>`)
+		// br.Renderln()
+
 		br.Renderln()
-		// br.Renderln(`<table style="width:100%;"><tr><td style=color:`, fore, `;background-color:`, bckg, `;">`)
-		br.Renderln(`<table style="width:100%;"><tr><td class="codecolor">`)
+		br.Renderln(`<div class="codecolor">`)
 		br.Renderln("<pre class='nohighlight precolor'>")
 		rb := &bytes.Buffer{}
 		err = f.Format(rb, s, it)
@@ -663,7 +707,7 @@ func (n *Node) RenderExampleNode(br *ByteRenderer) error {
 		}
 		br.Render(rb.Bytes())
 		br.Render("</pre>")
-		br.Renderln(`</td></tr></table>`)
+		br.Renderln(`</div>`)
 		br.Renderln()
 
 	}
@@ -696,6 +740,7 @@ func (n *Node) RenderDiagramNode(br *ByteRenderer) error {
 	// The output file will be in the 'builtassets' directory, relative to the root file being processed
 	builtAssetsDir := filepath.Join(n.p.rootDir, "builtassets")
 	fileName := filepath.Join(builtAssetsDir, diagType+"_"+hhString+"."+imageType)
+	relativeFileName := filepath.Join("builtassets", diagType+"_"+hhString+"."+imageType)
 
 	plantumlSkinParams := []byte(`
 skinparam shadowing true
@@ -862,7 +907,7 @@ skinparam SequenceLifeLineBackgroundColor PapayaWhip
 
 	sectionIndentStr := strings.Repeat(" ", n.Indentation)
 
-	br.Render(sectionIndentStr, "<figure><img class='figureshadow' src='"+fileName+"' alt='", n.RestLine, "'>\n")
+	br.Render(sectionIndentStr, "<figure><img class='figureshadow' src='"+relativeFileName+"' alt='", n.RestLine, "'>\n")
 
 	br.Render(sectionIndentStr, "<figcaption>", n.RestLine, "</figcaption></figure>\n\n")
 
